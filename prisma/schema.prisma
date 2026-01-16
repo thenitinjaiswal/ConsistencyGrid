@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  name        String?
+  email       String   @unique
+  image       String?
+  publicToken String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  settings  WallpaperSettings?
+  // ✅ ADD THESE
+  habits    Habit[]
+  habitLogs HabitLog[]
+}
+
+model WallpaperSettings {
+  id     String   @id @default(cuid())
+  userId String   @unique
+  dob    DateTime
+
+  lifeExpectancyYears Int @default(80)
+
+  theme  String @default("dark-minimal")
+  width  Int    @default(1080)
+  height Int    @default(2400)
+
+  showLifeGrid Boolean @default(true)
+  showYearGrid Boolean @default(true)
+  showAgeStats Boolean @default(true)
+
+  showQuote Boolean @default(false)
+  quote     String?
+
+  goalEnabled      Boolean   @default(false)
+  goalTitle        String?
+  goalStartDate    DateTime?
+  goalDurationDays Int?
+  goalUnit         String?
+  
+  // ✅ New Layout Fields
+  yearGridMode   String  @default("weeks") // "weeks" or "days"
+  wallpaperType  String  @default("lockscreen") // "lockscreen", "homescreen", "calendar"
+  
+  showMissedDays Boolean @default(false)
+  showHabitLayer Boolean @default(false)
+  showLegend     Boolean @default(false)
+
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Habit {
+  id       String  @id @default(cuid())
+  userId   String
+  title    String
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs HabitLog[]
+}
+
+model HabitLog {
+  id      String @id @default(cuid())
+  habitId String
+  userId  String
+
+  date DateTime // "YYYY-MM-DD" like
+  done Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

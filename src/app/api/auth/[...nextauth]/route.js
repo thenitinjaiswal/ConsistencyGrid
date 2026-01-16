@@ -1,0 +1,65 @@
+import NextAuth from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
+import prisma from "@/lib/prisma";
+import { generatePublicToken } from "@/lib/token";
+
+export const authOptions = {
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
+  ],
+
+  secret: process.env.NEXTAUTH_SECRET,
+
+  session: {
+    strategy: "jwt",
+  },
+
+  callbacks: {
+    async signIn({ user }) {
+      // ✅ Ensure user exists in DB
+      const existing = await prisma.user.findUnique({
+        where: { email: user.email },
+      });
+
+      if (!existing) {
+        await prisma.user.create({
+          data: {
+            name: user.name,
+            email: user.email,
+            image: user.image,
+            publicToken: generatePublicToken(),
+          },
+        });
+      }
+
+      return true;
+    },
+
+    async jwt({ token }) {
+      // ✅ attach DB userId to token
+      const dbUser = await prisma.user.findUnique({
+        where: { email: token.email },
+      });
+
+      if (dbUser) {
+        token.userId = dbUser.id;
+        token.publicToken = dbUser.publicToken;
+      }
+
+      return token;
+    },
+
+    async session({ session, token }) {
+      // ✅ attach userId + publicToken to session
+      session.user.id = token.userId;
+      session.user.publicToken = token.publicToken;
+      return session;
+    },
+  },
+};
+
+const handler = NextAuth(authOptions);
+export { handler as GET, handler as POST };
