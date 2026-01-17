@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 
 function getTodayDateOnly() {
   const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
 }
 
 export async function POST(req) {
@@ -14,7 +14,7 @@ export async function POST(req) {
     return Response.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const { habitId } = await req.json();
+  const { habitId, date } = await req.json();
 
   if (!habitId) {
     return Response.json({ message: "habitId required" }, { status: 400 });
@@ -24,18 +24,30 @@ export async function POST(req) {
     where: { email: session.user.email },
   });
 
-  const today = getTodayDateOnly();
+  // Determine target date (default to today)
+  let targetDate;
+  if (date) {
+    // Parse provided date string (YYYY-MM-DD)
+    const [year, month, day] = date.split('-').map(Number);
+    // Create UTC date at midnight
+    targetDate = new Date(Date.UTC(year, month - 1, day));
+  } else {
+    targetDate = getTodayDateOnly();
+  }
 
   // ✅ check if log already exists
   const existingLog = await prisma.habitLog.findFirst({
     where: {
       habitId,
       userId: user.id,
-      date: today,
+      date: targetDate, // Use variable, not 'today'
     },
   });
 
   if (existingLog) {
+    // If it exists, toggle it (or delete it if you prefer un-logging = delete, but toggling 'done' is safer if you track false states)
+    // Actually, usually easier to delete the log if unchecked? 
+    // The current logic toggles 'done' bool. Let's stick to that for now.
     const updated = await prisma.habitLog.update({
       where: { id: existingLog.id },
       data: { done: !existingLog.done },
@@ -49,7 +61,7 @@ export async function POST(req) {
     data: {
       habitId,
       userId: user.id,
-      date: today,
+      date: targetDate,
       done: true,
     },
   });

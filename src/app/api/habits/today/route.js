@@ -18,24 +18,48 @@ export async function GET() {
     where: { email: session.user.email },
   });
 
-  const today = getTodayDateOnly();
+  // Calculate date range (Today - 7 days)
+  const now = new Date();
+  const pastDate = new Date();
+  pastDate.setDate(now.getDate() - 7);
+
+  // Create UTC start/end for query to matching DB storage
+  const startQueryDate = new Date(Date.UTC(pastDate.getFullYear(), pastDate.getMonth(), pastDate.getDate()));
+
+  const logs = await prisma.habitLog.findMany({
+    where: {
+      userId: user.id,
+      date: {
+        gte: startQueryDate
+      }
+    },
+  });
 
   const habits = await prisma.habit.findMany({
     where: { userId: user.id, isActive: true },
     orderBy: { createdAt: "asc" },
   });
 
-  const logs = await prisma.habitLog.findMany({
-    where: { userId: user.id, date: today },
+  const todayHabits = habits.map((h) => {
+    // Filter logs for this specific habit
+    const habitLogs = logs.filter(l => l.habitId === h.id);
+
+    // Check if done TODAY
+    const todayLog = habitLogs.find(l => {
+      const lDate = new Date(l.date).toISOString().split('T')[0];
+      const tDate = new Date().toISOString().split('T')[0];
+      return lDate === tDate;
+    });
+
+    return {
+      id: h.id,
+      title: h.title,
+      scheduledTime: h.scheduledTime, // Include scheduledTime
+      done: todayLog ? todayLog.done : false,
+      logs: habitLogs, // Return all logs for history
+      isActive: h.isActive
+    };
   });
-
-  const logMap = new Map(logs.map((l) => [l.habitId, l.done]));
-
-  const todayHabits = habits.map((h) => ({
-    id: h.id,
-    title: h.title,
-    done: logMap.get(h.id) || false,
-  }));
 
   const completed = todayHabits.filter((h) => h.done).length;
 

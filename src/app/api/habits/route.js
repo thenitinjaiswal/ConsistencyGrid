@@ -9,7 +9,7 @@ export async function POST(req) {
         return Response.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { title } = await req.json();
+    const { title, scheduledTime } = await req.json();
 
     if (!title || title.trim().length < 2) {
         return Response.json(
@@ -29,6 +29,7 @@ export async function POST(req) {
     const habit = await prisma.habit.create({
         data: {
             title: title.trim(),
+            scheduledTime: scheduledTime ? scheduledTime : null,
             userId: dbUser.id,
         },
     });

@@ -4,6 +4,7 @@ import StatsRow from "@/components/dashboard/StatsRow";
 import WallpaperCard from "@/components/dashboard/WallpaperCard";
 import TodayProgressCard from "@/components/dashboard/TodayProgressCard";
 import QuickTips from "@/components/dashboard/QuickTips";
+import UpcomingReminders from "@/components/dashboard/UpcomingReminders";
 
 export default async function DashboardPage() {
   return (
@@ -21,7 +22,11 @@ export default async function DashboardPage() {
         <TodayProgressCard />
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Upcoming Reminders */}
+        <UpcomingReminders />
+
+        {/* Quick Tips */}
         <QuickTips />
       </div>
     </DashboardLayout>

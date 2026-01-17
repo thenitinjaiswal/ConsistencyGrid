@@ -11,15 +11,16 @@ model User {
   id          String   @id @default(cuid())
   name        String?
   email       String   @unique
+  password    String?  // Hashed password for credentials auth
   image       String?
   publicToken String   @unique
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   settings  WallpaperSettings?
-  // ✅ ADD THESE
   habits    Habit[]
   habitLogs HabitLog[]
+  reminders Reminder[]
 }
 
 model WallpaperSettings {
@@ -60,10 +61,11 @@ model WallpaperSettings {
 }
 
 model Habit {
-  id       String  @id @default(cuid())
-  userId   String
-  title    String
-  isActive Boolean @default(true)
+  id            String   @id @default(cuid())
+  userId        String
+  title         String
+  scheduledTime String?  // e.g., "09:00 AM", "2:30 PM"
+  isActive      Boolean  @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -85,4 +87,52 @@ model HabitLog {
 
   habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ✅ Intelligent Reminder System
+// This model enables reminders to live on the timeline, not just notify
+model Reminder {
+  id     String @id @default(cuid())
+  userId String
+
+  // Basic Info
+  title       String
+  description String?
+
+  // Flexible Duration Support
+  startDate DateTime // Start date of the reminder
+  endDate   DateTime // End date (same as startDate for single-day reminders)
+
+  // Time Range (optional - for non-full-day reminders)
+  startTime String? // e.g., "09:00" (24-hour format)
+  endTime   String? // e.g., "17:00" (24-hour format)
+  isFullDay Boolean @default(true) // If true, reminder is active all day
+
+  // Visual Presence on Grid
+  markerType  String @default("dot") // "dot", "border", "fill", "badge"
+  markerColor String @default("#ff7a00") // Hex color for the marker
+  markerIcon  String? // Optional emoji or icon identifier
+
+  // Priority & Importance
+  priority Int @default(1) // 1=low, 2=medium, 3=high, 4=critical
+  isImportant Boolean @default(false) // Marks as "Important Day"
+
+  // Notification Behavior
+  enableNotifications Boolean @default(true)
+  notifyOnStart       Boolean @default(true) // Notify when reminder period starts
+  notifyDaily         Boolean @default(false) // For multi-day reminders, notify each day
+
+  // Recurrence (future feature)
+  isRecurring    Boolean @default(false)
+  recurrenceRule String? // e.g., "DAILY", "WEEKLY", "MONTHLY"
+
+  // Metadata
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startDate])
+  @@index([userId, endDate])
 }

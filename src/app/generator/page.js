@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 
+import { sendWallpaperToAndroid } from "@/utils/sendWallpaperToAndroid";
+
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import GeneratorForm from "@/components/generator/GeneratorForm";
 import GeneratorPreview from "@/components/generator/GeneratorPreview";
@@ -112,6 +114,12 @@ export default function GeneratorPage() {
       }
 
       toast.success("Settings saved! Wallpaper updated.");
+
+      // Android Bridge: Send new wallpaper URL to native app
+      if (publicToken) {
+        const wallpaperUrl = `${window.location.origin}/w/${publicToken}/image.png`;
+        sendWallpaperToAndroid(wallpaperUrl);
+      }
 
       // Reload token if it was just created (edge case)
       if (!publicToken) {

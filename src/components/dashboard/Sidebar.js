@@ -10,6 +10,8 @@ const menu = [
   { label: "Habits", href: "/habits" },
   { label: "Goals", href: "/goals" },
   { label: "Streaks", href: "/streaks" },
+  { label: "Reminders", href: "/reminders" },
+  { label: "Calendar", href: "/calendar" },
   { label: "Analytics", href: "/analytics" },
 ];
 
@@ -58,8 +60,8 @@ export default function Sidebar({ active = "Dashboard" }) {
                 key={item.href}
                 href={item.href}
                 className={`flex items-center rounded-xl px-3 py-2 text-sm font-medium ${isActive
-                    ? "bg-orange-500 text-white"
-                    : "text-gray-700 hover:bg-white/60"
+                  ? "bg-orange-500 text-white"
+                  : "text-gray-700 hover:bg-white/60"
                   }`}
               >
                 {item.label}

@@ -88,6 +88,18 @@ export async function GET(request, { params }) {
     const currentDate = new Date();
     const currentDayKey = formatDateToDayString(currentDate);
 
+    // 4. Fetch Active Reminders
+    const activeReminders = await prisma.reminder.findMany({
+        where: {
+            userId: currentUser.id,
+            isActive: true
+        },
+        orderBy: [
+            { priority: 'desc' },
+            { startDate: 'asc' }
+        ]
+    });
+
     // Growth History (Last 7 days)
     const growthHistory = [];
     for (let offset = 6; offset >= 0; offset--) {
@@ -105,94 +117,98 @@ export async function GET(request, { params }) {
     const canvas = createCanvas(canvasWidth, canvasHeight);
     const canvasContext = canvas.getContext("2d");
 
-    // THEMES - Strict Monochrome / Dark Mode
+    // ENHANCED THEMES - Optimized color palettes for better visual hierarchy and contrast
     const COLOR_THEMES = {
         "minimal-dark": {
-            BG: "#09090b",
-            CARD: "#121212",
-            TEXT_MAIN: "#ffffff",
-            TEXT_SUB: "#71717a",
+            BG: "#09090b",              // Deep black for OLED optimization
+            CARD: "#18181b",            // CHANGED: Slightly lighter for better card separation
+            TEXT_MAIN: "#fafafa",       // CHANGED: Softer white to reduce eye strain
+            TEXT_SUB: "#a1a1aa",        // CHANGED: Improved contrast for readability
             ACCENT: "#ffffff",
             GRID_ACTIVE: "#ffffff",
             GRID_INACTIVE: "#27272a"
         },
         "sunset-orange": {
             BG: "#09090b",
-            CARD: "#121212",
-            TEXT_MAIN: "#ffffff",
-            TEXT_SUB: "#71717a",
-            ACCENT: "#ff7a00",
-            GRID_ACTIVE: "#ff7a00",
-            GRID_INACTIVE: "#27272a"
+            CARD: "#1a0f0a",            // CHANGED: Warm undertone for theme consistency
+            TEXT_MAIN: "#fafafa",       // CHANGED: Better readability
+            TEXT_SUB: "#a1a1aa",        // CHANGED: Improved contrast
+            ACCENT: "#ff8c42",          // CHANGED: Warmer, more vibrant orange
+            GRID_ACTIVE: "#ff8c42",     // CHANGED: Matches accent
+            GRID_INACTIVE: "#2a2019"    // CHANGED: Warm-tinted inactive state
         },
         "ocean-blue": {
             BG: "#09090b",
-            CARD: "#121212",
-            TEXT_MAIN: "#ffffff",
-            TEXT_SUB: "#71717a",
-            ACCENT: "#0088ff",
-            GRID_ACTIVE: "#0088ff",
-            GRID_INACTIVE: "#27272a"
+            CARD: "#0a1420",            // CHANGED: Cool blue undertone
+            TEXT_MAIN: "#fafafa",       // CHANGED: Better readability
+            TEXT_SUB: "#a1a1aa",        // CHANGED: Improved contrast
+            ACCENT: "#3b82f6",          // CHANGED: More vibrant, modern blue
+            GRID_ACTIVE: "#3b82f6",     // CHANGED: Matches accent
+            GRID_INACTIVE: "#1e293b"    // CHANGED: Blue-tinted inactive state
         },
         "forest-green": {
             BG: "#09090b",
-            CARD: "#121212",
-            TEXT_MAIN: "#ffffff",
-            TEXT_SUB: "#71717a",
-            ACCENT: "#00cc66",
-            GRID_ACTIVE: "#00cc66",
-            GRID_INACTIVE: "#27272a"
+            CARD: "#0a1410",            // CHANGED: Green undertone for cohesion
+            TEXT_MAIN: "#fafafa",       // CHANGED: Better readability
+            TEXT_SUB: "#a1a1aa",        // CHANGED: Improved contrast
+            ACCENT: "#10b981",          // CHANGED: Modern emerald green
+            GRID_ACTIVE: "#10b981",     // CHANGED: Matches accent
+            GRID_INACTIVE: "#1e2e25"    // CHANGED: Green-tinted inactive state
         },
         "purple-haze": {
             BG: "#09090b",
-            CARD: "#121212",
-            TEXT_MAIN: "#ffffff",
-            TEXT_SUB: "#71717a",
+            CARD: "#150a1f",            // CHANGED: Purple undertone
+            TEXT_MAIN: "#fafafa",       // CHANGED: Better readability
+            TEXT_SUB: "#a1a1aa",        // CHANGED: Improved contrast
             ACCENT: "#a855f7",
             GRID_ACTIVE: "#a855f7",
-            GRID_INACTIVE: "#27272a"
+            GRID_INACTIVE: "#2a1f3d"    // CHANGED: Purple-tinted inactive state
         },
         "monochrome": {
             BG: "#ffffff",
-            CARD: "#f4f4f5",
-            TEXT_MAIN: "#18181b",
-            TEXT_SUB: "#71717a",
-            ACCENT: "#18181b",
-            GRID_ACTIVE: "#18181b",
-            GRID_INACTIVE: "#e4e4e7"
+            CARD: "#f8f9fa",            // CHANGED: Cleaner white with subtle warmth
+            TEXT_MAIN: "#0a0a0a",       // CHANGED: True black for maximum contrast
+            TEXT_SUB: "#6b7280",        // CHANGED: Better mid-tone gray
+            ACCENT: "#0a0a0a",          // CHANGED: Matches text main
+            GRID_ACTIVE: "#0a0a0a",     // CHANGED: Matches accent
+            GRID_INACTIVE: "#e5e7eb"    // CHANGED: Softer inactive state
         },
         "dark-minimal": {
             BG: "#09090b",
-            CARD: "#121212",
-            TEXT_MAIN: "#ffffff",
-            TEXT_SUB: "#71717a",
+            CARD: "#18181b",            // CHANGED: Better card separation
+            TEXT_MAIN: "#fafafa",       // CHANGED: Softer white
+            TEXT_SUB: "#a1a1aa",        // CHANGED: Improved contrast
             ACCENT: "#ffffff",
             GRID_ACTIVE: "#ffffff",
             GRID_INACTIVE: "#27272a"
         },
         "orange-glow": {
             BG: "#09090b",
-            CARD: "#121212",
-            TEXT_MAIN: "#ffffff",
-            TEXT_SUB: "#71717a",
-            ACCENT: "#ff7a00",
-            GRID_ACTIVE: "#ff7a00",
-            GRID_INACTIVE: "#27272a"
+            CARD: "#1a0f0a",            // CHANGED: Warm undertone
+            TEXT_MAIN: "#fafafa",       // CHANGED: Better readability
+            TEXT_SUB: "#a1a1aa",        // CHANGED: Improved contrast
+            ACCENT: "#fb923c",          // CHANGED: Softer, glowing orange
+            GRID_ACTIVE: "#fb923c",     // CHANGED: Matches accent
+            GRID_INACTIVE: "#2a2019"    // CHANGED: Warm-tinted inactive
         },
     };
     const activeTheme = COLOR_THEMES[settings.theme] || COLOR_THEMES["minimal-dark"];
 
-    // Layout Constants
+    // ENHANCED LAYOUT - Improved spacing and proportions for better visual balance
     const horizontalMargin = canvasWidth * 0.08;
     const contentWidth = canvasWidth - (horizontalMargin * 2);
-    let verticalCursorY = canvasHeight * 0.33; // Start lower to clear Lock Screen Clock
 
-    // 1. Background
+    // CHANGED: Dynamic vertical start based on wallpaper type for optimal spacing
+    let verticalCursorY = settings.wallpaperType === "lockscreen"
+        ? canvasHeight * 0.35  // More space for lock screen clock
+        : canvasHeight * 0.12; // Less space for home screen
+
+    // 1. Background - Draw first for proper layering
     drawBackground(canvasContext, canvasWidth, canvasHeight, activeTheme);
 
-    // 2. Dashboard Header
+    // 2. Dashboard Header - Conditional rendering with proper spacing
     if (settings.showAgeStats) {
-        verticalCursorY += drawDashboardHeader(canvasContext, {
+        const headerHeight = drawDashboardHeader(canvasContext, {
             xCoordinate: horizontalMargin,
             yCoordinate: verticalCursorY,
             width: contentWidth,
@@ -200,12 +216,13 @@ export async function GET(request, { params }) {
             history: growthHistory,
             todayPercent: todayCompletionPercentage
         });
+        verticalCursorY += headerHeight + 40; // CHANGED: Added consistent spacing after header
     } else {
-        verticalCursorY += 100;
+        verticalCursorY += 80; // CHANGED: Reduced spacing when header is hidden
     }
 
-    // 3. Main Grid (Full Display)
-    verticalCursorY += drawGrid(canvasContext, {
+    // 3. Main Grid - The primary visual element with dynamic sizing
+    const gridHeight = drawGrid(canvasContext, {
         xCoordinate: horizontalMargin,
         yCoordinate: verticalCursorY,
         width: contentWidth,
@@ -215,47 +232,59 @@ export async function GET(request, { params }) {
         dob: settings.dateOfBirth,
         lifeExpectancy: settings.lifeExpectancyYears,
         activityMap: activityMap,
+        reminders: activeReminders,
         now: currentDate
     });
+    verticalCursorY += gridHeight + 40; // CHANGED: Consistent spacing after grid
 
-    // 4. Bottom Section (Habits & Goals)
+    // 4. Bottom Section - Habits & Goals with proper vertical positioning
+    // CHANGED: Calculate remaining space for better bottom section placement
+    const remainingHeight = canvasHeight - verticalCursorY - 100; // Leave space for quote
+
     drawBottomSection(canvasContext, {
         xCoordinate: horizontalMargin,
-        yCoordinate: verticalCursorY + 50,
+        yCoordinate: verticalCursorY,
         width: contentWidth,
-        height: canvasHeight,
+        height: remainingHeight, // CHANGED: Use calculated remaining height
         theme: activeTheme,
         habits: activeHabits,
         settings: settings,
+        reminders: activeReminders,
         nowDay: currentDayKey,
         now: currentDate
     });
 
-    // 5. Quote
+    // 5. Quote - Positioned at bottom with optimal spacing
     if (settings.showQuote) {
         drawQuote(canvasContext, {
             xCoordinate: horizontalMargin,
-            yCoordinate: 0,
-            width: canvasWidth,
-            height: canvasHeight,
+            yCoordinate: canvasHeight - 120, // CHANGED: Fixed bottom position
+            width: contentWidth,              // CHANGED: Use content width for proper margins
+            height: 100,                      // CHANGED: Fixed height for quote section
             theme: activeTheme,
             quote: settings.quoteText
         });
     }
 
     // 6. AD Placeholder (Optional - Commented out)
+    // DESIGN NOTE: If enabled, position above quote section
     // drawAdPlaceholder(canvasContext, {
-    //     xCoordinate: canvasWidth/2 - 150,
-    //     yCoordinate: canvasHeight - 150,
-    //     width: 300,
+    //     xCoordinate: horizontalMargin,
+    //     yCoordinate: canvasHeight - 200,  // CHANGED: Fixed position above quote
+    //     width: contentWidth,               // CHANGED: Full content width
     //     height: 60,
     //     theme: activeTheme
     // });
 
+    // OPTIMIZATION: Enable smoothing for better image quality
+    canvasContext.imageSmoothingEnabled = true;
+    canvasContext.imageSmoothingQuality = 'high';
+
     return new Response(canvas.toBuffer("image/png"), {
         headers: {
             "Content-Type": "image/png",
-            "Cache-Control": "no-store, max-age=0"
+            // CHANGED: Better cache control for dynamic content
+            "Cache-Control": "public, max-age=300, stale-while-revalidate=600"
         }
     });
 }
