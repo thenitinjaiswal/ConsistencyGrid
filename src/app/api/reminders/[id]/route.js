@@ -28,7 +28,7 @@ export async function GET(request, { params }) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        const { id } = params;
+        const { id } = await params;
 
         const reminder = await prisma.reminder.findFirst({
             where: {
@@ -70,7 +70,7 @@ export async function PATCH(request, { params }) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        const { id } = params;
+        const { id } = await params;
         const body = await request.json();
 
         // Verify ownership
@@ -142,7 +142,7 @@ export async function DELETE(request, { params }) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        const { id } = params;
+        const { id } = await params;
 
         // Verify ownership
         const existing = await prisma.reminder.findFirst({

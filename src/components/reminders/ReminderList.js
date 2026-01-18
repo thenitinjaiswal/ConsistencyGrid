@@ -9,6 +9,35 @@
 
 import { useState } from "react";
 import toast from "react-hot-toast";
+import {
+    Calendar,
+    Star,
+    Clock,
+    Bell,
+    Edit2,
+    Trash2,
+    Target,
+    PartyPopper,
+    Flame,
+    Briefcase,
+    GraduationCap,
+    Plane,
+    Gift,
+    Lightbulb
+} from "lucide-react";
+
+const ICON_MAP = {
+    "target": Target,
+    "party": PartyPopper,
+    "calendar": Calendar,
+    "star": Star,
+    "flame": Flame,
+    "briefcase": Briefcase,
+    "grad": GraduationCap,
+    "plane": Plane,
+    "gift": Gift,
+    "bulb": Lightbulb
+};
 
 export default function ReminderList({ reminders, onEdit, onDelete, onRefresh }) {
     const [deletingId, setDeletingId] = useState(null);
@@ -77,7 +106,9 @@ export default function ReminderList({ reminders, onEdit, onDelete, onRefresh })
     if (!reminders || reminders.length === 0) {
         return (
             <div className="text-center py-12">
-                <div className="text-6xl mb-4">📅</div>
+                <div className="flex justify-center mb-4">
+                    <Calendar className="w-16 h-16 text-gray-300" />
+                </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     No reminders yet
                 </h3>
@@ -130,6 +161,7 @@ export default function ReminderList({ reminders, onEdit, onDelete, onRefresh })
                             {dateReminders.map((reminder) => {
                                 const priorityBadge = getPriorityBadge(reminder.priority);
                                 const isMultiDay = reminder.startDate !== reminder.endDate;
+                                const MarkerComponent = ICON_MAP[reminder.markerIcon];
 
                                 return (
                                     <div
@@ -148,9 +180,13 @@ export default function ReminderList({ reminders, onEdit, onDelete, onRefresh })
                                             {/* Icon/Marker */}
                                             <div
                                                 className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center text-2xl"
-                                                style={{ backgroundColor: reminder.markerColor + "20" }}
+                                                style={{ backgroundColor: reminder.markerColor + "20", color: reminder.markerColor }}
                                             >
-                                                {reminder.markerIcon || getMarkerIcon(reminder.markerType)}
+                                                {MarkerComponent ? (
+                                                    <MarkerComponent className="w-6 h-6" />
+                                                ) : (
+                                                    reminder.markerIcon || getMarkerIcon(reminder.markerType)
+                                                )}
                                             </div>
 
                                             {/* Content */}
@@ -162,7 +198,7 @@ export default function ReminderList({ reminders, onEdit, onDelete, onRefresh })
                                                                 {reminder.title}
                                                             </h4>
                                                             {reminder.isImportant && (
-                                                                <span className="text-amber-500">⭐</span>
+                                                                <Star className="w-4 h-4 text-amber-500" fill="currentColor" />
                                                             )}
                                                         </div>
 
@@ -176,9 +212,7 @@ export default function ReminderList({ reminders, onEdit, onDelete, onRefresh })
                                                             {/* Time Range */}
                                                             {!reminder.isFullDay && reminder.startTime && (
                                                                 <span className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded">
-                                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                                    </svg>
+                                                                    <Clock className="w-3 h-3" />
                                                                     {formatTime(reminder.startTime)}
                                                                     {reminder.endTime && ` - ${formatTime(reminder.endTime)}`}
                                                                 </span>
@@ -205,9 +239,7 @@ export default function ReminderList({ reminders, onEdit, onDelete, onRefresh })
                                                             {/* Notifications */}
                                                             {reminder.enableNotifications && (
                                                                 <span className="flex items-center gap-1">
-                                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                                                    </svg>
+                                                                    <Bell className="w-3 h-3" />
                                                                 </span>
                                                             )}
                                                         </div>
@@ -220,9 +252,7 @@ export default function ReminderList({ reminders, onEdit, onDelete, onRefresh })
                                                             className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                                             title="Edit"
                                                         >
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                            </svg>
+                                                            <Edit2 className="w-4 h-4" />
                                                         </button>
                                                         <button
                                                             onClick={() => handleDelete(reminder.id)}
@@ -233,9 +263,7 @@ export default function ReminderList({ reminders, onEdit, onDelete, onRefresh })
                                                             {deletingId === reminder.id ? (
                                                                 <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
                                                             ) : (
-                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                                </svg>
+                                                                <Trash2 className="w-4 h-4" />
                                                             )}
                                                         </button>
                                                     </div>

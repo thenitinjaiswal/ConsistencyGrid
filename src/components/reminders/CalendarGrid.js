@@ -9,9 +9,40 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import {
+    Star,
+    Target,
+    PartyPopper,
+    Calendar,
+    Flame,
+    Briefcase,
+    GraduationCap,
+    Plane,
+    Gift,
+    Lightbulb
+} from "lucide-react";
+
+const ICON_MAP = {
+    "target": Target,
+    "party": PartyPopper,
+    "calendar": Calendar,
+    "star": Star,
+    "flame": Flame,
+    "briefcase": Briefcase,
+    "grad": GraduationCap,
+    "plane": Plane,
+    "gift": Gift,
+    "bulb": Lightbulb
+};
 
 export default function CalendarGrid({ year, month, reminders = [], onDateClick }) {
     const [hoveredDate, setHoveredDate] = useState(null);
+    const [now, setNow] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => setNow(new Date()), 60000); // Update every minute
+        return () => clearInterval(timer);
+    }, []);
 
     // Get days in month
     const getDaysInMonth = (year, month) => {
@@ -39,17 +70,43 @@ export default function CalendarGrid({ year, month, reminders = [], onDateClick 
         calendarDays.push(day);
     }
 
-    // Get reminders for a specific date
     const getRemindersForDate = (day) => {
         if (!day) return [];
 
-        const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        // Construct the date for this cell
+        const cellDate = new Date(year, month, day);
+        const cellDateStr = cellDate.toLocaleDateString("en-CA");
+        const todayStr = now.toLocaleDateString("en-CA");
 
-        return reminders.filter((reminder) => {
-            const startDate = reminder.startDate.split("T")[0];
-            const endDate = reminder.endDate.split("T")[0];
+        // Rule 1, 2, 3: Visible ONLY on exact scheduled day (Today)
+        if (cellDateStr !== todayStr) return [];
 
-            return dateStr >= startDate && dateStr <= endDate;
+        return reminders.filter(r => {
+            // Basic date check (just in case)
+            const start = r.startDate.split("T")[0];
+            const end = r.endDate.split("T")[0];
+            // Since we already filtered cellDate == todayStr, we check if today is within reminder range
+            if (cellDateStr < start || cellDateStr > end) return false;
+
+            // Rule 4: Time check
+            if (r.isFullDay) return true; // Full day is visible all day
+
+            if (!r.startTime) return true; // No start time? Visible all day
+
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+            const [startH, startM] = r.startTime.split(":").map(Number);
+            const startMinutes = startH * 60 + startM;
+
+            if (currentMinutes < startMinutes) return false; // Future time today
+
+            if (r.endTime) {
+                const [endH, endM] = r.endTime.split(":").map(Number);
+                const endMinutes = endH * 60 + endM;
+                if (currentMinutes > endMinutes) return false; // Past time today
+            }
+
+            return true;
         });
     };
 
@@ -111,12 +168,12 @@ export default function CalendarGrid({ year, month, reminders = [], onDateClick 
                         <div
                             key={index}
                             className={`relative aspect-square rounded-lg border-2 transition-all ${!day
-                                    ? "border-transparent"
-                                    : isToday(day)
-                                        ? "border-orange-500 bg-orange-50"
-                                        : isPast(day)
-                                            ? "border-gray-100 bg-gray-50"
-                                            : "border-gray-200 bg-white hover:border-orange-300 hover:shadow-md cursor-pointer"
+                                ? "border-transparent"
+                                : isToday(day)
+                                    ? "border-orange-500 bg-orange-50"
+                                    : isPast(day)
+                                        ? "border-gray-100 bg-gray-50"
+                                        : "border-gray-200 bg-white hover:border-orange-300 hover:shadow-md cursor-pointer"
                                 }`}
                             onClick={() => day && onDateClick?.(year, month, day)}
                             onMouseEnter={() => day && setHoveredDate(`${year}-${month}-${day}`)}
@@ -126,10 +183,10 @@ export default function CalendarGrid({ year, month, reminders = [], onDateClick 
                                 <>
                                     {/* Day Number */}
                                     <div className={`absolute top-1 left-1 text-sm font-semibold ${isToday(day)
-                                            ? "text-orange-600"
-                                            : isPast(day)
-                                                ? "text-gray-400"
-                                                : "text-gray-700"
+                                        ? "text-orange-600"
+                                        : isPast(day)
+                                            ? "text-gray-400"
+                                            : "text-gray-700"
                                         }`}>
                                         {day}
                                     </div>
@@ -137,7 +194,7 @@ export default function CalendarGrid({ year, month, reminders = [], onDateClick 
                                     {/* Important Star */}
                                     {isImportantDay && (
                                         <div className="absolute top-1 right-1 text-amber-500 text-sm">
-                                            ⭐
+                                            <Star className="w-3.5 h-3.5" fill="currentColor" />
                                         </div>
                                     )}
 
@@ -145,6 +202,7 @@ export default function CalendarGrid({ year, month, reminders = [], onDateClick 
                                     {dayReminders.length > 0 && (
                                         <div className="absolute bottom-1 left-1 right-1 flex flex-wrap gap-1 justify-center">
                                             {dayReminders.slice(0, 3).map((reminder, idx) => {
+                                                const MarkerComponent = ICON_MAP[reminder.markerIcon];
                                                 const markerIcons = {
                                                     dot: "●",
                                                     border: "○",
@@ -159,7 +217,11 @@ export default function CalendarGrid({ year, month, reminders = [], onDateClick 
                                                         style={{ color: reminder.markerColor }}
                                                         title={reminder.title}
                                                     >
-                                                        {reminder.markerIcon || markerIcons[reminder.markerType] || "●"}
+                                                        {MarkerComponent ? (
+                                                            <MarkerComponent className="w-3 h-3" />
+                                                        ) : (
+                                                            reminder.markerIcon || markerIcons[reminder.markerType] || "●"
+                                                        )}
                                                     </div>
                                                 );
                                             })}
@@ -173,33 +235,53 @@ export default function CalendarGrid({ year, month, reminders = [], onDateClick 
 
                                     {/* Hover Tooltip */}
                                     {hoveredDate === `${year}-${month}-${day}` && dayReminders.length > 0 && (
-                                        <div className="absolute z-10 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl pointer-events-none">
+                                        <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 bg-gray-950 border border-gray-800 text-white text-xs rounded-xl p-4 shadow-2xl pointer-events-none">
+                                            <div className="text-[10px] font-bold text-gray-500 mb-2 uppercase tracking-wider">
+                                                Reminders
+                                            </div>
                                             <div className="space-y-2">
-                                                {dayReminders.map((reminder, idx) => (
-                                                    <div key={idx} className="flex items-start gap-2">
-                                                        <div style={{ color: reminder.markerColor }}>
-                                                            {reminder.markerIcon || "●"}
-                                                        </div>
-                                                        <div className="flex-1">
-                                                            <div className="font-semibold">{reminder.title}</div>
-                                                            {reminder.description && (
-                                                                <div className="text-gray-300 text-xs mt-0.5">
-                                                                    {reminder.description}
+                                                {dayReminders.map((reminder, idx) => {
+                                                    const MarkerIcon = ICON_MAP[reminder.markerIcon];
+                                                    return (
+                                                        <div key={idx} className="flex items-start gap-3">
+                                                            <div
+                                                                className="mt-0.5"
+                                                                style={{ color: reminder.markerColor }}
+                                                            >
+                                                                {MarkerIcon ? (
+                                                                    <MarkerIcon className="w-3 h-3" />
+                                                                ) : (
+                                                                    reminder.markerIcon || "●"
+                                                                )}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="font-medium truncate">{reminder.title}</div>
+                                                                {reminder.description && (
+                                                                    <div className="text-gray-400 text-[10px] mt-0.5 line-clamp-2">
+                                                                        {reminder.description}
+                                                                    </div>
+                                                                )}
+                                                                <div className="text-gray-500 text-[10px] mt-0.5 flex justify-between">
+                                                                    <span>
+                                                                        {!reminder.isFullDay && reminder.startTime ? (
+                                                                            <>
+                                                                                {reminder.startTime}
+                                                                                {reminder.endTime && ` - ${reminder.endTime}`}
+                                                                            </>
+                                                                        ) : "All Day"}
+                                                                    </span>
+                                                                    {isToday(day) && (
+                                                                        <span className="text-orange-500 font-medium">Today</span>
+                                                                    )}
                                                                 </div>
-                                                            )}
-                                                            {!reminder.isFullDay && reminder.startTime && (
-                                                                <div className="text-gray-400 text-xs mt-0.5">
-                                                                    {reminder.startTime}
-                                                                    {reminder.endTime && ` - ${reminder.endTime}`}
-                                                                </div>
-                                                            )}
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                ))}
+                                                    )
+                                                })}
                                             </div>
                                             {/* Arrow */}
-                                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
-                                                <div className="border-4 border-transparent border-t-gray-900" />
+                                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-px">
+                                                <div className="border-4 border-transparent border-t-gray-950" />
                                             </div>
                                         </div>
                                     )}

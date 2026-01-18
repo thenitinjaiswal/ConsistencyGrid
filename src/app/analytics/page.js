@@ -3,6 +3,14 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Card from "@/components/ui/Card";
+import {
+    BarChart3,
+    PartyPopper,
+    ThumbsUp,
+    TrendingUp,
+    Calendar,
+    Star
+} from "lucide-react";
 
 export default function AnalyticsPage() {
     const [data, setData] = useState(null);
@@ -183,37 +191,38 @@ export default function AnalyticsPage() {
                 {data && data.completionRate > 0 && (
                     <Card className="p-6 bg-purple-50 border-purple-200">
                         <div className="flex items-start gap-3">
-                            <span className="text-2xl">📊</span>
+                            <BarChart3 className="w-8 h-8 text-purple-600 shrink-0" />
                             <div>
                                 <h3 className="font-semibold text-gray-900">Insights</h3>
-                                <ul className="mt-2 space-y-1 text-sm text-gray-600">
+                                <ul className="mt-2 space-y-2 text-sm text-gray-600">
                                     {data.completionRate >= 80 && (
-                                        <li>
-                                            🎉 Excellent! You're completing {data.completionRate}% of
-                                            your habits.
+                                        <li className="flex items-center gap-2">
+                                            <PartyPopper className="w-4 h-4 text-orange-500" />
+                                            <span>Excellent! You&apos;re completing {data.completionRate}% of your habits.</span>
                                         </li>
                                     )}
                                     {data.completionRate < 80 && data.completionRate >= 50 && (
-                                        <li>
-                                            👍 Good progress! You're at {data.completionRate}%
-                                            completion.
+                                        <li className="flex items-center gap-2">
+                                            <ThumbsUp className="w-4 h-4 text-blue-500" />
+                                            <span>Good progress! You&apos;re at {data.completionRate}% completion.</span>
                                         </li>
                                     )}
                                     {data.completionRate < 50 && (
-                                        <li>
-                                            💪 Keep pushing! Small improvements lead to big results.
+                                        <li className="flex items-center gap-2">
+                                            <TrendingUp className="w-4 h-4 text-green-500" />
+                                            <span>Keep pushing! Small improvements lead to big results.</span>
                                         </li>
                                     )}
                                     {data.bestDay !== "-" && (
-                                        <li>
-                                            📅 {data.bestDay} is your most productive day of the
-                                            week!
+                                        <li className="flex items-center gap-2">
+                                            <Calendar className="w-4 h-4 text-indigo-500" />
+                                            <span>{data.bestDay} is your most productive day of the week!</span>
                                         </li>
                                     )}
                                     {data.avgPerDay > 0 && (
-                                        <li>
-                                            ⭐ You complete an average of {data.avgPerDay} habits per
-                                            day.
+                                        <li className="flex items-center gap-2">
+                                            <Star className="w-4 h-4 text-amber-500" fill="currentColor" />
+                                            <span>You complete an average of {data.avgPerDay} habits per day.</span>
                                         </li>
                                     )}
                                 </ul>

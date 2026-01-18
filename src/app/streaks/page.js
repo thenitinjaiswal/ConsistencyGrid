@@ -3,10 +3,18 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Card from "@/components/ui/Card";
+import { Flame, Trophy, BarChart3, Zap, Medal, Gem } from "lucide-react";
 
 export default function StreaksPage() {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    const renderMilestoneIcon = (days) => {
+        if (days >= 365) return <Gem className="w-8 h-8 text-blue-500" />;
+        if (days >= 100) return <Medal className="w-8 h-8 text-yellow-500" />;
+        if (days >= 30) return <Medal className="w-8 h-8 text-slate-400" />;
+        return <Medal className="w-8 h-8 text-amber-700" />;
+    };
 
     useEffect(() => {
         async function loadStreaks() {
@@ -50,8 +58,8 @@ export default function StreaksPage() {
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <Card className="p-5">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100">
-                                <span className="text-2xl">🔥</span>
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 text-orange-600">
+                                <Flame className="w-6 h-6" />
                             </div>
                             <div>
                                 <p className="text-sm text-gray-500">Current Streak</p>
@@ -65,8 +73,8 @@ export default function StreaksPage() {
 
                     <Card className="p-5">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100">
-                                <span className="text-2xl">🏆</span>
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 text-purple-600">
+                                <Trophy className="w-6 h-6" />
                             </div>
                             <div>
                                 <p className="text-sm text-gray-500">Best Streak</p>
@@ -80,8 +88,8 @@ export default function StreaksPage() {
 
                     <Card className="p-5">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-                                <span className="text-2xl">📊</span>
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600">
+                                <BarChart3 className="w-6 h-6" />
                             </div>
                             <div>
                                 <p className="text-sm text-gray-500">Total Days</p>
@@ -106,10 +114,10 @@ export default function StreaksPage() {
                             <div
                                 key={index}
                                 className={`h-8 w-8 rounded ${day.completed
-                                        ? "bg-orange-500"
-                                        : day.habitCount > 0
-                                            ? "bg-orange-200"
-                                            : "bg-gray-100"
+                                    ? "bg-orange-500"
+                                    : day.habitCount > 0
+                                        ? "bg-orange-200"
+                                        : "bg-gray-100"
                                     }`}
                                 title={`${day.date}: ${day.habitCount}/${day.totalHabits} habits`}
                             />
@@ -143,13 +151,15 @@ export default function StreaksPage() {
                         {data?.milestones?.map((milestone, index) => (
                             <div
                                 key={index}
-                                className={`rounded-xl border p-4 text-center ${milestone.unlocked
-                                        ? "border-orange-200 bg-orange-50"
-                                        : "border-gray-200 bg-gray-50 opacity-50"
+                                className={`rounded-xl border p-4 text-center flex flex-col items-center ${milestone.unlocked
+                                    ? "border-orange-200 bg-orange-50"
+                                    : "border-gray-200 bg-gray-50 opacity-50"
                                     }`}
                             >
-                                <div className="text-3xl">{milestone.icon}</div>
-                                <p className="mt-2 text-sm font-semibold text-gray-700">
+                                <div className="mb-2">
+                                    {renderMilestoneIcon(milestone.days)}
+                                </div>
+                                <p className="mt-1 text-sm font-semibold text-gray-700">
                                     {milestone.title}
                                 </p>
                                 <p className="text-xs text-gray-500">
@@ -164,7 +174,7 @@ export default function StreaksPage() {
                 {data && data.currentStreak === 0 && (
                     <Card className="p-6 bg-blue-50 border-blue-200">
                         <div className="flex items-start gap-3">
-                            <span className="text-2xl">💪</span>
+                            <Zap className="w-6 h-6 text-blue-600 flex-shrink-0" />
                             <div>
                                 <h3 className="font-semibold text-gray-900">
                                     Start Your Streak Today!
@@ -181,7 +191,7 @@ export default function StreaksPage() {
                 {data && data.currentStreak > 0 && (
                     <Card className="p-6 bg-green-50 border-green-200">
                         <div className="flex items-start gap-3">
-                            <span className="text-2xl">🔥</span>
+                            <Flame className="w-6 h-6 text-green-600 flex-shrink-0" />
                             <div>
                                 <h3 className="font-semibold text-gray-900">
                                     Keep It Going!

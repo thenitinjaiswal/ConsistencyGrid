@@ -3,6 +3,7 @@ import { createCanvas } from "canvas";
 import {
     drawBackground,
     drawDashboardHeader,
+    drawStreakWidget,
     drawGrid,
     drawBottomSection,
     drawQuote,
@@ -206,53 +207,140 @@ export async function GET(request, { params }) {
     // 1. Background - Draw first for proper layering
     drawBackground(canvasContext, canvasWidth, canvasHeight, activeTheme);
 
+    // Calculate Streak
+    let currentStreak = 0;
+    let tempDate = new Date(currentDate);
+    // If today has activity, start counting
+    const todayLogged = (activityMap[formatDateToDayString(tempDate)] || 0) > 0;
+
+    if (todayLogged) {
+        currentStreak++;
+    }
+
+    // Reset tempDate to scan backwards from yesterday
+    tempDate = new Date(currentDate);
+    tempDate.setDate(tempDate.getDate() - 1);
+
+    while ((activityMap[formatDateToDayString(tempDate)] || 0) > 0) {
+        currentStreak++;
+        tempDate.setDate(tempDate.getDate() - 1);
+    }
+
     // 2. Dashboard Header - Conditional rendering with proper spacing
     if (settings.showAgeStats) {
+        // Draw Streak Widget (Top Right) - Independent of Header Layout
+        drawStreakWidget(canvasContext, {
+            x: horizontalMargin + contentWidth,
+            y: verticalCursorY - 60, // Moved up to separate from header
+            theme: activeTheme,
+            streak: currentStreak,
+            streakActiveToday: todayLogged
+        });
+
         const headerHeight = drawDashboardHeader(canvasContext, {
             xCoordinate: horizontalMargin,
             yCoordinate: verticalCursorY,
             width: contentWidth,
             theme: activeTheme,
             history: growthHistory,
-            todayPercent: todayCompletionPercentage
+            todayPercent: todayCompletionPercentage,
+            streak: currentStreak,
+            streakActiveToday: todayLogged // Pass streak status
         });
         verticalCursorY += headerHeight + 40; // CHANGED: Added consistent spacing after header
     } else {
         verticalCursorY += 80; // CHANGED: Reduced spacing when header is hidden
     }
 
-    // 3. Main Grid - The primary visual element with dynamic sizing
-    const gridHeight = drawGrid(canvasContext, {
-        xCoordinate: horizontalMargin,
-        yCoordinate: verticalCursorY,
-        width: contentWidth,
-        height: canvasHeight,
-        theme: activeTheme,
-        mode: settings.yearGridMode,
-        dob: settings.dateOfBirth,
-        lifeExpectancy: settings.lifeExpectancyYears,
-        activityMap: activityMap,
-        reminders: activeReminders,
-        now: currentDate
-    });
-    verticalCursorY += gridHeight + 40; // CHANGED: Consistent spacing after grid
+    // 3. Main Grid & Bottom Section Logic
+    // CHANGED: Implementing conditional layout based on grid mode
+    let gridHeight = 0;
 
-    // 4. Bottom Section - Habits & Goals with proper vertical positioning
-    // CHANGED: Calculate remaining space for better bottom section placement
-    const remainingHeight = canvasHeight - verticalCursorY - 100; // Leave space for quote
+    if (settings.yearGridMode === "life") {
+        // --- SIDE-BY-SIDE LAYOUT FOR LIFE GRID ---
+        // Life grid uses 60% width on the left, Habits/Goals stacked on the right
 
-    drawBottomSection(canvasContext, {
-        xCoordinate: horizontalMargin,
-        yCoordinate: verticalCursorY,
-        width: contentWidth,
-        height: remainingHeight, // CHANGED: Use calculated remaining height
-        theme: activeTheme,
-        habits: activeHabits,
-        settings: settings,
-        reminders: activeReminders,
-        nowDay: currentDayKey,
-        now: currentDate
-    });
+        const gridWidth = contentWidth * 0.60;
+        const sideGap = contentWidth * 0.05;
+        const sidebarWidth = contentWidth - gridWidth - sideGap;
+        const sidebarX = horizontalMargin + gridWidth + sideGap;
+        const sectionStartY = verticalCursorY;
+
+        // Draw Life Grid (Left Column)
+        gridHeight = drawGrid(canvasContext, {
+            xCoordinate: horizontalMargin,
+            yCoordinate: verticalCursorY,
+            width: gridWidth,
+            height: canvasHeight,
+            theme: activeTheme,
+            mode: settings.yearGridMode,
+            dob: settings.dateOfBirth,
+            lifeExpectancy: settings.lifeExpectancyYears,
+            activityMap: activityMap,
+            reminders: activeReminders,
+            now: currentDate
+        });
+
+        // Draw Habits & Goals (Right Column - Stacked)
+        const sidebarHeight = canvasHeight - verticalCursorY - 120; // Space for quote
+
+        drawBottomSection(canvasContext, {
+            xCoordinate: sidebarX,
+            yCoordinate: sectionStartY, // Align with top of grid
+            width: sidebarWidth,
+            height: sidebarHeight,
+            theme: activeTheme,
+            habits: activeHabits,
+            settings: settings,
+            reminders: activeReminders,
+            nowDay: currentDayKey,
+            now: currentDate,
+            isStacked: true,
+            streak: currentStreak
+        });
+
+        // Update cursor for consistent flow (though Quote is fixed bottom)
+        verticalCursorY += gridHeight + 40;
+
+    } else {
+        // --- STANDARD VERTICAL STACK FOR OTHER MODES ---
+
+        // 3. Main Grid
+        gridHeight = drawGrid(canvasContext, {
+            xCoordinate: horizontalMargin,
+            yCoordinate: verticalCursorY,
+            width: contentWidth,
+            height: canvasHeight,
+            theme: activeTheme,
+            mode: settings.yearGridMode,
+            dob: settings.dateOfBirth,
+            lifeExpectancy: settings.lifeExpectancyYears,
+            activityMap: activityMap,
+            reminders: activeReminders,
+            now: currentDate
+        });
+        verticalCursorY += gridHeight + 40;
+
+        // 4. Bottom Section
+        const remainingHeight = canvasHeight - verticalCursorY - 120; // Leave space for quote
+
+        // (Use pre-calculated streak)
+
+        drawBottomSection(canvasContext, {
+            xCoordinate: horizontalMargin,
+            yCoordinate: verticalCursorY,
+            width: contentWidth,
+            height: remainingHeight,
+            theme: activeTheme,
+            habits: activeHabits,
+            settings: settings,
+            reminders: activeReminders,
+            nowDay: currentDayKey,
+            now: currentDate,
+            streak: currentStreak, // Pass calculated streak
+            isStacked: false
+        });
+    }
 
     // 5. Quote - Positioned at bottom with optimal spacing
     if (settings.showQuote) {

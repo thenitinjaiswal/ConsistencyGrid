@@ -10,6 +10,22 @@
 
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import {
+    X,
+    Calendar,
+    Palette,
+    Zap,
+    Star,
+    Bell,
+    Target,
+    PartyPopper,
+    Flame,
+    Briefcase,
+    GraduationCap,
+    Plane,
+    Gift,
+    Lightbulb
+} from "lucide-react";
 
 export default function ReminderModal({ isOpen, onClose, onSave, editReminder = null }) {
     const [form, setForm] = useState({
@@ -151,7 +167,18 @@ export default function ReminderModal({ isOpen, onClose, onSave, editReminder = 
         "#6366f1", // Indigo
     ];
 
-    const commonIcons = ["🎯", "🎉", "📅", "⭐", "🔥", "💼", "🎓", "✈️", "🎂", "💡"];
+    const commonIcons = [
+        { value: "target", Icon: Target },
+        { value: "party", Icon: PartyPopper },
+        { value: "calendar", Icon: Calendar },
+        { value: "star", Icon: Star },
+        { value: "flame", Icon: Flame },
+        { value: "briefcase", Icon: Briefcase },
+        { value: "grad", Icon: GraduationCap },
+        { value: "plane", Icon: Plane },
+        { value: "gift", Icon: Gift },
+        { value: "bulb", Icon: Lightbulb },
+    ];
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -166,9 +193,7 @@ export default function ReminderModal({ isOpen, onClose, onSave, editReminder = 
                             onClick={onClose}
                             className="rounded-lg p-1 hover:bg-white/20 transition-colors"
                         >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <X className="w-6 h-6" />
                         </button>
                     </div>
                     <p className="text-sm text-orange-100 mt-1">
@@ -210,7 +235,7 @@ export default function ReminderModal({ isOpen, onClose, onSave, editReminder = 
                     {/* Date & Time */}
                     <div className="space-y-4">
                         <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                            <span className="text-orange-500">📅</span>
+                            <span className="text-orange-500"><Calendar className="w-5 h-5" /></span>
                             Date & Time
                         </h3>
 
@@ -294,7 +319,7 @@ export default function ReminderModal({ isOpen, onClose, onSave, editReminder = 
                     {/* Visual Appearance */}
                     <div className="space-y-4">
                         <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                            <span className="text-orange-500">🎨</span>
+                            <span className="text-orange-500"><Palette className="w-5 h-5" /></span>
                             Visual Appearance
                         </h3>
 
@@ -309,8 +334,8 @@ export default function ReminderModal({ isOpen, onClose, onSave, editReminder = 
                                         type="button"
                                         onClick={() => setForm({ ...form, markerType: type.value })}
                                         className={`px-4 py-2 rounded-lg border-2 transition-all ${form.markerType === type.value
-                                                ? "border-orange-500 bg-orange-50 text-orange-700"
-                                                : "border-gray-200 hover:border-gray-300"
+                                            ? "border-orange-500 bg-orange-50 text-orange-700"
+                                            : "border-gray-200 hover:border-gray-300"
                                             }`}
                                     >
                                         <div className="text-2xl">{type.icon}</div>
@@ -331,8 +356,8 @@ export default function ReminderModal({ isOpen, onClose, onSave, editReminder = 
                                         type="button"
                                         onClick={() => setForm({ ...form, markerColor: color })}
                                         className={`w-10 h-10 rounded-lg border-2 transition-all ${form.markerColor === color
-                                                ? "border-gray-900 scale-110"
-                                                : "border-gray-200 hover:scale-105"
+                                            ? "border-gray-900 scale-110"
+                                            : "border-gray-200 hover:scale-105"
                                             }`}
                                         style={{ backgroundColor: color }}
                                     />
@@ -351,27 +376,19 @@ export default function ReminderModal({ isOpen, onClose, onSave, editReminder = 
                                 Icon (Optional)
                             </label>
                             <div className="flex gap-2 flex-wrap">
-                                {commonIcons.map((icon) => (
+                                {commonIcons.map(({ value, Icon }) => (
                                     <button
-                                        key={icon}
+                                        key={value}
                                         type="button"
-                                        onClick={() => setForm({ ...form, markerIcon: icon })}
-                                        className={`w-10 h-10 rounded-lg border-2 text-xl transition-all ${form.markerIcon === icon
-                                                ? "border-orange-500 bg-orange-50"
-                                                : "border-gray-200 hover:border-gray-300"
+                                        onClick={() => setForm({ ...form, markerIcon: value })}
+                                        className={`w-10 h-10 rounded-lg border-2 flex items-center justify-center transition-all ${form.markerIcon === value
+                                            ? "border-orange-500 bg-orange-50 text-orange-600"
+                                            : "border-gray-200 hover:border-gray-300 text-gray-600"
                                             }`}
                                     >
-                                        {icon}
+                                        <Icon className="w-5 h-5" />
                                     </button>
                                 ))}
-                                <input
-                                    type="text"
-                                    value={form.markerIcon}
-                                    onChange={(e) => setForm({ ...form, markerIcon: e.target.value })}
-                                    placeholder="Custom"
-                                    maxLength={2}
-                                    className="w-16 px-2 py-2 text-center border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                                />
                             </div>
                         </div>
                     </div>
@@ -379,7 +396,7 @@ export default function ReminderModal({ isOpen, onClose, onSave, editReminder = 
                     {/* Priority */}
                     <div className="space-y-4">
                         <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                            <span className="text-orange-500">⚡</span>
+                            <span className="text-orange-500"><Zap className="w-5 h-5" /></span>
                             Priority
                         </h3>
 
@@ -390,8 +407,8 @@ export default function ReminderModal({ isOpen, onClose, onSave, editReminder = 
                                     type="button"
                                     onClick={() => setForm({ ...form, priority: level.value })}
                                     className={`px-4 py-2 rounded-lg border-2 transition-all ${form.priority === level.value
-                                            ? "border-gray-900 scale-105"
-                                            : "border-gray-200 hover:border-gray-300"
+                                        ? "border-gray-900 scale-105"
+                                        : "border-gray-200 hover:border-gray-300"
                                         }`}
                                     style={{
                                         backgroundColor: form.priority === level.value ? level.color + "20" : "transparent",
@@ -410,14 +427,17 @@ export default function ReminderModal({ isOpen, onClose, onSave, editReminder = 
                                 onChange={(e) => setForm({ ...form, isImportant: e.target.checked })}
                                 className="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
                             />
-                            <span className="text-sm text-gray-700">⭐ Mark as Important Day</span>
+                            <div className="flex items-center gap-2 text-sm text-gray-700">
+                                <Star className="w-4 h-4 text-amber-500" fill="currentColor" />
+                                Mark as Important Day
+                            </div>
                         </label>
                     </div>
 
                     {/* Notifications */}
                     <div className="space-y-4">
                         <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                            <span className="text-orange-500">🔔</span>
+                            <span className="text-orange-500"><Bell className="w-5 h-5" /></span>
                             Notifications
                         </h3>
 

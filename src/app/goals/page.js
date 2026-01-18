@@ -6,6 +6,14 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
+import {
+    Target,
+    Trophy,
+    Flag,
+    Lightbulb,
+    CheckCircle2,
+    Plus
+} from "lucide-react";
 
 export default function GoalsPage() {
     const [data, setData] = useState(null);
@@ -51,7 +59,9 @@ export default function GoalsPage() {
                     </div>
 
                     <Link href="/generator">
-                        <Button variant="primary">+ New Goal</Button>
+                        <Button variant="primary" className="flex items-center gap-2">
+                            <Plus className="w-4 h-4" /> New Goal
+                        </Button>
                     </Link>
                 </div>
 
@@ -59,8 +69,8 @@ export default function GoalsPage() {
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <Card className="p-5">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100">
-                                <span className="text-2xl">🎯</span>
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 text-orange-600">
+                                <Target className="w-6 h-6" />
                             </div>
                             <div>
                                 <p className="text-sm text-gray-500">Active Goals</p>
@@ -73,8 +83,8 @@ export default function GoalsPage() {
 
                     <Card className="p-5">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-                                <span className="text-2xl">✅</span>
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600">
+                                <CheckCircle2 className="w-6 h-6" />
                             </div>
                             <div>
                                 <p className="text-sm text-gray-500">Completed</p>
@@ -98,8 +108,8 @@ export default function GoalsPage() {
                             <Card className="p-6">
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-start gap-4">
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-                                            <span className="text-xl">📖</span>
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                                            <Flag className="w-5 h-5" />
                                         </div>
                                         <div>
                                             <h3 className="font-semibold text-gray-900">
@@ -147,8 +157,8 @@ export default function GoalsPage() {
                         ) : (
                             <Card className="p-10 text-center">
                                 <div className="flex flex-col items-center">
-                                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-                                        <span className="text-3xl">🎯</span>
+                                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 text-gray-500">
+                                        <Target className="w-8 h-8" />
                                     </div>
                                     <h3 className="mt-4 text-lg font-semibold text-gray-900">
                                         No goals yet
@@ -158,7 +168,9 @@ export default function GoalsPage() {
                                         wallpaper
                                     </p>
                                     <Link href="/generator" className="mt-4">
-                                        <Button variant="primary">Create Goal</Button>
+                                        <Button variant="primary" className="flex items-center gap-2">
+                                            <Plus className="w-4 h-4" /> Create Goal
+                                        </Button>
                                     </Link>
                                 </div>
                             </Card>
@@ -169,7 +181,7 @@ export default function GoalsPage() {
                 {/* Tips */}
                 <Card className="p-6 bg-orange-50 border-orange-200">
                     <div className="flex items-start gap-3">
-                        <span className="text-2xl">💡</span>
+                        <Lightbulb className="w-6 h-6 text-orange-600 flex-shrink-0" />
                         <div>
                             <h3 className="font-semibold text-gray-900">Pro Tip</h3>
                             <p className="mt-1 text-sm text-gray-600">
