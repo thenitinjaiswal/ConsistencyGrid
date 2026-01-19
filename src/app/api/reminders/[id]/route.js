@@ -73,7 +73,7 @@ export async function PATCH(request, { params }) {
         const { id } = await params;
         const body = await request.json();
 
-        // Verify ownership
+        // Verify ownership and existence
         const existing = await prisma.reminder.findFirst({
             where: {
                 id,
@@ -85,29 +85,41 @@ export async function PATCH(request, { params }) {
             return NextResponse.json({ error: "Reminder not found" }, { status: 404 });
         }
 
-        // Build update data
+        // Build update data with type safety
         const updateData = {};
 
         if (body.title !== undefined) updateData.title = body.title;
-        if (body.description !== undefined) updateData.description = body.description;
-        if (body.startDate !== undefined) updateData.startDate = new Date(body.startDate);
-        if (body.endDate !== undefined) updateData.endDate = new Date(body.endDate);
-        if (body.startTime !== undefined) updateData.startTime = body.startTime;
-        if (body.endTime !== undefined) updateData.endTime = body.endTime;
-        if (body.isFullDay !== undefined) updateData.isFullDay = body.isFullDay;
+        if (body.description !== undefined) updateData.description = body.description || null;
+
+        // Handle dates carefully
+        if (body.startDate) {
+            const startDate = new Date(body.startDate);
+            if (!isNaN(startDate.getTime())) {
+                updateData.startDate = startDate;
+            }
+        }
+
+        if (body.endDate) {
+            const endDate = new Date(body.endDate);
+            if (!isNaN(endDate.getTime())) {
+                updateData.endDate = endDate;
+            }
+        }
+
+        if (body.startTime !== undefined) updateData.startTime = body.startTime || null;
+        if (body.endTime !== undefined) updateData.endTime = body.endTime || null;
+        if (body.isFullDay !== undefined) updateData.isFullDay = Boolean(body.isFullDay);
         if (body.markerType !== undefined) updateData.markerType = body.markerType;
         if (body.markerColor !== undefined) updateData.markerColor = body.markerColor;
-        if (body.markerIcon !== undefined) updateData.markerIcon = body.markerIcon;
-        if (body.priority !== undefined) updateData.priority = body.priority;
-        if (body.isImportant !== undefined) updateData.isImportant = body.isImportant;
-        if (body.enableNotifications !== undefined) updateData.enableNotifications = body.enableNotifications;
-        if (body.notifyOnStart !== undefined) updateData.notifyOnStart = body.notifyOnStart;
-        if (body.notifyDaily !== undefined) updateData.notifyDaily = body.notifyDaily;
-        if (body.isRecurring !== undefined) updateData.isRecurring = body.isRecurring;
-        if (body.recurrenceRule !== undefined) updateData.recurrenceRule = body.recurrenceRule;
-        if (body.isActive !== undefined) updateData.isActive = body.isActive;
+        if (body.markerIcon !== undefined) updateData.markerIcon = body.markerIcon || null;
+        if (body.priority !== undefined) updateData.priority = Number(body.priority);
+        if (body.isImportant !== undefined) updateData.isImportant = Boolean(body.isImportant);
+        if (body.enableNotifications !== undefined) updateData.enableNotifications = Boolean(body.enableNotifications);
+        if (body.notifyOnStart !== undefined) updateData.notifyOnStart = Boolean(body.notifyOnStart);
+        if (body.notifyDaily !== undefined) updateData.notifyDaily = Boolean(body.notifyDaily);
+        if (body.isActive !== undefined) updateData.isActive = Boolean(body.isActive);
 
-        // Update reminder
+        // Update reminder using many-conditional check for safety
         const reminder = await prisma.reminder.update({
             where: { id },
             data: updateData,

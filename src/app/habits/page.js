@@ -7,6 +7,11 @@ import HabitHeader from "@/components/habits/HabitHeader";
 import TodayProgressCard from "@/components/habits/TodayProgressCard";
 import HabitCard from "@/components/habits/HabitCard";
 
+export const metadata = {
+  title: "Habits",
+  description: "Track your daily habits and build consistency with streak tracking.",
+};
+
 export default async function HabitsPage() {
   const session = await getServerSession(authOptions);
 

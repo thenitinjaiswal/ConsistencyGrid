@@ -73,39 +73,20 @@ export default function CalendarGrid({ year, month, reminders = [], onDateClick 
     const getRemindersForDate = (day) => {
         if (!day) return [];
 
-        // Construct the date for this cell
         const cellDate = new Date(year, month, day);
         const cellDateStr = cellDate.toLocaleDateString("en-CA");
         const todayStr = now.toLocaleDateString("en-CA");
 
-        // Rule 1, 2, 3: Visible ONLY on exact scheduled day (Today)
-        if (cellDateStr !== todayStr) return [];
-
         return reminders.filter(r => {
-            // Basic date check (just in case)
             const start = r.startDate.split("T")[0];
             const end = r.endDate.split("T")[0];
-            // Since we already filtered cellDate == todayStr, we check if today is within reminder range
-            if (cellDateStr < start || cellDateStr > end) return false;
 
-            // Rule 4: Time check
-            if (r.isFullDay) return true; // Full day is visible all day
+            // Check if this specific day falls within the reminder's range
+            const isInRange = cellDateStr >= start && cellDateStr <= end;
+            if (!isInRange) return false;
 
-            if (!r.startTime) return true; // No start time? Visible all day
-
-            const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-            const [startH, startM] = r.startTime.split(":").map(Number);
-            const startMinutes = startH * 60 + startM;
-
-            if (currentMinutes < startMinutes) return false; // Future time today
-
-            if (r.endTime) {
-                const [endH, endM] = r.endTime.split(":").map(Number);
-                const endMinutes = endH * 60 + endM;
-                if (currentMinutes > endMinutes) return false; // Past time today
-            }
-
+            // Optional: For the Web UI, we allow seeing time-based reminders 
+            // even if it's not the exact minute yet, so users can see their schedule.
             return true;
         });
     };

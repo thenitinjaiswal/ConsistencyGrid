@@ -176,3 +176,50 @@ export function drawStreakWidget(context, { x, y, theme, streak, streakActiveTod
     }
     context.restore();
 }
+
+export function drawLifeHeader(context, { canvasWidth, theme, progress }) {
+    if (progress === undefined || progress === null) return;
+
+    context.save();
+
+    const x = canvasWidth / 2;
+    const y = 200; // Positioned in the notch area
+
+    // 1. MEMENTO MORI Label
+    context.textAlign = "center";
+    context.fillStyle = theme.TEXT_SUB;
+    context.font = "bold 18px Inter, sans-serif";
+    if (context.letterSpacing !== undefined) context.letterSpacing = "4px";
+    context.globalAlpha = 0.6;
+    context.fillText("LIFE PROGRESS", x, y);
+    context.globalAlpha = 1.0;
+
+    // 2. Percentage Text
+    context.fillStyle = theme.TEXT_MAIN;
+    context.font = "bold 36px Inter, sans-serif";
+    context.fillText(`${progress.toFixed(1)}%`, x, y + 50);
+
+    // 3. Progress Bar
+    const barWidth = canvasWidth * 0.4;
+    const barHeight = 6;
+    const barX = x - barWidth / 2;
+    const barY = y + 75;
+
+    // Track
+    context.fillStyle = "rgba(255, 255, 255, 0.1)";
+    context.beginPath();
+    context.roundRect(barX, barY, barWidth, barHeight, 3);
+    context.fill();
+
+    // Progress
+    if (progress > 0) {
+        context.shadowColor = theme.ACCENT;
+        context.shadowBlur = 10;
+        context.fillStyle = theme.ACCENT;
+        context.beginPath();
+        context.roundRect(barX, barY, (progress / 100) * barWidth, barHeight, 3);
+        context.fill();
+    }
+
+    context.restore();
+}

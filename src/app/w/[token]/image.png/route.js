@@ -7,7 +7,8 @@ import {
     drawGrid,
     drawBottomSection,
     drawQuote,
-    drawAdPlaceholder
+    drawAdPlaceholder,
+    drawLifeHeader
 } from "@/lib/wallpaper/components";
 
 function calculateWeeksBetween(startDate, endDate) {
@@ -204,8 +205,21 @@ export async function GET(request, { params }) {
         ? canvasHeight * 0.35  // More space for lock screen clock
         : canvasHeight * 0.12; // Less space for home screen
 
+    // Calculate Life Progress
+    const birthDate = new Date(settings.dateOfBirth);
+    const lifeExpectancyMs = settings.lifeExpectancyYears * 365.25 * 24 * 60 * 60 * 1000;
+    const ageMs = currentDate - birthDate;
+    const lifeProgressPercent = Math.min(100, Math.max(0, (ageMs / lifeExpectancyMs) * 100));
+
     // 1. Background - Draw first for proper layering
     drawBackground(canvasContext, canvasWidth, canvasHeight, activeTheme);
+
+    // Life Header (In the notch area above the clock)
+    drawLifeHeader(canvasContext, {
+        canvasWidth,
+        theme: activeTheme,
+        progress: lifeProgressPercent
+    });
 
     // Calculate Streak
     let currentStreak = 0;

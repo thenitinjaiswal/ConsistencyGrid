@@ -6,6 +6,11 @@ import TodayProgressCard from "@/components/dashboard/TodayProgressCard";
 import QuickTips from "@/components/dashboard/QuickTips";
 import UpcomingReminders from "@/components/dashboard/UpcomingReminders";
 
+export const metadata = {
+  title: "Dashboard",
+  description: "View your life calendar wallpaper, track habits, and monitor your progress.",
+};
+
 export default async function DashboardPage() {
   return (
     <DashboardLayout active="Dashboard">
