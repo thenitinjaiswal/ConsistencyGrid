@@ -10,6 +10,9 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import GeneratorForm from "@/components/generator/GeneratorForm";
 import GeneratorPreview from "@/components/generator/GeneratorPreview";
 
+// Metadata for SEO (Note: In Next.js App Router, client components can't export metadata directly)
+// This is handled via the layout.js file
+
 export default function GeneratorPage() {
   const [loading, setLoading] = useState(true);
   const [publicToken, setPublicToken] = useState("");
@@ -29,7 +32,7 @@ export default function GeneratorPage() {
     showAgeStats: true,
 
     showMissedDays: false,
-    showHabitLayer: false,
+    showHabitLayer: true,
     showLegend: false,
 
     showQuote: true,
@@ -71,7 +74,7 @@ export default function GeneratorPage() {
             showAgeStats: s.showAgeStats ?? true,
 
             showMissedDays: s.showMissedDays ?? false,
-            showHabitLayer: s.showHabitLayer ?? false,
+            showHabitLayer: s.showHabitLayer ?? true,
             showLegend: s.showLegend ?? false,
 
             showQuote: s.showQuote ?? false,

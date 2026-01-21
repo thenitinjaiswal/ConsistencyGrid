@@ -5,6 +5,9 @@ import WallpaperCard from "@/components/dashboard/WallpaperCard";
 import TodayProgressCard from "@/components/dashboard/TodayProgressCard";
 import QuickTips from "@/components/dashboard/QuickTips";
 import UpcomingReminders from "@/components/dashboard/UpcomingReminders";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "Dashboard",
@@ -12,6 +15,13 @@ export const metadata = {
 };
 
 export default async function DashboardPage() {
+  // Check if user has completed onboarding
+  const session = await getServerSession(authOptions);
+  
+  if (!session?.user?.onboarded) {
+    redirect("/onboarding");
+  }
+
   return (
     <DashboardLayout active="Dashboard">
       <TopHeader />

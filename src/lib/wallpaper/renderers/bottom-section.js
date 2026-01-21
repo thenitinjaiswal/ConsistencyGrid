@@ -1,6 +1,6 @@
 import { drawRoundedRect } from "./utils";
 
-export function drawBottomSection(context, { xCoordinate, yCoordinate, width, height, theme, habits, settings, reminders = [], nowDay, now, streak }) {
+export function drawBottomSection(context, { xCoordinate, yCoordinate, width, height, theme, habits, goals = [], settings, reminders = [], nowDay, now, streak }) {
     const contentWidth = width;
     const columnWidth = (contentWidth - 40) / 2;
     const leftColumnX = xCoordinate;
@@ -151,8 +151,67 @@ export function drawBottomSection(context, { xCoordinate, yCoordinate, width, he
     //     rightY += 120;
     // }
 
-    // 2. Goal Section
-    if (settings.goalEnabled) {
+    // 2. Goal Section - Show Real Active Goals
+    if (goals && goals.length > 0) {
+        const primaryGoal = goals[0]; // Show the first (most recent) goal
+        
+        context.textAlign = "left";
+        context.fillStyle = theme.TEXT_SUB;
+        context.font = "bold 20px Inter, sans-serif";
+        context.fillText("FOCUS", rightColumnX, rightY);
+
+        context.fillStyle = theme.TEXT_MAIN;
+        context.font = "bold 24px Inter, sans-serif";
+        const goalTitle = primaryGoal.title || "Goal";
+        const maxTitleLength = 16;
+        const displayTitle = goalTitle.length > maxTitleLength 
+            ? goalTitle.substring(0, maxTitleLength) + "..." 
+            : goalTitle;
+        context.fillText(displayTitle, rightColumnX, rightY + 40);
+
+        // Calculate progress from sub-goals
+        let progressPercentage = primaryGoal.progress || 0;
+        if (primaryGoal.subGoals && primaryGoal.subGoals.length > 0) {
+            const completedSubGoals = primaryGoal.subGoals.filter(sg => sg.isCompleted).length;
+            progressPercentage = Math.round((completedSubGoals / primaryGoal.subGoals.length) * 100);
+        }
+
+        const barY = rightY + 60;
+        const barHeight = 10;
+        const barWidth = columnWidth;
+
+        context.shadowColor = "rgba(0,0,0,0.2)";
+        context.shadowBlur = 5;
+        context.shadowOffsetY = 2;
+        drawRoundedRect(context, rightColumnX, barY, barWidth, barHeight, 5, "rgba(255,255,255,0.1)");
+        context.shadowBlur = 0;
+        context.shadowOffsetY = 0;
+
+        if (progressPercentage > 0) {
+            context.shadowColor = theme.ACCENT;
+            context.shadowBlur = 10;
+            const gradient = context.createLinearGradient(rightColumnX, 0, rightColumnX + barWidth, 0);
+            gradient.addColorStop(0, theme.ACCENT);
+            gradient.addColorStop(1, theme.ACCENT);
+            drawRoundedRect(context, rightColumnX, barY, barWidth * (progressPercentage / 100), barHeight, 5, gradient);
+            context.shadowBlur = 0;
+        }
+
+        context.fillStyle = theme.TEXT_SUB;
+        context.font = "16px Inter, sans-serif";
+        context.textAlign = "right";
+        context.fillText(`${progressPercentage}% complete`, rightColumnX + barWidth, barY + 30);
+
+        // Show sub-goals count if available
+        if (primaryGoal.subGoals && primaryGoal.subGoals.length > 0) {
+            const completed = primaryGoal.subGoals.filter(sg => sg.isCompleted).length;
+            context.textAlign = "left";
+            context.fillText(`${completed}/${primaryGoal.subGoals.length} tasks`, rightColumnX, barY + 30);
+        }
+
+        rightY += 140; // Spacing after Goal
+    } else if (settings.goalEnabled) {
+        // Fallback to settings-based goal if no real goals exist
         context.textAlign = "left";
         context.fillStyle = theme.TEXT_SUB;
         context.font = "bold 20px Inter, sans-serif";

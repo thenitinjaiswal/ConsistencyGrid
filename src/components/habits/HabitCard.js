@@ -23,6 +23,7 @@ export default function HabitCard() {
   // ============================================================================
   const [habits, setHabits] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [feedback, setFeedback] = useState(null); // { id: string, msg: string }
 
   // ============================================================================
   // DATA FETCHING
@@ -104,7 +105,9 @@ export default function HabitCard() {
 
       // Show success toast only when marking as complete
       if (!currentStatus) {
-        toast.success("Habit updated! 🔥");
+        setFeedback({ id: habitId, msg: "Kept." });
+        setTimeout(() => setFeedback(null), 1500);
+        // toast.success("Habit updated! 🔥"); // Disabled in favor of micro-text
       }
     } catch (error) {
       toast.error("Failed to update habit");
@@ -197,7 +200,10 @@ export default function HabitCard() {
         return (
           <div
             key={habit.id}
-            className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white px-5 py-4 shadow-sm hover:shadow-md transition-shadow"
+            className={`flex items-center gap-4 rounded-2xl border px-5 py-4 shadow-sm transition-all duration-500 ${feedback?.id === habit.id
+              ? "border-green-200 bg-green-50 shadow-md ring-1 ring-green-100"
+              : "border-gray-100 bg-white hover:shadow-md"
+              }`}
           >
             {/* ============================================================================ */}
             {/* MAIN CHECKBOX (Today's Status) */}
@@ -226,6 +232,11 @@ export default function HabitCard() {
               <div className="flex items-center gap-2.5 mb-3">
                 <div className="h-2.5 w-2.5 rounded-full shadow-sm" style={{ backgroundColor: habitColor }} />
                 <span className="font-semibold text-gray-900 text-base">{habit.title}</span>
+                {feedback?.id === habit.id && (
+                  <span className="ml-2 text-xs font-bold text-green-600 tracking-wider animate-pulse">
+                    {feedback.msg}
+                  </span>
+                )}
                 {habit.scheduledTime && (
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{
                     color: habitColor,
@@ -251,8 +262,8 @@ export default function HabitCard() {
                       disabled={!day.isToday} // CHANGED: Disable if not today (Strict Mode)
                       onClick={() => day.isToday && toggleHabit(habit.id, isCompleted, day.date)}
                       className={`h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all ${!day.isToday
-                          ? (day.isFuture ? 'cursor-not-allowed opacity-40' : 'cursor-default') // Past days static, Future disabled
-                          : 'ring-2 ring-offset-1 cursor-pointer hover:scale-105 shadow-sm'
+                        ? (day.isFuture ? 'cursor-not-allowed opacity-40' : 'cursor-default') // Past days static, Future disabled
+                        : 'ring-2 ring-offset-1 cursor-pointer hover:scale-105 shadow-sm'
                         }`}
                       style={{
                         backgroundColor: isCompleted ? habitColor : day.isFuture ? "#fafafa" : "#f3f4f6",
@@ -292,8 +303,8 @@ export default function HabitCard() {
       {habits.length === 0 && (
         <div className="rounded-2xl border border-gray-100 bg-white p-12 text-center shadow-sm">
           <div className="mb-4 text-5xl">✨</div>
-          <p className="text-gray-900 font-semibold text-lg">No habits yet</p>
-          <p className="mt-2 text-sm text-gray-500">Click <b>Add Habit</b> to get started!</p>
+          <p className="text-gray-900 font-semibold text-lg">No momentum yet</p>
+          <p className="mt-2 text-sm text-gray-500">Add a habit to start building your chain today.</p>
         </div>
       )}
     </div>

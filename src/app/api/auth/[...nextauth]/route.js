@@ -80,6 +80,7 @@ export const authOptions = {
       if (dbUser) {
         token.userId = dbUser.id;
         token.publicToken = dbUser.publicToken;
+        token.onboarded = dbUser.onboarded;
       }
 
       return token;
@@ -89,6 +90,7 @@ export const authOptions = {
       // ✅ attach userId + publicToken to session
       session.user.id = token.userId;
       session.user.publicToken = token.publicToken;
+      session.user.onboarded = token.onboarded;
       return session;
     },
   },

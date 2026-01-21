@@ -115,121 +115,135 @@ export default function GeneratorForm({ form, setForm, onSave }) {
                 <ThemeSelector activeTheme={form.theme} onChange={handleThemeChange} />
             </div>
 
-            {/* 3. Resolution */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-                <ResolutionPicker
-                    width={form.width}
-                    height={form.height}
-                    onChange={handleSizeChange}
-                />
-            </div>
+            {/* Advanced Settings Progressive Disclosure */}
+            <details className="group space-y-4">
+                <summary className="list-none cursor-pointer py-4 flex items-center justify-between text-sm font-bold text-gray-800 hover:text-orange-600 transition-colors">
+                    <span>Advanced Settings</span>
+                    <span className="text-xs text-gray-400 font-normal group-open:rotate-180 transition-transform">↓</span>
+                </summary>
 
-            {/* 4. Layout Toggles */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-6">
-                <h2 className="text-sm font-bold text-gray-900">Layout Options</h2>
+                <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                    {/* 3. Resolution */}
+                    <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+                        <ResolutionPicker
+                            width={form.width}
+                            height={form.height}
+                            onChange={handleSizeChange}
+                        />
+                    </div>
 
-                {/* Grid Mode Selector */}
-                <GridModeSelector
-                    mode={form.yearGridMode || "weeks"}
-                    onChange={(val) => setForm(prev => ({ ...prev, yearGridMode: val }))}
-                />
+                    {/* 4. Layout Toggles */}
+                    <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-6">
+                        <h2 className="text-sm font-bold text-gray-900">Layout Options</h2>
 
-                {/* Wallpaper Type */}
-                <div className="space-y-2">
-                    <label className="text-sm font-bold text-gray-900">Wallpaper Type</label>
-                    <select
-                        name="wallpaperType"
-                        value={form.wallpaperType || "lockscreen"}
-                        onChange={handleChange}
-                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-orange-500 bg-white"
-                    >
-                        <option value="lockscreen">Lock Screen (Life Grid)</option>
-                        <option value="homescreen">Home Screen (Minimal)</option>
-                        <option value="calendar">Monthly Calendar</option>
-                    </select>
+                        {/* Grid Mode Selector */}
+                        <GridModeSelector
+                            mode={form.yearGridMode || "weeks"}
+                            onChange={(val) => setForm(prev => ({ ...prev, yearGridMode: val }))}
+                        />
+
+                        {/* Wallpaper Type */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-900">Wallpaper Type</label>
+                            <select
+                                name="wallpaperType"
+                                value={form.wallpaperType || "lockscreen"}
+                                onChange={handleChange}
+                                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-orange-500 bg-white"
+                            >
+                                <option value="lockscreen">Lock Screen (Life Grid)</option>
+                                <option value="homescreen">Home Screen (Minimal)</option>
+                                <option value="calendar">Monthly Calendar</option>
+                            </select>
+                        </div>
+
+                        <div className="divide-y divide-gray-50 pt-2">
+                            <ToggleRow
+                                label="Show Progress Bar"
+                                subLabel="Life journey percentage at top"
+                                name="showAgeStats"
+                                checked={form.showAgeStats}
+                                onChange={handleChange}
+                            />
+                            <ToggleRow
+                                label="Show Missed Days"
+                                subLabel="Red dotted outline for skipped habits"
+                                name="showMissedDays"
+                                checked={form.showMissedDays}
+                                onChange={handleChange}
+                            />
+                            <ToggleRow
+                                label="Show Life Grid"
+                                name="showLifeGrid"
+                                checked={form.showLifeGrid}
+                                onChange={handleChange}
+                            />
+                            <ToggleRow
+                                label="Show Year Grid"
+                                name="showYearGrid"
+                                checked={form.showYearGrid}
+                                onChange={handleChange}
+                            />
+                            <ToggleRow
+                                label="Show Age Stats"
+                                name="showAgeDetail" // Renamed from showAgeStats to avoid conflict if needed, or keep same
+                                checked={form.showAgeStats} // Reuse existing for now or add new field
+                                onChange={handleChange}
+                            />
+                            <ToggleRow
+                                label="Show Quote"
+                                name="showQuote"
+                                checked={form.showQuote}
+                                onChange={handleChange}
+                            />
+                            <ToggleRow
+                                label="Show Goal Layer"
+                                name="goalEnabled"
+                                checked={form.goalEnabled}
+                                onChange={handleChange}
+                            />
+                            <ToggleRow
+                                label="Show Habit Layer"
+                                name="showHabitLayer"
+                                checked={form.showHabitLayer}
+                                onChange={handleChange}
+                            />
+                            <ToggleRow
+                                label="Show Legend"
+                                name="showLegend"
+                                checked={form.showLegend}
+                                onChange={handleChange}
+                            />
+                        </div>
+                    </div>
+
+                    {/* 5. Goal */}
+                    <GoalSettings />
+
+                    {/* 6. Quote Input */}
+                    {form.showQuote && (
+                        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm animate-in fade-in slide-in-from-top-2">
+                            <label className="text-sm font-bold text-gray-900 block mb-2">Quote</label>
+                            <input
+                                type="text"
+                                name="quote"
+                                value={form.quote}
+                                onChange={handleChange}
+                                placeholder="Make every week count."
+                                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-orange-500 bg-gray-50 focus:bg-white transition-all"
+                            />
+                        </div>
+                    )}
+
                 </div>
-
-                <div className="divide-y divide-gray-50 pt-2">
-                    <ToggleRow
-                        label="Show Progress Bar"
-                        subLabel="Life journey percentage at top"
-                        name="showAgeStats"
-                        checked={form.showAgeStats}
-                        onChange={handleChange}
-                    />
-                    <ToggleRow
-                        label="Show Missed Days"
-                        subLabel="Red dotted outline for skipped habits"
-                        name="showMissedDays"
-                        checked={form.showMissedDays}
-                        onChange={handleChange}
-                    />
-                    <ToggleRow
-                        label="Show Life Grid"
-                        name="showLifeGrid"
-                        checked={form.showLifeGrid}
-                        onChange={handleChange}
-                    />
-                    <ToggleRow
-                        label="Show Year Grid"
-                        name="showYearGrid"
-                        checked={form.showYearGrid}
-                        onChange={handleChange}
-                    />
-                    <ToggleRow
-                        label="Show Age Stats"
-                        name="showAgeDetail" // Renamed from showAgeStats to avoid conflict if needed, or keep same
-                        checked={form.showAgeStats} // Reuse existing for now or add new field
-                        onChange={handleChange}
-                    />
-                    <ToggleRow
-                        label="Show Quote"
-                        name="showQuote"
-                        checked={form.showQuote}
-                        onChange={handleChange}
-                    />
-                    <ToggleRow
-                        label="Show Goal Layer"
-                        name="goalEnabled"
-                        checked={form.goalEnabled}
-                        onChange={handleChange}
-                    />
-                    <ToggleRow
-                        label="Show Habit Layer"
-                        name="showHabitLayer"
-                        checked={form.showHabitLayer}
-                        onChange={handleChange}
-                    />
-                    <ToggleRow
-                        label="Show Legend"
-                        name="showLegend"
-                        checked={form.showLegend}
-                        onChange={handleChange}
-                    />
-                </div>
-            </div>
-
-            {/* 5. Goal */}
-            <GoalSettings form={form} handleChange={handleChange} />
-
-            {/* 6. Quote Input */}
-            {form.showQuote && (
-                <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm animate-in fade-in slide-in-from-top-2">
-                    <label className="text-sm font-bold text-gray-900 block mb-2">Quote</label>
-                    <input
-                        type="text"
-                        name="quote"
-                        value={form.quote}
-                        onChange={handleChange}
-                        placeholder="Make every week count."
-                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-orange-500 bg-gray-50 focus:bg-white transition-all"
-                    />
-                </div>
-            )}
+            </details>
 
             {/* Sticky Save Bar */}
-            <div className="fixed bottom-0 left-0 lg:left-[240px] right-0 p-4 bg-white/80 backdrop-blur-md border-t border-gray-200 flex justify-end z-30">
-                <div className="w-full max-w-6xl mx-auto flex justify-end">
+            <div className="fixed bottom-0 left-0 lg:left-[240px] right-0 p-4 bg-white/80 backdrop-blur-md border-t border-gray-200 z-30">
+                <div className="w-full max-w-6xl mx-auto flex items-center justify-between">
+                    <p className="text-xs text-gray-500 font-medium italic hidden sm:block">
+                        “This is what you’ll see every time you unlock your phone.”
+                    </p>
                     <button
                         onClick={handleSaveClick}
                         disabled={saving}

@@ -32,9 +32,10 @@ export default function WallpaperCard() {
 
   if (loading) {
     return (
-      <Card className="p-5">
-        <div className="flex items-center justify-center py-20">
-          <p className="text-sm text-gray-500">Loading wallpaper...</p>
+      <Card className="p-5 animate-pulse">
+        <div className="space-y-4">
+          <div className="h-4 w-32 rounded bg-gray-200" />
+          <div className="h-64 w-full rounded-lg bg-gray-200" />
         </div>
       </Card>
     );
@@ -59,26 +60,28 @@ export default function WallpaperCard() {
   }
 
   return (
-    <Card className="p-5">
+    <Card className="p-5 animate-scale-in">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-sm font-bold text-gray-900">Your Wallpaper</h2>
           <p className="text-xs text-gray-500">Live preview + quick actions</p>
         </div>
 
-        <span className="rounded-full bg-green-100 px-3 py-1 text-[11px] font-semibold text-green-700">
-          ● Live
+        <span className="flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-[11px] font-semibold text-green-700">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-600" />
+          Live
         </span>
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Preview */}
-        <div className="flex items-center justify-center rounded-2xl bg-gray-50 p-5">
-          <div className="w-[240px] overflow-hidden rounded-[30px] border border-gray-200 bg-black shadow-lg">
+        <div className="flex items-center justify-center rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 p-5 transition-all hover:shadow-lg">
+          <div className="w-[240px] overflow-hidden rounded-[30px] border-2 border-gray-300 bg-black shadow-xl transition-transform hover:scale-105">
             <img
               src={wallpaperPng}
               alt="Wallpaper Preview"
               className="h-auto w-full"
+              loading="lazy"
             />
           </div>
         </div>

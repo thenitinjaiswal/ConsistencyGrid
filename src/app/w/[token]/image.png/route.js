@@ -79,6 +79,32 @@ export async function GET(request, { params }) {
         include: { logs: true },
     });
 
+    // 3.5. Fetch Pinned Active Goals (not completed and not life milestones)
+    const pinnedGoals = await prisma.goal.findMany({
+        where: {
+            userId: currentUser.id,
+            isCompleted: false,
+            isPinned: true,
+            category: { not: "LifeMilestone" }
+        },
+        include: { subGoals: true },
+        take: 1
+    });
+
+    // If no pinned goals, fetch recent active goals as fallback
+    const activeGoals = pinnedGoals.length > 0 
+        ? pinnedGoals
+        : await prisma.goal.findMany({
+            where: {
+                userId: currentUser.id,
+                isCompleted: false,
+                category: { not: "LifeMilestone" }
+            },
+            include: { subGoals: true },
+            orderBy: { createdAt: 'desc' },
+            take: 1
+        });
+
     const activityMap = {};
     activeHabits.forEach(habit => {
         habit.logs.forEach(log => {
@@ -305,6 +331,7 @@ export async function GET(request, { params }) {
             height: sidebarHeight,
             theme: activeTheme,
             habits: activeHabits,
+            goals: activeGoals,
             settings: settings,
             reminders: activeReminders,
             nowDay: currentDayKey,
@@ -329,7 +356,7 @@ export async function GET(request, { params }) {
             mode: settings.yearGridMode,
             dob: settings.dateOfBirth,
             lifeExpectancy: settings.lifeExpectancyYears,
-            activityMap: activityMap,
+            activityMap: settings.showHabitLayer ? activityMap : {},
             reminders: activeReminders,
             now: currentDate
         });
@@ -346,7 +373,8 @@ export async function GET(request, { params }) {
             width: contentWidth,
             height: remainingHeight,
             theme: activeTheme,
-            habits: activeHabits,
+            habits: settings.showHabitLayer ? activeHabits : [],
+            goals: activeGoals,
             settings: settings,
             reminders: activeReminders,
             nowDay: currentDayKey,

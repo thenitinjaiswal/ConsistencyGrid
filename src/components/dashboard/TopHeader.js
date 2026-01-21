@@ -31,13 +31,15 @@ export default function TopHeader() {
     : "";
 
   return (
-    <header className="flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100 md:flex-row md:items-center md:justify-between">
+    <header className="flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100 md:flex-row md:items-center md:justify-between animate-fade-in">
       {/* Left */}
       <div>
         <h1 className="text-xl font-bold text-gray-900">
-          {loading
-            ? "Loading..."
-            : `Welcome back, ${user?.name || "User"}!`}
+          {loading ? (
+            <span className="inline-block h-6 w-48 animate-pulse rounded bg-gray-200" />
+          ) : (
+            `Welcome back, ${user?.name || "User"}!`
+          )}
         </h1>
         <p className="mt-1 text-sm text-gray-500">
           Manage your life calendar and habits

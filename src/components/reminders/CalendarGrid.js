@@ -151,9 +151,9 @@ export default function CalendarGrid({ year, month, reminders = [], onDateClick 
                             className={`relative aspect-square rounded-lg border-2 transition-all ${!day
                                 ? "border-transparent"
                                 : isToday(day)
-                                    ? "border-orange-500 bg-orange-50"
+                                    ? "border-orange-500 bg-orange-50 shadow-lg shadow-orange-100/50 scale-[1.02] z-10 ring-2 ring-orange-200"
                                     : isPast(day)
-                                        ? "border-gray-100 bg-gray-50"
+                                        ? "border-gray-100 bg-gray-50 opacity-70"
                                         : "border-gray-200 bg-white hover:border-orange-300 hover:shadow-md cursor-pointer"
                                 }`}
                             onClick={() => day && onDateClick?.(year, month, day)}
@@ -163,13 +163,22 @@ export default function CalendarGrid({ year, month, reminders = [], onDateClick 
                             {day && (
                                 <>
                                     {/* Day Number */}
-                                    <div className={`absolute top-1 left-1 text-sm font-semibold ${isToday(day)
-                                        ? "text-orange-600"
-                                        : isPast(day)
-                                            ? "text-gray-400"
-                                            : "text-gray-700"
-                                        }`}>
-                                        {day}
+                                    <div className={`absolute top-1 left-1 leading-none ${isToday(day) ? "mt-0.5 ml-0.5" : ""}`}>
+                                        <span className={`text-sm font-semibold ${isToday(day)
+                                            ? "text-orange-600"
+                                            : isPast(day)
+                                                ? "text-gray-400"
+                                                : "text-gray-700"
+                                            }`}>
+                                            {day}
+                                        </span>
+
+                                        {/* Psychological Anchor */}
+                                        {isToday(day) && (
+                                            <div className="text-[9px] font-extrabold uppercase tracking-tight text-orange-500 mt-1 animate-pulse leading-tight">
+                                                This day matters
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Important Star */}

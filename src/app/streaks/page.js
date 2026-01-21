@@ -96,7 +96,7 @@ export default function StreaksPage() {
                                 <h2 className="text-3xl font-bold text-gray-900">
                                     {data?.totalCompletedDays || 0}
                                 </h2>
-                                <p className="text-xs text-gray-400">completed</p>
+                                <p className="text-xs text-gray-400">kept</p>
                             </div>
                         </div>
                     </Card>
@@ -106,7 +106,7 @@ export default function StreaksPage() {
                 <Card className="p-6">
                     <h2 className="text-lg font-bold text-gray-900">Activity Calendar</h2>
                     <p className="text-sm text-gray-500">
-                        Last 90 days of habit completion
+                        Last 90 days of habit momentum
                     </p>
 
                     <div className="mt-6 grid grid-cols-10 gap-1">
@@ -135,7 +135,7 @@ export default function StreaksPage() {
                         </div>
                         <div className="flex items-center gap-2">
                             <div className="h-4 w-4 rounded bg-orange-500" />
-                            <span>All complete</span>
+                            <span>All kept</span>
                         </div>
                     </div>
                 </Card>
@@ -148,25 +148,35 @@ export default function StreaksPage() {
                     </p>
 
                     <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-                        {data?.milestones?.map((milestone, index) => (
-                            <div
-                                key={index}
-                                className={`rounded-xl border p-4 text-center flex flex-col items-center ${milestone.unlocked
-                                    ? "border-orange-200 bg-orange-50"
-                                    : "border-gray-200 bg-gray-50 opacity-50"
-                                    }`}
-                            >
-                                <div className="mb-2">
-                                    {renderMilestoneIcon(milestone.days)}
+                        {data?.milestones?.map((milestone, index) => {
+                            const remaining = Math.max(0, milestone.days - (data?.currentStreak || 0));
+
+                            return (
+                                <div
+                                    key={index}
+                                    className={`rounded-xl border p-4 text-center flex flex-col items-center transition-all ${milestone.unlocked
+                                        ? "border-orange-200 bg-orange-50 shadow-sm"
+                                        : "border-gray-200 bg-gray-50/80" // Removed opacity-50 to make text readable
+                                        }`}
+                                >
+                                    <div className="mb-2">
+                                        {renderMilestoneIcon(milestone.days)}
+                                    </div>
+                                    <p className="mt-1 text-sm font-semibold text-gray-700">
+                                        {milestone.title}
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        {milestone.unlocked ? (
+                                            <span className="text-green-600 font-bold">Unlocked! 🎉</span>
+                                        ) : (
+                                            <span className="text-orange-600 font-bold">
+                                                {remaining} days away
+                                            </span>
+                                        )}
+                                    </p>
                                 </div>
-                                <p className="mt-1 text-sm font-semibold text-gray-700">
-                                    {milestone.title}
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                    {milestone.unlocked ? "Unlocked! 🎉" : "Locked"}
-                                </p>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </Card>
 
@@ -180,7 +190,7 @@ export default function StreaksPage() {
                                     Start Your Streak Today!
                                 </h3>
                                 <p className="mt-1 text-sm text-gray-600">
-                                    Complete all your habits today to start building your streak.
+                                    Keep all your habits today to start building your streak.
                                     Consistency is the key to success!
                                 </p>
                             </div>

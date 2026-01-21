@@ -90,8 +90,8 @@ export default function LoginPage() {
                     <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
                         Welcome back
                     </h1>
-                    <p className="mt-2 text-sm text-gray-600">
-                        Login to continue building your wallpaper.
+                    <p className="mt-2 text-sm text-gray-500 font-medium animate-fade-in">
+                        Your grid is saved. Your progress is waiting.
                     </p>
 
                     {/* 

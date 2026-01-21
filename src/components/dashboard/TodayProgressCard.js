@@ -11,29 +11,35 @@ export default function TodayProgressCard() {
   const doneCount = habits.filter((h) => h.done).length;
 
   return (
-    <Card className="p-5">
-      <h2 className="text-sm font-bold text-gray-900">Today's Progress</h2>
-      <p className="mt-1 text-xs text-gray-500">
-        {doneCount}/{habits.length} habits completed
-      </p>
+    <Card className="p-5 border-2 border-orange-100 shadow-lg shadow-orange-50/50">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-sm font-bold text-gray-900">Today's Momentum</h2>
+          <p className="text-xs text-orange-600 font-medium">
+            {doneCount}/{habits.length} habits kept
+          </p>
+        </div>
+        <button className="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition-colors shadow-sm">
+          Mark Today
+        </button>
+      </div>
 
-      <div className="mt-4 space-y-3">
+      <div className="space-y-3">
         {habits.map((h, i) => (
           <div
             key={i}
-            className="flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3"
+            className="flex items-center justify-between rounded-xl bg-orange-50/30 border border-orange-100/50 px-4 py-3"
           >
             <div className="flex items-center gap-2">
               <span
-                className={`h-2 w-2 rounded-full ${
-                  h.done ? "bg-green-500" : "bg-gray-300"
-                }`}
+                className={`h-2.5 w-2.5 rounded-full ring-2 ring-white ${h.done ? "bg-green-500" : "bg-gray-200"
+                  }`}
               />
-              <p className="text-sm font-medium text-gray-800">{h.title}</p>
+              <p className="text-sm font-bold text-gray-800">{h.title}</p>
             </div>
 
-            <span className="text-xs text-gray-400">
-              {h.done ? "Done" : "Pending"}
+            <span className={`text-[10px] uppercase tracking-wider font-bold ${h.done ? "text-green-600" : "text-gray-400"}`}>
+              {h.done ? "Kept" : "Due"}
             </span>
           </div>
         ))}

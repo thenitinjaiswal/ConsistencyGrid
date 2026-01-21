@@ -34,7 +34,7 @@ export default function StatsRow() {
     {
       title: "Current Streak",
       value: loading ? "..." : stats.currentStreak.toString(),
-      sub: "days",
+      sub: stats.currentStreak > 0 ? "Skipping today breaks momentum" : "Start your streak today",
     },
     {
       title: "Best Streak",
@@ -46,7 +46,7 @@ export default function StatsRow() {
       value: loading
         ? "..."
         : `${stats.todayHabitsCompleted}/${stats.todayHabitsTotal}`,
-      sub: "completed",
+      sub: "kept",
     },
     {
       title: "Active Goals",
@@ -56,9 +56,9 @@ export default function StatsRow() {
   ];
 
   return (
-    <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 animate-slide-up">
       {displayStats.map((s, i) => (
-        <StatCard key={i} title={s.title} value={s.value} sub={s.sub} />
+        <StatCard key={i} title={s.title} value={s.value} sub={s.sub} loading={loading} />
       ))}
     </section>
   );

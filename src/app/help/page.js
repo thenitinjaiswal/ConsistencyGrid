@@ -2,6 +2,11 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Card from "@/components/ui/Card";
 import Link from "next/link";
 
+export const metadata = {
+  title: "Help & Support",
+  description: "Get help with ConsistencyGrid features, MacroDroid setup guide, and frequently asked questions.",
+};
+
 export default function HelpPage() {
     return (
         <DashboardLayout active="Help">

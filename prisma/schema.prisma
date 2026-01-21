@@ -14,13 +14,16 @@ model User {
   password    String?  // Hashed password for credentials auth
   image       String?
   publicToken String   @unique
+  onboarded   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  settings  WallpaperSettings?
-  habits    Habit[]
-  habitLogs HabitLog[]
-  reminders Reminder[]
+  settings   WallpaperSettings?
+  habits     Habit[]
+  habitLogs  HabitLog[]
+  reminders  Reminder[]
+  goals      Goal[]
+  milestones Milestone[]
 }
 
 model WallpaperSettings {
@@ -135,4 +138,50 @@ model Reminder {
 
   @@index([userId, startDate])
   @@index([userId, endDate])
+}
+
+model Goal {
+  id              String    @id @default(cuid())
+  userId          String
+  title           String
+  category        String    @default("General") // "Health", "Wealth", "Mind", "Work", "Life Milestone"
+  description     String?   // Optional description of the goal
+  progress        Int       @default(0) // 0-100 calculated from subgoals
+  
+  targetDeadline  DateTime?
+  age             Int?      // Target age for Life Milestone category
+  isCompleted     Boolean   @default(false)
+  isPinned        Boolean   @default(false) // NEW: Pin goal to show on wallpaper
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subGoals        SubGoal[]
+}
+
+model SubGoal {
+  id          String   @id @default(cuid())
+  goalId      String
+  title       String
+  isCompleted Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  goal        Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+}
+
+model Milestone {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  age         Int
+  status      String   @default("future") // "achieved", "targeting", "future"
+  description String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

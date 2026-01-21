@@ -53,7 +53,7 @@ export default function SignupPage() {
       }
 
       // Success feedback
-      toast.success("Account created! Logging in...");
+      toast.success("Account created! Starting onboarding...");
 
       // Auto-login with the new credentials
       const result = await signIn("credentials", {
@@ -67,8 +67,8 @@ export default function SignupPage() {
         throw new Error(result.error);
       }
 
-      // Redirect to dashboard
-      router.push("/dashboard");
+      // Redirect to onboarding
+      router.push("/onboarding");
     } catch (error) {
       // Display error message to user
       toast.error(error.message);
@@ -79,10 +79,10 @@ export default function SignupPage() {
 
   /**
    * Handles Google OAuth sign-up
-   * Redirects to Google consent screen and returns to dashboard
+   * Redirects to Google consent screen and then to onboarding
    */
   const handleGoogleSignUp = () => {
-    signIn("google", { callbackUrl: "/dashboard" });
+    signIn("google", { callbackUrl: "/onboarding" });
   };
 
   return (
