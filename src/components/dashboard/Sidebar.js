@@ -100,7 +100,11 @@ export default function Sidebar({ active = "Dashboard", onNavigate }) {
         Displays app logo and name
       */}
       <div className="flex items-center gap-2 px-5 py-5 border-b border-gray-200/50">
-        <div className="h-8 w-8 rounded-lg bg-orange-500" />
+        <img 
+          src="/images/logo.png" 
+          alt="ConsistencyGrid Logo" 
+          className="h-8 w-8"
+        />
         <span className="text-sm font-bold text-gray-900">ConsistencyGrid</span>
       </div>
 

@@ -36,8 +36,12 @@ export default function AnalyticsPage() {
                 return;
             }
 
-            const habits = await habitsRes.json();
-            const goals = await goalsRes.json();
+            const habitsData = await habitsRes.json();
+            const goalsData = await goalsRes.json();
+
+            // Handle both array and object responses
+            const habits = Array.isArray(habitsData) ? habitsData : habitsData.habits || [];
+            const goals = Array.isArray(goalsData) ? goalsData : goalsData.goals || [];
 
                 // Calculate consistency score from last 30 days
                 const last30Days = [];
@@ -52,9 +56,10 @@ export default function AnalyticsPage() {
 
                 // Count habit completions
                 habits.forEach(habit => {
+                    if (!habit.logs) return;
                     const last30Logs = habit.logs.filter(log => {
                         const logDate = new Date(log.date).toISOString().split("T")[0];
-                        return last30Days.includes(logDate);
+                        return last30Days.includes(logDate) && log.done;
                     });
                     totalPossible += last30Days.length;
                     totalCompleted += last30Logs.length;
@@ -89,8 +94,26 @@ export default function AnalyticsPage() {
                 });
 
                 // Calculate life completion %
-                const completedGoals = goals.filter(g => g.isCompleted).length;
-                const lifeCompletion = goals.length > 0 ? Math.round((completedGoals / goals.length) * 100) : 0;
+                // A goal is considered completed if marked isCompleted, all subgoals are completed, or progress >= 100
+                let totalProgress = 0;
+                const completedGoals = goals.filter(g => {
+                    if (g.isCompleted) return true;
+                    if (g.progress >= 100) return true;
+                    if (g.subGoals && g.subGoals.length > 0) {
+                        return g.subGoals.every(sg => sg.isCompleted);
+                    }
+                    return false;
+                }).length;
+                
+                // Also calculate average progress across all goals
+                if (goals.length > 0) {
+                    totalProgress = goals.reduce((sum, g) => sum + (g.progress || 0), 0) / goals.length;
+                }
+                
+                const lifeCompletion = goals.length > 0 ? Math.max(
+                    Math.round((completedGoals / goals.length) * 100),
+                    Math.round(totalProgress)
+                ) : 0;
 
                 // Generate consistency over time chart (last 30 days)
                 const chartData = [];
@@ -102,10 +125,12 @@ export default function AnalyticsPage() {
 
                     let dayScore = 0;
                     habits.forEach(habit => {
-                        const isDone = habit.logs.some(log => 
-                            new Date(log.date).toISOString().split("T")[0] === dateStr
-                        );
-                        if (isDone) dayScore += 100 / Math.max(habits.length, 1);
+                        if (habit.logs) {
+                            const isDone = habit.logs.some(log => 
+                                new Date(log.date).toISOString().split("T")[0] === dateStr && log.done
+                            );
+                            if (isDone) dayScore += 100 / Math.max(habits.length, 1);
+                        }
                     });
 
                     chartData.push({
@@ -127,8 +152,8 @@ export default function AnalyticsPage() {
 
                         let intensity = 0;
                         habits.forEach(habit => {
-                            if (habit.logs.some(log => 
-                                new Date(log.date).toISOString().split("T")[0] === dateStr
+                            if (habit.logs && habit.logs.some(log => 
+                                new Date(log.date).toISOString().split("T")[0] === dateStr && log.done
                             )) {
                                 intensity += 1;
                             }

@@ -54,8 +54,9 @@ export async function GET() {
 
     const habits = await prisma.habit.findMany({
         where: { userId: dbUser.id, isActive: true },
+        include: { logs: true },
         orderBy: { createdAt: "asc" },
     });
 
-    return Response.json({ habits }, { status: 200 });
+    return Response.json(habits, { status: 200 });
 }

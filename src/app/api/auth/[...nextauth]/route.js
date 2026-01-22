@@ -48,6 +48,8 @@ export const authOptions = {
 
   session: {
     strategy: "jwt",
+    maxAge: 365 * 24 * 60 * 60, // 1 year
+    updateAge: 24 * 60 * 60, // Update token every 24 hours
   },
 
   callbacks: {

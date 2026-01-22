@@ -41,8 +41,12 @@ export default function Navbar({
         href="/"
         className="flex items-center gap-2 hover:opacity-80 transition-opacity"
       >
-        {/* Logo Icon - Square orange box representing the grid concept */}
-        <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-orange-500" />
+        {/* Logo Icon */}
+        <img 
+          src="/images/logo.png" 
+          alt="ConsistencyGrid Logo" 
+          className="h-7 w-7 sm:h-8 sm:w-8"
+        />
 
         {/* Brand Name */}
         <span className="text-sm sm:text-base font-semibold text-gray-900">
