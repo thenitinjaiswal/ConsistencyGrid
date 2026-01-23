@@ -8,6 +8,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/prisma";
+import { invalidateDashboardCache } from "@/lib/cache-invalidation";
+import { getRateLimitErrorResponse, RATE_LIMITS } from "@/lib/rate-limit";
 
 /**
  * GET /api/reminders/[id]
@@ -30,18 +32,12 @@ export async function GET(request, { params }) {
 
         const { id } = await params;
 
-        const reminder = await prisma.reminder.findFirst({
-            where: {
-                id,
-                userId: user.id,
-            },
+        const reminder = await prisma.reminder.delete({
+            where: { id },
         });
 
-        if (!reminder) {
-            return NextResponse.json({ error: "Reminder not found" }, { status: 404 });
-        }
-
-        return NextResponse.json({ reminder });
+        await invalidateDashboardCache(user.id);
+        return NextResponse.json({ success: true });
     } catch (error) {
         console.error("GET /api/reminders/[id] error:", error);
         return NextResponse.json(
@@ -69,6 +65,10 @@ export async function PATCH(request, { params }) {
         if (!user) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
+
+        // Check rate limit
+        const rateLimitError = getRateLimitErrorResponse(user.id, "reminderUpdate", RATE_LIMITS.reminderUpdate);
+        if (rateLimitError) return rateLimitError;
 
         const { id } = await params;
         const body = await request.json();
@@ -125,6 +125,7 @@ export async function PATCH(request, { params }) {
             data: updateData,
         });
 
+        await invalidateDashboardCache(user.id);
         return NextResponse.json({ reminder });
     } catch (error) {
         console.error("PATCH /api/reminders/[id] error:", error);
@@ -153,6 +154,10 @@ export async function DELETE(request, { params }) {
         if (!user) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
+
+        // Check rate limit
+        const rateLimitError = getRateLimitErrorResponse(user.id, "reminderDelete", RATE_LIMITS.reminderDelete);
+        if (rateLimitError) return rateLimitError;
 
         const { id } = await params;
 

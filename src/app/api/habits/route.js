@@ -1,10 +1,20 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/authOptions";
 import prisma from "@/lib/prisma";
+import { getHabitsList } from "@/lib/dashboard-cache";
+import { invalidateHabitsCache } from "@/lib/cache-invalidation";
+import { getRateLimitErrorResponse, RATE_LIMITS } from "@/lib/rate-limit";
 
 /**
  * GET /api/habits
+ * 
  * Fetch all habits for authenticated user with their logs
+ * 
+ * PERFORMANCE:
+ * - Uses server-side caching for read operations
+ * - First request: Database query + cache for 60 seconds
+ * - Subsequent requests within 60s: Returns cached data
+ * - After 60s: Automatic revalidation on next request
  */
 export async function GET(req) {
     try {
@@ -22,17 +32,16 @@ export async function GET(req) {
             return Response.json({ message: "User not found" }, { status: 404 });
         }
 
-        // Fetch habits with logs
-        const habits = await prisma.habit.findMany({
-            where: { userId: user.id, isActive: true },
-            include: { logs: true },
-            orderBy: { createdAt: "asc" },
-        });
+        // Get cached habits with logs
+        const habits = await getHabitsList(user.id);
 
         return Response.json(habits);
     } catch (error) {
         console.error("Error fetching habits:", error);
-        return Response.json({ message: "Internal Server Error", error: error.message }, { status: 500 });
+        return Response.json(
+            { message: "Internal Server Error", error: error.message },
+            { status: 500 }
+        );
     }
 }
 
@@ -55,6 +64,10 @@ export async function POST(req) {
         if (!user) {
             return Response.json({ message: "User not found" }, { status: 404 });
         }
+
+        // Check rate limit
+        const rateLimitError = getRateLimitErrorResponse(user.id, "habitCreate", RATE_LIMITS.habitCreate);
+        if (rateLimitError) return rateLimitError;
 
         const body = await req.json();
         const { title, scheduledTime } = body;
@@ -81,6 +94,7 @@ export async function POST(req) {
             include: { logs: true },
         });
 
+        await invalidateHabitsCache(user.id);
         return Response.json(habit, { status: 201 });
     } catch (error) {
         console.error("Error creating habit:", error);
@@ -107,6 +121,10 @@ export async function PUT(req) {
         if (!user) {
             return Response.json({ message: "User not found" }, { status: 404 });
         }
+
+        // Check rate limit
+        const rateLimitError = getRateLimitErrorResponse(user.id, "habitUpdate", RATE_LIMITS.habitUpdate);
+        if (rateLimitError) return rateLimitError;
 
         const { searchParams } = new URL(req.url);
         const habitId = searchParams.get("id");
@@ -137,6 +155,7 @@ export async function PUT(req) {
             include: { logs: true },
         });
 
+        await invalidateHabitsCache(user.id);
         return Response.json(updated);
     } catch (error) {
         console.error("Error updating habit:", error);

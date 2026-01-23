@@ -1,6 +1,8 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/prisma";
+import { invalidateGoalsCache } from "@/lib/cache-invalidation";
+import { getRateLimitErrorResponse, RATE_LIMITS } from "@/lib/rate-limit";
 
 export async function PATCH(req, { params }) {
     const session = await getServerSession(authOptions);
@@ -37,6 +39,10 @@ export async function PATCH(req, { params }) {
             return Response.json({ message: "Unauthorized" }, { status: 403 });
         }
 
+        // Check rate limit
+        const rateLimitError = getRateLimitErrorResponse(user.id, "subgoalUpdate", RATE_LIMITS.subgoalUpdate);
+        if (rateLimitError) return rateLimitError;
+
         const updatedSubGoal = await prisma.subGoal.update({
             where: { id },
             data: { isCompleted }
@@ -68,6 +74,7 @@ export async function PATCH(req, { params }) {
             data: { progress: newProgress }
         });
 
+        await invalidateGoalsCache(user.id);
         return Response.json({ subGoal: updatedSubGoal, goalProgress: newProgress });
 
     } catch (error) {

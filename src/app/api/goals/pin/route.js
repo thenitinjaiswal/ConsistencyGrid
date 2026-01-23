@@ -1,6 +1,8 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/authOptions";
 import prisma from "@/lib/prisma";
+import { invalidateGoalsCache } from "@/lib/cache-invalidation";
+import { getRateLimitErrorResponse, RATE_LIMITS } from "@/lib/rate-limit";
 
 export async function PATCH(req) {
     const session = await getServerSession(authOptions);
@@ -16,6 +18,10 @@ export async function PATCH(req) {
     if (!user) {
         return Response.json({ message: "User not found" }, { status: 404 });
     }
+
+    // Check rate limit
+    const rateLimitError = getRateLimitErrorResponse(user.id, "goalPin", RATE_LIMITS.goalPin || RATE_LIMITS.goalUpdate);
+    if (rateLimitError) return rateLimitError;
 
     try {
         const body = await req.json();
@@ -57,6 +63,7 @@ export async function PATCH(req) {
             include: { subGoals: true }
         });
 
+        await invalidateGoalsCache(user.id);
         return Response.json(updatedGoal, { status: 200 });
     } catch (error) {
         console.error("Error updating goal pin status:", error);

@@ -1,20 +1,23 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/authOptions";
 import prisma from "@/lib/prisma";
+import { getStreakData } from "@/lib/dashboard-cache";
 
-// Get local date string in YYYY-MM-DD format
-function getLocalDateString(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
-// Convert date object to local date string
-function dateToLocalDateString(dateObj) {
-    return getLocalDateString(new Date(dateObj));
-}
-
+/**
+ * GET /api/streaks
+ * 
+ * Fetch streak data (current and best streaks) and raw data for heatmap visualization
+ * 
+ * PERFORMANCE:
+ * - Uses server-side caching for read operations
+ * - First request: Database query + cache for 60 seconds
+ * - Subsequent requests within 60s: Returns cached data
+ * - After 60s: Automatic revalidation on next request
+ * 
+ * Heavy computation offloaded to cached function:
+ * - Current streak calculation from logs
+ * - Best streak calculation across all time
+ */
 export async function GET() {
     const session = await getServerSession(authOptions);
 
@@ -30,116 +33,63 @@ export async function GET() {
         return Response.json({ message: "User not found" }, { status: 404 });
     }
 
-    // Get all active habits
-    const habits = await prisma.habit.findMany({
-        where: { userId: user.id, isActive: true },
-    });
-
-    // Get all habit logs
-    const allLogs = await prisma.habitLog.findMany({
-        where: { userId: user.id },
-        orderBy: { date: "asc" },
-    });
-
-    const today = getLocalDateString(new Date());
-    
-    // Build dateMap from logs
-    const dateMap = new Map();
-    allLogs.forEach((log) => {
-        const dateKey = dateToLocalDateString(log.date);
-        if (!dateMap.has(dateKey)) {
-            dateMap.set(dateKey, []);
-        }
-        dateMap.get(dateKey).push(log);
-    });
-
-    const sortedDates = Array.from(dateMap.keys()).sort();
-
-    // Calculate current streak (check from yesterday backwards)
-    let currentStreak = 0;
-    const yesterdayObj = new Date();
-    yesterdayObj.setDate(yesterdayObj.getDate() - 1);
-    const yesterday = getLocalDateString(yesterdayObj);
-    
-    let checkDateObj = new Date();
-    checkDateObj.setDate(checkDateObj.getDate() - 1);
-    
-    while (true) {
-        const checkDateStr = getLocalDateString(checkDateObj);
-        const logsForDate = dateMap.get(checkDateStr) || [];
-        const completedForDate = logsForDate.filter((log) => log.done).length;
-
-        if (completedForDate === habits.length && habits.length > 0) {
-            currentStreak++;
-            checkDateObj.setDate(checkDateObj.getDate() - 1);
-        } else {
-            break;
-        }
-
-        if (currentStreak > 365) break; // Safety
-    }
-
-    // Calculate best streak
-    let bestStreak = 0;
-    let tempStreak = 0;
-
-    sortedDates.forEach((dateKey) => {
-        const logsForDate = dateMap.get(dateKey);
-        const completedCount = logsForDate.filter((log) => log.done).length;
-
-        if (completedCount === habits.length && habits.length > 0) {
-            tempStreak++;
-            bestStreak = Math.max(bestStreak, tempStreak);
-        } else {
-            tempStreak = 0;
-        }
-    });
-
-    // Calculate total completed days
-    const completedDays = sortedDates.filter((dateKey) => {
-        const logsForDate = dateMap.get(dateKey);
-        const completedCount = logsForDate.filter((log) => log.done).length;
-        return completedCount === habits.length && habits.length > 0;
-    }).length;
-
-    // Generate calendar data (last 90 days)
-    const calendarData = [];
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 89); // 90 days ago
-
-    for (let i = 0; i < 90; i++) {
-        const date = new Date(startDate);
-        date.setDate(date.getDate() + i);
-        const dateKey = getLocalDateString(date);
-
-        const logsForDate = dateMap.get(dateKey) || [];
-        const completedCount = logsForDate.filter((log) => log.done).length;
-        const isComplete = completedCount === habits.length && habits.length > 0;
-
-        calendarData.push({
-            date: dateKey,
-            completed: isComplete,
-            habitCount: completedCount,
-            totalHabits: habits.length,
+    try {
+        // Get cached streak data
+        const streaks = await getStreakData(user.id);
+        
+        // Get raw data for heatmap visualization
+        const habits = await prisma.habit.findMany({
+            where: { userId: user.id, isActive: true },
+            select: {
+                id: true,
+                title: true,
+                scheduledTime: true,
+                isActive: true,
+                createdAt: true,
+            },
         });
+
+        // Get all logs with proper date handling
+        const logs = await prisma.habitLog.findMany({
+            where: { userId: user.id },
+            select: {
+                id: true,
+                habitId: true,
+                date: true,
+                done: true,
+                createdAt: true,
+            },
+            orderBy: { date: 'asc' },
+        });
+
+        // Ensure dates are properly formatted for frontend
+        const formattedLogs = logs.map(log => ({
+            ...log,
+            date: log.date instanceof Date ? log.date.toISOString() : log.date,
+        }));
+
+        const milestones = await prisma.milestone.findMany({
+            where: { userId: user.id },
+            orderBy: { date: 'asc' },
+        });
+
+        return Response.json({
+            currentStreak: streaks.currentStreak || 0,
+            bestStreak: streaks.bestStreak || 0,
+            totalCompletedDays: formattedLogs.filter(l => l.done).length || 0,
+            habits: habits || [],
+            logs: formattedLogs || [],
+            milestones: (milestones || []).map(m => ({
+                title: m.title,
+                days: m.age || 0,
+                unlocked: m.age <= (streaks.currentStreak || 0),
+            })),
+        });
+    } catch (error) {
+        console.error("Error fetching streaks:", error);
+        return Response.json(
+            { message: "Internal Server Error", error: error.message },
+            { status: 500 }
+        );
     }
-
-    // Calculate milestones
-    const milestones = [
-        { days: 7, unlocked: bestStreak >= 7, icon: "🥉", title: "7 Days" },
-        { days: 30, unlocked: bestStreak >= 30, icon: "🥈", title: "30 Days" },
-        { days: 100, unlocked: bestStreak >= 100, icon: "🥇", title: "100 Days" },
-        { days: 365, unlocked: bestStreak >= 365, icon: "💎", title: "365 Days" },
-    ];
-
-    return Response.json(
-        {
-            currentStreak,
-            bestStreak,
-            totalCompletedDays: completedDays,
-            calendarData,
-            milestones,
-        },
-        { status: 200 }
-    );
 }

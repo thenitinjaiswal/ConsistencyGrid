@@ -1,6 +1,8 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/authOptions";
 import prisma from "@/lib/prisma";
+import { invalidateSettingsCache } from "@/lib/cache-invalidation";
+import { getRateLimitErrorResponse, RATE_LIMITS } from "@/lib/rate-limit";
 
 export async function POST(req) {
     const session = await getServerSession(authOptions);
@@ -8,6 +10,18 @@ export async function POST(req) {
     if (!session?.user?.email) {
         return Response.json({ message: "Unauthorized" }, { status: 401 });
     }
+
+    const dbUser = await prisma.user.findUnique({
+        where: { email: session.user.email },
+    });
+
+    if (!dbUser) {
+        return Response.json({ message: "User not found" }, { status: 404 });
+    }
+
+    // Check rate limit
+    const rateLimitError = getRateLimitErrorResponse(dbUser.id, "settingsSave", RATE_LIMITS.settingsSave);
+    if (rateLimitError) return rateLimitError;
 
     const body = await req.json();
 
@@ -31,14 +45,6 @@ export async function POST(req) {
             { message: "Invalid Date of Birth" },
             { status: 400 }
         );
-    }
-
-    const dbUser = await prisma.user.findUnique({
-        where: { email: session.user.email },
-    });
-
-    if (!dbUser) {
-        return Response.json({ message: "User not found" }, { status: 404 });
     }
 
     const saved = await prisma.wallpaperSettings.upsert({
@@ -100,5 +106,6 @@ export async function POST(req) {
         },
     });
 
+    await invalidateSettingsCache(dbUser.id);
     return Response.json({ message: "Saved", settings: saved }, { status: 200 });
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Card from "@/components/ui/Card";
+import StreakHeatmap from "@/components/streaks/StreakHeatmap";
 import { Flame, Trophy, BarChart3, Zap, Medal, Gem } from "lucide-react";
 
 export default function StreaksPage() {
@@ -22,10 +23,15 @@ export default function StreaksPage() {
                 const res = await fetch("/api/streaks");
                 if (res.ok) {
                     const json = await res.json();
+                    console.log("Streaks data loaded:", json);
                     setData(json);
+                } else {
+                    console.error("Failed to fetch streaks:", res.status, res.statusText);
+                    setData(null);
                 }
             } catch (err) {
                 console.error("Failed to load streaks:", err);
+                setData(null);
             } finally {
                 setLoading(false);
             }
@@ -102,41 +108,19 @@ export default function StreaksPage() {
                     </Card>
                 </div>
 
-                {/* Activity Calendar */}
+                {/* Streak Heatmap */}
                 <Card className="p-6">
-                    <h2 className="text-lg font-bold text-gray-900">Activity Calendar</h2>
+                    <h2 className="text-lg font-bold text-gray-900">Your Streak Heatmap</h2>
                     <p className="text-sm text-gray-500">
-                        Last 90 days of habit momentum
+                        52 weeks of habit consistency at a glance
                     </p>
 
-                    <div className="mt-6 grid grid-cols-10 gap-1">
-                        {data?.calendarData?.map((day, index) => (
-                            <div
-                                key={index}
-                                className={`h-8 w-8 rounded ${day.completed
-                                    ? "bg-orange-500"
-                                    : day.habitCount > 0
-                                        ? "bg-orange-200"
-                                        : "bg-gray-100"
-                                    }`}
-                                title={`${day.date}: ${day.habitCount}/${day.totalHabits} habits`}
-                            />
-                        ))}
-                    </div>
-
-                    <div className="mt-4 flex items-center gap-4 text-xs text-gray-500">
-                        <div className="flex items-center gap-2">
-                            <div className="h-4 w-4 rounded bg-gray-100" />
-                            <span>No habits</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="h-4 w-4 rounded bg-orange-200" />
-                            <span>Partial</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="h-4 w-4 rounded bg-orange-500" />
-                            <span>All kept</span>
-                        </div>
+                    <div className="mt-6">
+                        <StreakHeatmap
+                            habits={data?.habits || []}
+                            logs={data?.logs || []}
+                            timeframeWeeks={52}
+                        />
                     </div>
                 </Card>
 

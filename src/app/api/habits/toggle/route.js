@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/authOptions";
 import prisma from "@/lib/prisma";
+import { invalidateHabitsCache } from "@/lib/cache-invalidation";
 
 function getLocalDateOnly(date) {
   const year = date.getFullYear();
@@ -66,6 +67,7 @@ export async function POST(req) {
         data: { done: !existingLog.done },
       });
 
+      await invalidateHabitsCache(user.id);
       return Response.json({ log: updated }, { status: 200 });
     }
 
@@ -79,6 +81,7 @@ export async function POST(req) {
       },
     });
 
+    await invalidateHabitsCache(user.id);
     return Response.json({ log: newLog }, { status: 201 });
   } catch (error) {
     console.error("Error toggling habit:", error);

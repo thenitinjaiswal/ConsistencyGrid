@@ -1,7 +1,22 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/authOptions";
 import prisma from "@/lib/prisma";
+import { getGoalsList } from "@/lib/dashboard-cache";
+import { invalidateGoalsCache } from "@/lib/cache-invalidation";
+import { getRateLimitErrorResponse, RATE_LIMITS } from "@/lib/rate-limit";
 
+/**
+ * GET /api/goals
+ * 
+ * Fetch all goals for authenticated user with sub-goals
+ * 
+ * PERFORMANCE:
+ * - Uses server-side caching for read operations
+ * - First request: Database query + cache for 60 seconds
+ * - Subsequent requests within 60s: Returns cached data
+ * - Includes calculated progress for each goal
+ * - After 60s: Automatic revalidation on next request
+ */
 export async function GET() {
     const session = await getServerSession(authOptions);
 
@@ -18,16 +33,8 @@ export async function GET() {
     }
 
     try {
-        const goals = await prisma.goal.findMany({
-            where: { userId: user.id },
-            include: {
-                subGoals: {
-                    orderBy: { createdAt: 'asc' }
-                }
-            },
-            orderBy: { createdAt: 'desc' }
-        });
-
+        // Get cached goals with calculated progress
+        const goals = await getGoalsList(user.id);
         return Response.json(goals);
     } catch (error) {
         console.error("Error fetching goals:", error);
@@ -49,6 +56,10 @@ export async function POST(req) {
     if (!user) {
         return Response.json({ message: "User not found" }, { status: 404 });
     }
+
+    // Check rate limit
+    const rateLimitError = getRateLimitErrorResponse(user.id, "goalCreate", RATE_LIMITS.goalCreate);
+    if (rateLimitError) return rateLimitError;
 
     try {
         const body = await req.json();
@@ -85,6 +96,7 @@ export async function POST(req) {
             }
         });
 
+        await invalidateGoalsCache(user.id);
         return Response.json(goal, { status: 201 });
     } catch (error) {
         console.error("Error creating goal:", error);
@@ -106,6 +118,10 @@ export async function DELETE(req) {
     if (!user) {
         return Response.json({ message: "User not found" }, { status: 404 });
     }
+
+    // Check rate limit
+    const rateLimitError = getRateLimitErrorResponse(user.id, "goalDelete", RATE_LIMITS.goalDelete);
+    if (rateLimitError) return rateLimitError;
 
     try {
         const { searchParams } = new URL(req.url);
@@ -133,7 +149,8 @@ export async function DELETE(req) {
         await prisma.goal.delete({
             where: { id: goalId },
         });
-
+await invalidateGoalsCache(user.id);
+        
         return Response.json({ message: "Goal deleted successfully" }, { status: 200 });
     } catch (error) {
         console.error("Error deleting goal:", error);

@@ -18,6 +18,8 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@prisma/client": "^6.19.2",
+    "@sentry/nextjs": "^10.36.0",
+    "@sentry/tracing": "^7.120.4",
     "bcryptjs": "^3.0.3",
     "canvas": "^3.2.1",
     "lucide-react": "^0.562.0",

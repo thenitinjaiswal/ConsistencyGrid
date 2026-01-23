@@ -1,6 +1,8 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/authOptions";
 import prisma from "@/lib/prisma";
+import { invalidateDashboardCache } from "@/lib/cache-invalidation";
+import { getRateLimitErrorResponse, RATE_LIMITS } from "@/lib/rate-limit";
 
 export async function GET() {
     const session = await getServerSession(authOptions);
@@ -45,6 +47,10 @@ export async function POST(req) {
         return Response.json({ message: "User not found" }, { status: 404 });
     }
 
+    // Check rate limit
+    const rateLimitError = getRateLimitErrorResponse(user.id, "milestoneCreate", RATE_LIMITS.milestoneCreate);
+    if (rateLimitError) return rateLimitError;
+
     try {
         const body = await req.json();
         const { title, age, description, status } = body;
@@ -63,6 +69,7 @@ export async function POST(req) {
             }
         });
 
+        await invalidateDashboardCache(user.id);
         return Response.json(milestone);
     } catch (error) {
         console.error("Error creating milestone:", error);

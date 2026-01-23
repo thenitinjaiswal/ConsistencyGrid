@@ -9,6 +9,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/authOptions";
 import prisma from "@/lib/prisma";
+import { invalidateDashboardCache } from "@/lib/cache-invalidation";
+import { getRateLimitErrorResponse, RATE_LIMITS } from "@/lib/rate-limit";
 
 /**
  * GET /api/reminders
@@ -100,6 +102,10 @@ export async function POST(request) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
+        // Check rate limit
+        const rateLimitError = getRateLimitErrorResponse(user.id, "reminderCreate", RATE_LIMITS.reminderCreate);
+        if (rateLimitError) return rateLimitError;
+
         const body = await request.json();
 
         // Validate required fields
@@ -134,6 +140,7 @@ export async function POST(request) {
             },
         });
 
+        await invalidateDashboardCache(user.id);
         return NextResponse.json({ reminder }, { status: 201 });
     } catch (error) {
         console.error("POST /api/reminders error:", error);
