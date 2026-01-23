@@ -57,6 +57,12 @@ export const metadata = {
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION,
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Consistency Grid',
+  },
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({ children }) {
@@ -67,8 +73,14 @@ export default function RootLayout({ children }) {
       <head>
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <meta name="theme-color" content="#f97316" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#6366f1" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+        
+        {/* PWA Meta Tags */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Consistency Grid" />
         
         {/* Google Analytics */}
         {gaId && (

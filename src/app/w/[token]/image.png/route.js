@@ -413,8 +413,10 @@ export async function GET(request, { params }) {
     return new Response(canvas.toBuffer("image/png"), {
         headers: {
             "Content-Type": "image/png",
-            // CHANGED: Better cache control for dynamic content
-            "Cache-Control": "public, max-age=300, stale-while-revalidate=600"
+            // NO CACHE: Wallpaper must always show current data
+            "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0"
         }
     });
 }

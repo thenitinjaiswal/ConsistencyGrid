@@ -1,77 +1,112 @@
 "use client";
 
+import { Calendar, Grid3x3, Clock, BarChart3 } from "lucide-react";
+
+/**
+ * GridModeSelector Component - Enhanced Version
+ * 
+ * Select how to visualize your life/year progress:
+ * ✨ 4 different grid visualization modes
+ * ✨ Emoji icons for quick identification
+ * ✨ Detailed descriptions for each mode
+ * ✨ Responsive 2-column grid
+ * ✨ Active state with orange highlight
+ * ✨ Hover effects and smooth transitions
+ * 
+ * Grid Modes:
+ * 1. Year Weeks - 52 weeks in a year
+ * 2. Year Days - 365 days in a year
+ * 3. Life Grid - All weeks you'll live
+ * 4. Month - Current month calendar
+ */
+const GRID_MODES = [
+    {
+        id: "weeks",
+        emoji: "📅",
+        name: "Year Weeks",
+        description: "52 weeks grid",
+        details: "View your year in weeks for weekly planning",
+        icon: Calendar,
+    },
+    {
+        id: "days",
+        emoji: "🗓️",
+        name: "Year Days",
+        description: "365 days grid",
+        details: "Daily visualization for habit tracking",
+        icon: Grid3x3,
+    },
+    {
+        id: "life",
+        emoji: "⏳",
+        name: "Life Grid",
+        description: "Weeks lived grid",
+        details: "See your entire life in one view",
+        icon: Clock,
+    },
+    {
+        id: "month",
+        emoji: "📆",
+        name: "Month",
+        description: "Current month calendar",
+        details: "Focus on this month's progress",
+        icon: BarChart3,
+    },
+];
+
+/**
+ * @param {string} mode - Currently selected grid mode
+ * @param {Function} onChange - Callback when mode is selected
+ */
 export default function GridModeSelector({ mode, onChange }) {
     return (
         <div className="space-y-3">
-            <label className="text-sm font-bold text-gray-900">Year Grid Mode</label>
-            <div className="grid grid-cols-2 gap-3">
-                <button
-                    onClick={() => onChange("weeks")}
-                    className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-all ${mode === "weeks"
-                        ? "border-orange-500 bg-orange-50 ring-1 ring-orange-500"
-                        : "border-gray-200 bg-white hover:bg-gray-50"
-                        }`}
-                >
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${mode === "weeks" ? "bg-orange-100 text-orange-600" : "bg-gray-100 text-gray-500"
-                        }`}>
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                    </div>
-                    <div>
-                        <div className={`font-semibold ${mode === "weeks" ? "text-orange-900" : "text-gray-900"}`}>Year Weeks</div>
-                        <div className="text-xs text-gray-500">52 weeks grid</div>
-                    </div>
-                </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                {GRID_MODES.map((gridMode) => {
+                    const isActive = mode === gridMode.id;
+                    return (
+                        <button
+                            key={gridMode.id}
+                            onClick={() => onChange(gridMode.id)}
+                            title={`Select ${gridMode.name}: ${gridMode.details}`}
+                            className={`group relative flex items-center gap-3 sm:gap-4 rounded-xl border-2 p-3 sm:p-4 text-left transition-all duration-200 ${
+                                isActive
+                                    ? "border-orange-500 bg-gradient-to-r from-orange-50 to-orange-100 shadow-md"
+                                    : "border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-50/50"
+                            }`}
+                        >
+                            {/* Icon Container */}
+                            <div className={`flex h-10 sm:h-12 w-10 sm:w-12 items-center justify-center rounded-lg flex-shrink-0 transition-all ${
+                                isActive 
+                                    ? "bg-gradient-to-br from-orange-100 to-orange-200 text-orange-600 shadow-md" 
+                                    : "bg-gray-100 text-gray-500 group-hover:bg-orange-100 group-hover:text-orange-600"
+                            }`}>
+                                <span className="text-lg sm:text-xl">{gridMode.emoji}</span>
+                            </div>
 
-                <button
-                    onClick={() => onChange("days")}
-                    className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-all ${mode === "days"
-                        ? "border-orange-500 bg-orange-50 ring-1 ring-orange-500"
-                        : "border-gray-200 bg-white hover:bg-gray-50"
-                        }`}
-                >
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${mode === "days" ? "bg-orange-100 text-orange-600" : "bg-gray-100 text-gray-500"
-                        }`}>
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
-                    </div>
-                    <div>
-                        <div className={`font-semibold ${mode === "days" ? "text-orange-900" : "text-gray-900"}`}>Year Days</div>
-                        <div className="text-xs text-gray-500">365 days grid</div>
-                    </div>
-                </button>
+                            {/* Text Content */}
+                            <div className="flex-1 min-w-0">
+                                <h4 className={`text-sm font-bold truncate transition-colors ${
+                                    isActive ? "text-orange-700" : "text-gray-900 group-hover:text-orange-700"
+                                }`}>
+                                    {gridMode.name}
+                                </h4>
+                                <p className={`text-xs truncate transition-colors ${
+                                    isActive ? "text-orange-600/80" : "text-gray-500"
+                                }`}>
+                                    {gridMode.description}
+                                </p>
+                            </div>
 
-                <button
-                    onClick={() => onChange("life")}
-                    className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-all ${mode === "life"
-                        ? "border-orange-500 bg-orange-50 ring-1 ring-orange-500"
-                        : "border-gray-200 bg-white hover:bg-gray-50"
-                        }`}
-                >
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${mode === "life" ? "bg-orange-100 text-orange-600" : "bg-gray-100 text-gray-500"
-                        }`}>
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                    <div>
-                        <div className={`font-semibold ${mode === "life" ? "text-orange-900" : "text-gray-900"}`}>Life Grid</div>
-                        <div className="text-xs text-gray-500">Weeks lived grid</div>
-                    </div>
-                </button>
-
-                <button
-                    onClick={() => onChange("month")}
-                    className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-all ${mode === "month"
-                        ? "border-orange-500 bg-orange-50 ring-1 ring-orange-500"
-                        : "border-gray-200 bg-white hover:bg-gray-50"
-                        }`}
-                >
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${mode === "month" ? "bg-orange-100 text-orange-600" : "bg-gray-100 text-gray-500"
-                        }`}>
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                    </div>
-                    <div>
-                        <div className={`font-semibold ${mode === "month" ? "text-orange-900" : "text-gray-900"}`}>Month</div>
-                        <div className="text-xs text-gray-500">Current month calendar</div>
-                    </div>
-                </button>
+                            {/* Active Indicator */}
+                            {isActive && (
+                                <div className="flex-shrink-0 h-5 w-5 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-bold shadow-md">
+                                    ✓
+                                </div>
+                            )}
+                        </button>
+                    );
+                })}
             </div>
         </div>
     );

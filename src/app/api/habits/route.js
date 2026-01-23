@@ -1,62 +1,192 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/app/api/auth/authOptions";
 import prisma from "@/lib/prisma";
 
-export async function POST(req) {
-    const session = await getServerSession(authOptions);
+/**
+ * GET /api/habits
+ * Fetch all habits for authenticated user with their logs
+ */
+export async function GET(req) {
+    try {
+        const session = await getServerSession(authOptions);
 
-    if (!session?.user?.email) {
-        return Response.json({ message: "Unauthorized" }, { status: 401 });
+        if (!session?.user?.email) {
+            return Response.json({ message: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { email: session.user.email },
+        });
+
+        if (!user) {
+            return Response.json({ message: "User not found" }, { status: 404 });
+        }
+
+        // Fetch habits with logs
+        const habits = await prisma.habit.findMany({
+            where: { userId: user.id, isActive: true },
+            include: { logs: true },
+            orderBy: { createdAt: "asc" },
+        });
+
+        return Response.json(habits);
+    } catch (error) {
+        console.error("Error fetching habits:", error);
+        return Response.json({ message: "Internal Server Error", error: error.message }, { status: 500 });
     }
-
-    const { title, scheduledTime } = await req.json();
-
-    if (!title || title.trim().length < 2) {
-        return Response.json(
-            { message: "Habit title required (min 2 characters)" },
-            { status: 400 }
-        );
-    }
-
-    const dbUser = await prisma.user.findUnique({
-        where: { email: session.user.email },
-    });
-
-    if (!dbUser) {
-        return Response.json({ message: "User not found" }, { status: 404 });
-    }
-
-    const habit = await prisma.habit.create({
-        data: {
-            title: title.trim(),
-            scheduledTime: scheduledTime ? scheduledTime : null,
-            userId: dbUser.id,
-        },
-    });
-
-    return Response.json({ habit }, { status: 201 });
 }
 
-export async function GET() {
-    const session = await getServerSession(authOptions);
+/**
+ * POST /api/habits
+ * Create a new habit for authenticated user
+ */
+export async function POST(req) {
+    try {
+        const session = await getServerSession(authOptions);
 
-    if (!session?.user?.email) {
-        return Response.json({ message: "Unauthorized" }, { status: 401 });
+        if (!session?.user?.email) {
+            return Response.json({ message: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { email: session.user.email },
+        });
+
+        if (!user) {
+            return Response.json({ message: "User not found" }, { status: 404 });
+        }
+
+        const body = await req.json();
+        const { title, scheduledTime } = body;
+
+        if (!title || String(title).trim().length === 0) {
+            return Response.json({ message: "Habit title is required" }, { status: 400 });
+        }
+
+        if (String(title).length > 100) {
+            return Response.json({ message: "Habit title must be less than 100 characters" }, { status: 400 });
+        }
+
+        // Validate scheduled time if provided
+        if (scheduledTime && !/^([0-1]\d|2[0-3]):[0-5]\d$/.test(scheduledTime)) {
+            return Response.json({ message: "Invalid time format (HH:MM)" }, { status: 400 });
+        }
+
+        const habit = await prisma.habit.create({
+            data: {
+                title: String(title).trim(),
+                scheduledTime: scheduledTime || null,
+                userId: user.id,
+            },
+            include: { logs: true },
+        });
+
+        return Response.json(habit, { status: 201 });
+    } catch (error) {
+        console.error("Error creating habit:", error);
+        return Response.json({ message: "Internal Server Error", error: error.message }, { status: 500 });
     }
+}
 
-    const dbUser = await prisma.user.findUnique({
-        where: { email: session.user.email },
-    });
+/**
+ * PUT /api/habits?id=habitId
+ * Update a habit
+ */
+export async function PUT(req) {
+    try {
+        const session = await getServerSession(authOptions);
 
-    if (!dbUser) {
-        return Response.json({ message: "User not found" }, { status: 404 });
+        if (!session?.user?.email) {
+            return Response.json({ message: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { email: session.user.email },
+        });
+
+        if (!user) {
+            return Response.json({ message: "User not found" }, { status: 404 });
+        }
+
+        const { searchParams } = new URL(req.url);
+        const habitId = searchParams.get("id");
+
+        if (!habitId) {
+            return Response.json({ message: "Habit ID is required" }, { status: 400 });
+        }
+
+        const body = await req.json();
+        const { title, scheduledTime, isActive } = body;
+
+        // Verify habit belongs to user
+        const habit = await prisma.habit.findUnique({
+            where: { id: habitId },
+        });
+
+        if (!habit || habit.userId !== user.id) {
+            return Response.json({ message: "Habit not found" }, { status: 404 });
+        }
+
+        const updated = await prisma.habit.update({
+            where: { id: habitId },
+            data: {
+                ...(title && { title: String(title).trim() }),
+                ...(scheduledTime && { scheduledTime }),
+                ...(isActive !== undefined && { isActive }),
+            },
+            include: { logs: true },
+        });
+
+        return Response.json(updated);
+    } catch (error) {
+        console.error("Error updating habit:", error);
+        return Response.json({ message: "Internal Server Error", error: error.message }, { status: 500 });
     }
+}
 
-    const habits = await prisma.habit.findMany({
-        where: { userId: dbUser.id, isActive: true },
-        include: { logs: true },
-        orderBy: { createdAt: "asc" },
-    });
+/**
+ * DELETE /api/habits?id=habitId
+ * Delete a habit
+ */
+export async function DELETE(req) {
+    try {
+        const session = await getServerSession(authOptions);
 
-    return Response.json(habits, { status: 200 });
+        if (!session?.user?.email) {
+            return Response.json({ message: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { email: session.user.email },
+        });
+
+        if (!user) {
+            return Response.json({ message: "User not found" }, { status: 404 });
+        }
+
+        const { searchParams } = new URL(req.url);
+        const habitId = searchParams.get("id");
+
+        if (!habitId) {
+            return Response.json({ message: "Habit ID is required" }, { status: 400 });
+        }
+
+        // Verify habit belongs to user
+        const habit = await prisma.habit.findUnique({
+            where: { id: habitId },
+        });
+
+        if (!habit || habit.userId !== user.id) {
+            return Response.json({ message: "Habit not found" }, { status: 404 });
+        }
+
+        await prisma.habit.delete({
+            where: { id: habitId },
+        });
+
+        return Response.json({ message: "Habit deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting habit:", error);
+        return Response.json({ message: "Internal Server Error", error: error.message }, { status: 500 });
+    }
 }

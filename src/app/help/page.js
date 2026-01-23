@@ -2,10 +2,6 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Card from "@/components/ui/Card";
 import Link from "next/link";
 
-export const metadata = {
-  title: "Help & Support",
-  description: "Get help with ConsistencyGrid features, MacroDroid setup guide, and frequently asked questions.",
-};
 
 export default function HelpPage() {
     return (
@@ -30,20 +26,6 @@ export default function HelpPage() {
                                 <h3 className="font-semibold text-gray-900">Getting Started</h3>
                                 <p className="text-sm text-gray-500">
                                     Learn the basics of ConsistencyGrid
-                                </p>
-                            </div>
-                        </div>
-                    </Card>
-
-                    <Card className="p-5 hover:shadow-md transition-shadow cursor-pointer">
-                        <div className="flex items-start gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-                                <span className="text-xl">📱</span>
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-gray-900">MacroDroid Setup</h3>
-                                <p className="text-sm text-gray-500">
-                                    Auto-update wallpaper on Android
                                 </p>
                             </div>
                         </div>
@@ -102,17 +84,6 @@ export default function HelpPage() {
 
                         <div className="rounded-lg border border-gray-200 p-4">
                             <h3 className="font-semibold text-gray-900">
-                                How does the auto-update wallpaper work?
-                            </h3>
-                            <p className="mt-2 text-sm text-gray-600">
-                                Your wallpaper URL (found in the Dashboard) always shows the
-                                current day's progress. Use automation apps like MacroDroid to
-                                set it as your wallpaper daily at midnight.
-                            </p>
-                        </div>
-
-                        <div className="rounded-lg border border-gray-200 p-4">
-                            <h3 className="font-semibold text-gray-900">
                                 What are habits and how do I track them?
                             </h3>
                             <p className="mt-2 text-sm text-gray-600">
@@ -160,88 +131,7 @@ export default function HelpPage() {
                     </div>
                 </Card>
 
-                {/* MacroDroid Guide */}
-                <Card className="p-6">
-                    <h2 className="text-lg font-bold text-gray-900">
-                        MacroDroid Setup Guide
-                    </h2>
-                    <p className="text-sm text-gray-500">
-                        Auto-update your Android wallpaper daily
-                    </p>
-
-                    <div className="mt-6 space-y-4">
-                        <div className="flex gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-white">
-                                1
-                            </div>
-                            <div>
-                                <p className="font-semibold text-gray-900">
-                                    Install MacroDroid
-                                </p>
-                                <p className="text-sm text-gray-600">
-                                    Download MacroDroid from Google Play Store
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-white">
-                                2
-                            </div>
-                            <div>
-                                <p className="font-semibold text-gray-900">Create New Macro</p>
-                                <p className="text-sm text-gray-600">
-                                    Tap the + button to create a new macro
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-white">
-                                3
-                            </div>
-                            <div>
-                                <p className="font-semibold text-gray-900">Set Trigger</p>
-                                <p className="text-sm text-gray-600">
-                                    Trigger: Time → Daily at 12:00 AM
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-white">
-                                4
-                            </div>
-                            <div>
-                                <p className="font-semibold text-gray-900">Add Action</p>
-                                <p className="text-sm text-gray-600">
-                                    Action: Set Wallpaper → From URL → Paste your wallpaper URL
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-white">
-                                5
-                            </div>
-                            <div>
-                                <p className="font-semibold text-gray-900">Save & Enable</p>
-                                <p className="text-sm text-gray-600">
-                                    Save the macro and make sure it's enabled
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mt-6 rounded-lg bg-orange-50 p-4">
-                        <p className="text-sm text-orange-800">
-                            <strong>Pro Tip:</strong> You can also trigger the wallpaper
-                            update when you unlock your phone or at specific times throughout
-                            the day!
-                        </p>
-                    </div>
-                </Card>
-
+                
                 {/* Contact Support */}
                 <Card className="p-6">
                     <h2 className="text-lg font-bold text-gray-900">Still Need Help?</h2>

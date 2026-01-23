@@ -1,14 +1,18 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/app/api/auth/authOptions";
 import prisma from "@/lib/prisma";
 
-function getTodayDateOnly() {
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+// Get local date string in YYYY-MM-DD format
+function getLocalDateString(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
-function getDateOnly(date) {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+// Convert date object to local date string
+function dateToLocalDateString(dateObj) {
+    return getLocalDateString(new Date(dateObj));
 }
 
 export async function GET() {
@@ -37,24 +41,37 @@ export async function GET() {
         orderBy: { date: "asc" },
     });
 
-    const today = getTodayDateOnly();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+    const today = getLocalDateString(new Date());
+    
+    // Build dateMap from logs
+    const dateMap = new Map();
+    allLogs.forEach((log) => {
+        const dateKey = dateToLocalDateString(log.date);
+        if (!dateMap.has(dateKey)) {
+            dateMap.set(dateKey, []);
+        }
+        dateMap.get(dateKey).push(log);
+    });
 
-    // Calculate current streak
+    const sortedDates = Array.from(dateMap.keys()).sort();
+
+    // Calculate current streak (check from yesterday backwards)
     let currentStreak = 0;
-    let checkDate = new Date(yesterday);
-
+    const yesterdayObj = new Date();
+    yesterdayObj.setDate(yesterdayObj.getDate() - 1);
+    const yesterday = getLocalDateString(yesterdayObj);
+    
+    let checkDateObj = new Date();
+    checkDateObj.setDate(checkDateObj.getDate() - 1);
+    
     while (true) {
-        const logsForDate = allLogs.filter(
-            (log) => getDateOnly(new Date(log.date)).getTime() === checkDate.getTime()
-        );
-
+        const checkDateStr = getLocalDateString(checkDateObj);
+        const logsForDate = dateMap.get(checkDateStr) || [];
         const completedForDate = logsForDate.filter((log) => log.done).length;
 
         if (completedForDate === habits.length && habits.length > 0) {
             currentStreak++;
-            checkDate.setDate(checkDate.getDate() - 1);
+            checkDateObj.setDate(checkDateObj.getDate() - 1);
         } else {
             break;
         }
@@ -65,17 +82,6 @@ export async function GET() {
     // Calculate best streak
     let bestStreak = 0;
     let tempStreak = 0;
-    const dateMap = new Map();
-
-    allLogs.forEach((log) => {
-        const dateKey = getDateOnly(new Date(log.date)).toISOString().split("T")[0];
-        if (!dateMap.has(dateKey)) {
-            dateMap.set(dateKey, []);
-        }
-        dateMap.get(dateKey).push(log);
-    });
-
-    const sortedDates = Array.from(dateMap.keys()).sort();
 
     sortedDates.forEach((dateKey) => {
         const logsForDate = dateMap.get(dateKey);
@@ -98,13 +104,13 @@ export async function GET() {
 
     // Generate calendar data (last 90 days)
     const calendarData = [];
-    const startDate = new Date(today);
+    const startDate = new Date();
     startDate.setDate(startDate.getDate() - 89); // 90 days ago
 
     for (let i = 0; i < 90; i++) {
         const date = new Date(startDate);
         date.setDate(date.getDate() + i);
-        const dateKey = getDateOnly(date).toISOString().split("T")[0];
+        const dateKey = getLocalDateString(date);
 
         const logsForDate = dateMap.get(dateKey) || [];
         const completedCount = logsForDate.filter((log) => log.done).length;

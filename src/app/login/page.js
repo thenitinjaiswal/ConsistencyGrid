@@ -151,6 +151,14 @@ export default function LoginPage() {
                             />
                         </div>
 
+                        {/* Forgot Password Link */}
+                        <Link
+                            href="/forgot-password"
+                            className="text-sm text-orange-500 hover:text-orange-600 hover:underline transition-colors font-medium block text-center"
+                        >
+                            Forgot your password?
+                        </Link>
+
                         {/* Submit Button */}
                         <button
                             type="submit"

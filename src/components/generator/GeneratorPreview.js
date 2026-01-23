@@ -1,20 +1,56 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Download, Copy, CheckCircle2, Clock } from "lucide-react";
 import Button from "@/components/ui/Button";
 
+/**
+ * GeneratorPreview Component - Enhanced Version
+ * 
+ * Real-time live preview of the wallpaper with:
+ * ✨ Dynamic image generation with live updates
+ * ✨ Clock overlay showing current time (demo)
+ * ✨ Download and copy functionality
+ * ✨ Responsive preview sizing
+ * ✨ Loading state feedback
+ * ✨ Debounced updates for performance
+ * 
+ * @param {string} publicToken - User's public wallpaper token
+ * @param {boolean} loading - Loading state indicator
+ * @param {Object} form - Current form settings
+ */
 export default function GeneratorPreview({ publicToken, loading, form }) {
+    // ============================================================================================
+    // STATE MANAGEMENT
+    // ============================================================================================
+    
     const [copied, setCopied] = useState(false);
     const [previewUrl, setPreviewUrl] = useState("");
     const [time, setTime] = useState(new Date());
+    const [debugMode] = useState(false); // Toggle for debugging
 
-    // Clock Timer
+    // ============================================================================================
+    // EFFECTS: CLOCK & TIMER
+    // ============================================================================================
+    
+    /**
+     * Update clock display every second
+     * Shows real-time preview of what the wallpaper will look like
+     */
     useEffect(() => {
         const timer = setInterval(() => setTime(new Date()), 1000);
         return () => clearInterval(timer);
     }, []);
 
-    // Live Preview Debouncer
+    // ============================================================================================
+    // EFFECTS: LIVE PREVIEW GENERATOR
+    // ============================================================================================
+    
+    /**
+     * Generate live preview URL with current form settings
+     * Debounced to avoid excessive API calls during rapid form changes
+     * Updates every 600ms when form changes
+     */
     useEffect(() => {
         if (!publicToken) return;
 
@@ -47,9 +83,16 @@ export default function GeneratorPreview({ publicToken, loading, form }) {
         };
     }, [form, publicToken]);
 
+    // ============================================================================================
+    // EVENT HANDLERS: DOWNLOAD & COPY
+    // ============================================================================================
+    
+    /**
+     * Download the current wallpaper as PNG
+     * Uses the current preview URL with all active settings
+     */
     async function handleDownload() {
         if (!publicToken) return;
-        // Use current preview URL or base
         const url = previewUrl || `/w/${publicToken}/image.png`;
         const link = document.createElement("a");
         link.href = url;
@@ -59,55 +102,108 @@ export default function GeneratorPreview({ publicToken, loading, form }) {
         document.body.removeChild(link);
     }
 
+    /**
+     * Copy the wallpaper sharing URL to clipboard
+     * Shows success feedback for 2 seconds
+     */
     async function handleCopy() {
         if (!publicToken) return;
-        const url = `${window.location.origin}/w/${publicToken}/image.png`; // Always copy base URL for sharing
+        const url = `${window.location.origin}/w/${publicToken}/image.png`;
         await navigator.clipboard.writeText(url);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     }
 
+    // ============================================================================================
+    // RENDER
+    // ============================================================================================
+
     return (
-        <div className="sticky top-6">
-            {/* Actions */}
-            <div className="mb-4 flex items-center justify-end gap-2">
-                <button
-                    onClick={() => window.location.reload()}
-                    className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50"
-                >
-                    ↻ Reset
-                </button>
-                <button
-                    onClick={handleCopy}
-                    disabled={!publicToken}
-                    className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50"
-                >
-                    {copied ? "✅ Copied" : "📋 Copy URL"}
-                </button>
-                <Button
-                    onClick={handleDownload}
-                    disabled={!publicToken}
-                    variant="primary"
-                    className="py-2 text-xs"
-                >
-                    ↓ Download
-                </Button>
+        <div className="sticky top-6 space-y-4">
+            
+            {/* ┌─────────────────────────────────────────────────────────────────────────────────┐ */}
+            {/* │ ACTION BUTTONS BAR - Download, Copy, Reset                                      │ */}
+            {/* │ - Responsive spacing and sizing                                                 │ */}
+            {/* │ - Feedback states (success, disabled, hover)                                    │ */}
+            {/* └─────────────────────────────────────────────────────────────────────────────────┘ */}
+            
+            <div className="space-y-2 mb-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+                    <button
+                        onClick={() => window.location.reload()}
+                        title="Reload to reset all settings"
+                        className="rounded-xl border border-gray-200 bg-white px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95"
+                    >
+                        ↻ Reset
+                    </button>
+                    <button
+                        onClick={handleCopy}
+                        disabled={!publicToken || loading}
+                        title={copied ? "Copied!" : "Copy sharing URL to clipboard"}
+                        className="rounded-xl border border-gray-200 bg-white px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 hover:border-gray-300 active:scale-95"
+                    >
+                        {copied ? (
+                            <>
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span>Copied!</span>
+                            </>
+                        ) : (
+                            <>
+                                <Copy className="w-3.5 h-3.5" />
+                                <span className="hidden xs:inline">Copy URL</span>
+                            </>
+                        )}
+                    </button>
+                    <button
+                        onClick={handleDownload}
+                        disabled={!publicToken || loading}
+                        title="Download wallpaper as PNG image"
+                        className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white px-3 sm:px-6 py-2 sm:py-2.5 text-xs font-semibold flex items-center justify-center gap-2 hover:shadow-lg hover:from-orange-600 hover:to-orange-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none active:scale-95 shadow-md"
+                    >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Download</span>
+                    </button>
+                </div>
+                {loading && (
+                    <p className="text-xs text-gray-500 text-center">
+                        ⏳ Generating preview...
+                    </p>
+                )}
             </div>
 
-            {/* Phone Mockup */}
-            <div className="relative mx-auto h-[600px] w-[300px] overflow-hidden rounded-[40px] border-8 border-gray-900 bg-black shadow-2xl">
-                {/* Dynamic Island / Notch */}
-                <div className="absolute top-0 left-1/2 h-6 w-32 -translate-x-1/2 rounded-b-xl bg-black z-20" />
+            {/* ┌─────────────────────────────────────────────────────────────────────────────────┐ */}
+            {/* │ PHONE MOCKUP - Responsive Container                                            │ */}
+            {/* │ - Realistic iPhone-style design                                                │ */}
+            {/* │ - Dynamic Island notch simulation                                              │ */}
+            {/* │ - Live preview of wallpaper                                                    │ */}
+            {/* │ - Real-time clock display                                                      │ */}
+            {/* └─────────────────────────────────────────────────────────────────────────────────┘ */}
+            
+            <div className="relative mx-auto h-[580px] sm:h-[600px] w-[290px] sm:w-[300px] overflow-hidden rounded-[38px] sm:rounded-[40px] border-8 border-gray-900 bg-black shadow-2xl hover:shadow-3xl transition-shadow">
+                
+                {/* Dynamic Island / Notch - iPhone Style */}
+                <div className="absolute top-0 left-1/2 h-6 sm:h-7 w-32 sm:w-40 -translate-x-1/2 rounded-b-3xl bg-black z-20 shadow-lg" />
 
-                {/* Screen Content */}
+                {/* Screen Content Container */}
                 <div className="h-full w-full bg-gray-900 text-white flex items-center justify-center relative overflow-hidden">
+                    
+                    {/* Loading Overlay */}
+                    {loading && (
+                        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-30 flex items-center justify-center">
+                            <div className="text-center">
+                                <div className="animate-spin text-4xl mb-2">⏳</div>
+                                <p className="text-xs text-white/80">Generating...</p>
+                            </div>
+                        </div>
+                    )}
+                    
                     {/* Lock Screen Clock Simulation */}
-                    <div className="absolute top-[12%] left-0 right-0 z-10 flex flex-col items-center justify-center pointer-events-none fade-in">
-                        <h1 className="text-6xl font-bold tracking-tight text-white/90 drop-shadow-md font-sans">
-                            {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                    <div className="absolute top-[12%] left-0 right-0 z-10 flex flex-col items-center justify-center pointer-events-none">
+                        <h1 className="text-5xl sm:text-6xl font-bold tracking-tight text-white/95 drop-shadow-lg font-mono">
+                            {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
                         </h1>
-                        <p className="text-lg font-medium text-white/80 mt-1 drop-shadow-sm">
-                            {new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}
+                        <p className="text-sm sm:text-base font-medium text-white/75 mt-2 drop-shadow-md">
+                            {time.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })}
                         </p>
                     </div>
 

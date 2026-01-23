@@ -261,7 +261,6 @@ export default function Home() {
               <h4 className="font-semibold text-gray-900 mb-4">Resources</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li><Link href="/help" className="hover:text-orange-500 transition-colors">Help Center</Link></li>
-                <li><Link href="/help" className="hover:text-orange-500 transition-colors">MacroDroid Guide</Link></li>
                 <li><Link href="/settings" className="hover:text-orange-500 transition-colors">Settings</Link></li>
               </ul>
             </div>

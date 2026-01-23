@@ -3,11 +3,16 @@
 import { Component } from "react";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
+import { captureException } from "@/lib/sentry";
 
 class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { 
+      hasError: false, 
+      error: null,
+      errorId: null
+    };
   }
 
   static getDerivedStateFromError(error) {
@@ -15,6 +20,16 @@ class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, errorInfo) {
+    // Log error to Sentry
+    captureException(error, {
+      errorInfo,
+      componentStack: errorInfo.componentStack,
+    });
+
+    // Generate error ID for user support
+    const errorId = `ERR-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    this.setState({ errorId });
+
     console.error("ErrorBoundary caught an error:", error, errorInfo);
   }
 
@@ -43,9 +58,17 @@ class ErrorBoundary extends Component {
                 Something went wrong
               </h1>
               <p className="text-gray-600 mb-6">
-                We encountered an unexpected error. Please try refreshing the page.
+                We encountered an unexpected error. Our team has been notified.
               </p>
             </div>
+
+            {this.state.errorId && (
+              <div className="bg-gray-50 border border-gray-200 rounded p-3 mb-6">
+                <p className="text-xs text-gray-500 font-mono break-all">
+                  Error ID: {this.state.errorId}
+                </p>
+              </div>
+            )}
 
             <div className="space-y-3">
               <button

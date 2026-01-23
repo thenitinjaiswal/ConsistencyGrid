@@ -6,6 +6,8 @@ export const metadata = {
   description: "The page you're looking for doesn't exist.",
 };
 
+export const dynamic = 'force-dynamic';
+
 export default function NotFound() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#fffaf1] to-white">

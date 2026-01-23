@@ -1,10 +1,12 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/app/api/auth/authOptions";
 import prisma from "@/lib/prisma";
 
-function getTodayDateOnly() {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+function getLocalDateString(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 export async function GET() {
@@ -23,8 +25,9 @@ export async function GET() {
   const pastDate = new Date();
   pastDate.setDate(now.getDate() - 7);
 
-  // Create UTC start/end for query to matching DB storage
-  const startQueryDate = new Date(Date.UTC(pastDate.getFullYear(), pastDate.getMonth(), pastDate.getDate()));
+  // Use local dates for consistency
+  const startQueryDate = new Date(pastDate.getFullYear(), pastDate.getMonth(), pastDate.getDate());
+  const todayDate = getLocalDateString(now);
 
   const logs = await prisma.habitLog.findMany({
     where: {
@@ -46,9 +49,8 @@ export async function GET() {
 
     // Check if done TODAY
     const todayLog = habitLogs.find(l => {
-      const lDate = new Date(l.date).toISOString().split('T')[0];
-      const tDate = new Date().toISOString().split('T')[0];
-      return lDate === tDate;
+      const lDate = getLocalDateString(new Date(l.date));
+      return lDate === todayDate;
     });
 
     return {

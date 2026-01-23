@@ -18,12 +18,13 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  settings   WallpaperSettings?
-  habits     Habit[]
-  habitLogs  HabitLog[]
-  reminders  Reminder[]
-  goals      Goal[]
-  milestones Milestone[]
+  settings         WallpaperSettings?
+  consentPreferences ConsentPreference?
+  habits           Habit[]
+  habitLogs        HabitLog[]
+  reminders        Reminder[]
+  goals            Goal[]
+  milestones       Milestone[]
 }
 
 model WallpaperSettings {
@@ -184,4 +185,23 @@ model Milestone {
   updatedAt   DateTime @updatedAt
   
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ✅ GDPR Compliance - User Consent Preferences
+model ConsentPreference {
+  id                       String   @id @default(cuid())
+  userId                   String   @unique
+  
+  // Core Consents (Required for service)
+  data_processing          Boolean  @default(true) // Must be true to use service
+  
+  // Optional Consents
+  analytics                Boolean  @default(true) // Allow analytics tracking
+  marketing_emails         Boolean  @default(false) // Receive marketing communications
+  performance_monitoring   Boolean  @default(true) // Monitor app performance
+  
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  
+  user                     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -10,20 +10,21 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
+function getLocalDateString(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export default function UpcomingReminders() {
     const [reminders, setReminders] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        loadReminders();
-    }, []);
-
     const loadReminders = async () => {
         try {
-            const today = new Date().toISOString().split("T")[0];
-            const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-                .toISOString()
-                .split("T")[0];
+            const today = getLocalDateString(new Date());
+            const nextWeek = getLocalDateString(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
 
             const res = await fetch(`/api/reminders/range?start=${today}&end=${nextWeek}`);
             const data = await res.json();
@@ -45,15 +46,42 @@ export default function UpcomingReminders() {
         }
     };
 
+    useEffect(() => {
+        loadReminders();
+        // Refresh every 10 seconds for real-time updates
+        const interval = setInterval(loadReminders, 10000);
+        
+        const handleFocus = () => {
+            setLoading(true);
+            loadReminders();
+        };
+        
+        const handleVisibilityChange = () => {
+            if (!document.hidden) {
+                setLoading(true);
+                loadReminders();
+            }
+        };
+        
+        window.addEventListener("focus", handleFocus);
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener("focus", handleFocus);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
+    }, []);
+
     const formatDate = (dateStr) => {
         const date = new Date(dateStr);
         const today = new Date();
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
 
-        const dateOnly = date.toISOString().split("T")[0];
-        const todayOnly = today.toISOString().split("T")[0];
-        const tomorrowOnly = tomorrow.toISOString().split("T")[0];
+        const dateOnly = getLocalDateString(date);
+        const todayOnly = getLocalDateString(today);
+        const tomorrowOnly = getLocalDateString(tomorrow);
 
         if (dateOnly === todayOnly) return "Today";
         if (dateOnly === tomorrowOnly) return "Tomorrow";

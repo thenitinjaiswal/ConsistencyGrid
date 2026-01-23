@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Card from "@/components/ui/Card";
-import { TrendingUp, Flame, Target, RefreshCw } from "lucide-react";
+import { TrendingUp, Flame, Target, RefreshCw, AlertCircle } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 export default function AnalyticsPage() {
@@ -18,200 +18,215 @@ export default function AnalyticsPage() {
     const [categoryData, setCategoryData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [error, setError] = useState(null);
+    const [lastRefresh, setLastRefresh] = useState(null);
 
     const COLORS = ["#fb923c", "#8b5cf6", "#3b82f6"];
 
     async function loadAnalyticsData() {
         try {
             setRefreshing(true);
-            // Fetch habits and goals
+            setError(null);
+            
+            // Fetch habits and goals with cache busting
             const [habitsRes, goalsRes] = await Promise.all([
                 fetch("/api/habits?_t=" + Date.now()),
                 fetch("/api/goals?_t=" + Date.now())
             ]);
 
             if (!habitsRes.ok || !goalsRes.ok) {
-                setLoading(false);
-                setRefreshing(false);
-                return;
+                throw new Error(`Failed to fetch analytics data`);
             }
 
             const habitsData = await habitsRes.json();
             const goalsData = await goalsRes.json();
 
-            // Handle both array and object responses
-            const habits = Array.isArray(habitsData) ? habitsData : habitsData.habits || [];
-            const goals = Array.isArray(goalsData) ? goalsData : goalsData.goals || [];
+            // Safely extract arrays - handle both direct arrays and wrapped responses
+            const habits = Array.isArray(habitsData) 
+                ? habitsData 
+                : (habitsData?.data || habitsData?.habits || []);
+            
+            const goals = Array.isArray(goalsData) 
+                ? goalsData 
+                : (goalsData?.data || goalsData?.goals || []);
 
-                // Calculate consistency score from last 30 days
-                const last30Days = [];
-                for (let i = 29; i >= 0; i--) {
-                    const date = new Date();
-                    date.setDate(date.getDate() - i);
-                    last30Days.push(date.toISOString().split("T")[0]);
-                }
-
-                let totalPossible = 0;
-                let totalCompleted = 0;
-
-                // Count habit completions
-                habits.forEach(habit => {
-                    if (!habit.logs) return;
-                    const last30Logs = habit.logs.filter(log => {
-                        const logDate = new Date(log.date).toISOString().split("T")[0];
-                        return last30Days.includes(logDate) && log.done;
-                    });
-                    totalPossible += last30Days.length;
-                    totalCompleted += last30Logs.length;
-                });
-
-                const consistencyScore = totalPossible > 0 ? Math.round((totalCompleted / totalPossible) * 100) : 0;
-
-                // Calculate longest streak
-                let longestStreak = 0;
-                habits.forEach(habit => {
-                    if (!habit.logs || habit.logs.length === 0) return;
-                    
-                    const sortedLogs = habit.logs.sort((a, b) => new Date(a.date) - new Date(b.date));
-                    let currentStreak = 0;
-                    let lastDate = null;
-
-                    sortedLogs.forEach(log => {
-                        const logDate = new Date(log.date);
-                        if (!lastDate) {
-                            currentStreak = 1;
-                        } else {
-                            const dayDiff = Math.floor((logDate - lastDate) / (1000 * 60 * 60 * 24));
-                            if (dayDiff === 1) {
-                                currentStreak++;
-                            } else if (dayDiff > 1) {
-                                currentStreak = 1;
-                            }
-                        }
-                        longestStreak = Math.max(longestStreak, currentStreak);
-                        lastDate = logDate;
-                    });
-                });
-
-                // Calculate life completion %
-                // A goal is considered completed if marked isCompleted, all subgoals are completed, or progress >= 100
-                let totalProgress = 0;
-                const completedGoals = goals.filter(g => {
-                    if (g.isCompleted) return true;
-                    if (g.progress >= 100) return true;
-                    if (g.subGoals && g.subGoals.length > 0) {
-                        return g.subGoals.every(sg => sg.isCompleted);
-                    }
-                    return false;
-                }).length;
-                
-                // Also calculate average progress across all goals
-                if (goals.length > 0) {
-                    totalProgress = goals.reduce((sum, g) => sum + (g.progress || 0), 0) / goals.length;
-                }
-                
-                const lifeCompletion = goals.length > 0 ? Math.max(
-                    Math.round((completedGoals / goals.length) * 100),
-                    Math.round(totalProgress)
-                ) : 0;
-
-                // Generate consistency over time chart (last 30 days)
-                const chartData = [];
-                for (let i = 29; i >= 0; i--) {
-                    const date = new Date();
-                    date.setDate(date.getDate() - i);
-                    const dateStr = date.toISOString().split("T")[0];
-                    const dayNum = date.getDate();
-
-                    let dayScore = 0;
-                    habits.forEach(habit => {
-                        if (habit.logs) {
-                            const isDone = habit.logs.some(log => 
-                                new Date(log.date).toISOString().split("T")[0] === dateStr && log.done
-                            );
-                            if (isDone) dayScore += 100 / Math.max(habits.length, 1);
-                        }
-                    });
-
-                    chartData.push({
-                        date: `${date.getMonth() + 1}/${dayNum}`,
-                        consistency: Math.round(dayScore)
-                    });
-                }
-
-                // Generate heatmap data (last 12 weeks x 7 days)
-                const heatmap = [];
-                const dayNames = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
-                
-                for (let week = 11; week >= 0; week--) {
-                    const weekData = [];
-                    for (let day = 0; day < 7; day++) {
-                        const date = new Date();
-                        date.setDate(date.getDate() - (week * 7 + day));
-                        const dateStr = date.toISOString().split("T")[0];
-
-                        let intensity = 0;
-                        habits.forEach(habit => {
-                            if (habit.logs && habit.logs.some(log => 
-                                new Date(log.date).toISOString().split("T")[0] === dateStr && log.done
-                            )) {
-                                intensity += 1;
-                            }
-                        });
-
-                        weekData.push({
-                            date: dateStr,
-                            day: dayNames[date.getDay()],
-                            intensity: Math.min(intensity, habits.length > 0 ? habits.length : 1)
-                        });
-                    }
-                    heatmap.push(weekData);
-                }
-
-                // Category distribution from goals
-                const categoryCount = {};
-                goals.forEach(goal => {
-                    const category = goal.category || "General";
-                    categoryCount[category] = (categoryCount[category] || 0) + 1;
-                });
-
-                const totalCategories = Object.values(categoryCount).reduce((a, b) => a + b, 0);
-                const catData = Object.entries(categoryCount).map(([name, value]) => ({
-                    name,
-                    value: totalCategories > 0 ? Math.round((value / totalCategories) * 100) : 0,
-                    count: value
-                }));
-
+            // If no data, set empty state
+            if (habits.length === 0 && goals.length === 0) {
                 setStats({
-                    consistencyScore,
-                    consistencyChange: 8,
-                    longestStreak,
-                    lifeCompletion
+                    consistencyScore: 0,
+                    consistencyChange: 0,
+                    longestStreak: 0,
+                    lifeCompletion: 0
                 });
-                setConsistencyData(chartData);
-                setHeatmapData(heatmap);
-                setCategoryData(catData);
+                setConsistencyData([]);
+                setHeatmapData([]);
+                setCategoryData([]);
+                setLastRefresh(new Date().toLocaleTimeString());
                 setLoading(false);
                 setRefreshing(false);
-            } catch (error) {
-                console.error("Failed to load analytics:", error);
-                setLoading(false);
-                setRefreshing(false);
+                return;
             }
-        }
 
-    // Load data on mount
+            // Calculate consistency score from last 30 days
+            const last30Days = [];
+            for (let i = 29; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                last30Days.push(date.toISOString().split("T")[0]);
+            }
+
+            let totalPossible = 0;
+            let totalCompleted = 0;
+
+            // Count habit completions
+            habits.forEach(habit => {
+                if (!habit.logs || !Array.isArray(habit.logs)) return;
+                const last30Logs = habit.logs.filter(log => {
+                    const logDate = new Date(log.date).toISOString().split("T")[0];
+                    return last30Days.includes(logDate) && log.done;
+                });
+                totalPossible += last30Days.length;
+                totalCompleted += last30Logs.length;
+            });
+
+            const consistencyScore = totalPossible > 0 ? Math.round((totalCompleted / totalPossible) * 100) : 0;
+
+            // Calculate longest streak
+            let longestStreak = 0;
+            habits.forEach(habit => {
+                if (!habit.logs || habit.logs.length === 0) return;
+                
+                const sortedLogs = [...habit.logs].sort((a, b) => new Date(a.date) - new Date(b.date));
+                let currentStreak = 0;
+                let lastDate = null;
+
+                sortedLogs.forEach(log => {
+                    const logDate = new Date(log.date);
+                    if (!lastDate) {
+                        currentStreak = 1;
+                    } else {
+                        const dayDiff = Math.floor((logDate - lastDate) / (1000 * 60 * 60 * 24));
+                        if (dayDiff === 1) {
+                            currentStreak++;
+                        } else if (dayDiff > 1) {
+                            currentStreak = 1;
+                        }
+                    }
+                    longestStreak = Math.max(longestStreak, currentStreak);
+                    lastDate = logDate;
+                });
+            });
+
+            // Calculate life completion %
+            let totalProgress = 0;
+            const completedGoals = goals.filter(g => {
+                if (g.isCompleted) return true;
+                if (g.progress >= 100) return true;
+                if (g.subGoals && g.subGoals.length > 0) {
+                    return g.subGoals.every(sg => sg.isCompleted);
+                }
+                return false;
+            }).length;
+            
+            if (goals.length > 0) {
+                totalProgress = goals.reduce((sum, g) => sum + (g.progress || 0), 0) / goals.length;
+            }
+            
+            const lifeCompletion = goals.length > 0 ? Math.max(
+                Math.round((completedGoals / goals.length) * 100),
+                Math.round(totalProgress)
+            ) : 0;
+
+            // Generate consistency over time chart (last 30 days)
+            const chartData = [];
+            for (let i = 29; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toISOString().split("T")[0];
+                const dayNum = date.getDate();
+
+                let dayScore = 0;
+                habits.forEach(habit => {
+                    if (habit.logs && Array.isArray(habit.logs)) {
+                        const isDone = habit.logs.some(log => 
+                            new Date(log.date).toISOString().split("T")[0] === dateStr && log.done
+                        );
+                        if (isDone) dayScore += 100 / Math.max(habits.length, 1);
+                    }
+                });
+
+                chartData.push({
+                    date: `${date.getMonth() + 1}/${dayNum}`,
+                    consistency: Math.round(dayScore)
+                });
+            }
+
+            // Generate heatmap data (last 12 weeks x 7 days)
+            const heatmap = [];
+            const dayNames = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+            
+            for (let week = 11; week >= 0; week--) {
+                const weekData = [];
+                for (let day = 0; day < 7; day++) {
+                    const date = new Date();
+                    date.setDate(date.getDate() - (week * 7 + day));
+                    const dateStr = date.toISOString().split("T")[0];
+
+                    let intensity = 0;
+                    habits.forEach(habit => {
+                        if (habit.logs && Array.isArray(habit.logs) && habit.logs.some(log => 
+                            new Date(log.date).toISOString().split("T")[0] === dateStr && log.done
+                        )) {
+                            intensity += 1;
+                        }
+                    });
+
+                    weekData.push({
+                        date: dateStr,
+                        day: dayNames[date.getDay()],
+                        intensity: Math.min(intensity, habits.length > 0 ? habits.length : 1)
+                    });
+                }
+                heatmap.push(weekData);
+            }
+
+            // Category distribution from goals
+            const categoryCount = {};
+            goals.forEach(goal => {
+                const category = goal.category || "General";
+                categoryCount[category] = (categoryCount[category] || 0) + 1;
+            });
+
+            const totalCategories = Object.values(categoryCount).reduce((a, b) => a + b, 0);
+            const catData = Object.entries(categoryCount).map(([name, value]) => ({
+                name,
+                value: totalCategories > 0 ? Math.round((value / totalCategories) * 100) : 0,
+                count: value
+            }));
+
+            setStats({
+                consistencyScore,
+                consistencyChange: 8,
+                longestStreak,
+                lifeCompletion
+            });
+            setConsistencyData(chartData);
+            setHeatmapData(heatmap);
+            setCategoryData(catData);
+            setLastRefresh(new Date().toLocaleTimeString());
+            setLoading(false);
+            setRefreshing(false);
+        } catch (error) {
+            console.error("Failed to load analytics:", error);
+            setError(error.message || "Failed to load analytics data");
+            setLoading(false);
+            setRefreshing(false);
+        }
+    }
+
+    // Load data on mount only
     useEffect(() => {
         loadAnalyticsData();
-    }, []);
-
-    // Auto-refresh every 10 seconds
-    useEffect(() => {
-        const interval = setInterval(() => {
-            loadAnalyticsData();
-        }, 10000);
-
-        return () => clearInterval(interval);
     }, []);
 
     if (loading) {
@@ -227,6 +242,28 @@ export default function AnalyticsPage() {
         );
     }
 
+    if (error) {
+        return (
+            <DashboardLayout active="Analytics">
+                <div className="mx-auto max-w-7xl">
+                    <div className="flex items-center gap-4 p-6 bg-red-50 border border-red-200 rounded-lg">
+                        <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
+                        <div className="flex-1">
+                            <h3 className="font-semibold text-red-900">Error loading analytics</h3>
+                            <p className="text-sm text-red-700 mt-1">{error}</p>
+                        </div>
+                        <button
+                            onClick={loadAnalyticsData}
+                            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                </div>
+            </DashboardLayout>
+        );
+    }
+
     return (
         <DashboardLayout active="Analytics">
             <div className="mx-auto max-w-7xl space-y-8">
@@ -235,6 +272,7 @@ export default function AnalyticsPage() {
                     <div>
                         <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Analytics</h1>
                         <p className="text-gray-500 mt-1">Your performance insights and trends</p>
+                        {lastRefresh && <p className="text-xs text-gray-400 mt-2">Last updated: {lastRefresh}</p>}
                     </div>
                     <button
                         onClick={loadAnalyticsData}

@@ -19,7 +19,7 @@ export default async function HabitsPage() {
 
   return (
     <DashboardLayout active="Habits">
-      <div className="mx-auto max-w-6xl space-y-6">
+      <div className="mx-auto max-w-6xl space-y-4 sm:space-y-6 px-3 sm:px-0">
         {/* Header */}
         <HabitHeader />
 

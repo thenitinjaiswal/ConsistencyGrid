@@ -5,37 +5,84 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
 import CopyButton from "@/components/ui/CopyButton";
+import { Download, Share2, Sparkles, RefreshCw } from "lucide-react";
 
 export default function WallpaperCard() {
   const [publicToken, setPublicToken] = useState("");
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(Date.now());
+  const [wallpaperStats, setWallpaperStats] = useState({
+    percentComplete: 0,
+    weeksLived: 0,
+  });
+
+  const loadData = async () => {
+    try {
+      const res = await fetch("/api/settings/me", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        setPublicToken(data.user?.publicToken || "");
+        // Force wallpaper image refresh with cache-bust timestamp
+        setRefreshKey(Date.now());
+        // Calculate wallpaper stats
+        if (data.user?.createdAt) {
+          const created = new Date(data.user.createdAt);
+          const now = new Date();
+          const weeksLived = Math.floor(
+            (now - created) / (7 * 24 * 60 * 60 * 1000)
+          );
+          const percentComplete = Math.min(
+            (weeksLived / 1111) * 100,
+            100
+          ).toFixed(1);
+          setWallpaperStats({ percentComplete, weeksLived });
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function loadToken() {
-      try {
-        const res = await fetch("/api/settings/me");
-        if (res.ok) {
-          const data = await res.json();
-          setPublicToken(data.user?.publicToken || "");
-        }
-      } catch (err) {
-        console.error("Failed to load token:", err);
-      } finally {
-        setLoading(false);
+    loadData();
+    const interval = setInterval(loadData, 30000); // Refresh every 30 seconds
+    const handleFocus = () => {
+      setLoading(true);
+      loadData();
+    };
+    
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        setLoading(true);
+        loadData();
       }
-    }
-    loadToken();
+    };
+    
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   const publicLink = publicToken ? `/w/${publicToken}` : "";
-  const wallpaperPng = publicToken ? `/w/${publicToken}/image.png` : "";
+  const wallpaperPng = publicToken ? `/w/${publicToken}/image.png?t=${refreshKey}` : "";
+
+  const handleManualRefresh = () => {
+    setRefreshKey(Date.now());
+  };
 
   if (loading) {
     return (
-      <Card className="p-5 animate-pulse">
+      <Card className="p-6">
         <div className="space-y-4">
-          <div className="h-4 w-32 rounded bg-gray-200" />
-          <div className="h-64 w-full rounded-lg bg-gray-200" />
+          <div className="h-6 w-32 rounded bg-gray-200 animate-pulse" />
+          <div className="h-80 w-full rounded-xl bg-gray-200 animate-pulse" />
         </div>
       </Card>
     );
@@ -43,16 +90,22 @@ export default function WallpaperCard() {
 
   if (!publicToken) {
     return (
-      <Card className="p-5">
+      <Card className="p-6 border-2 border-dashed border-orange-200 bg-gradient-to-br from-orange-50/30 to-transparent">
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <p className="text-sm font-semibold text-gray-700">
-            No wallpaper yet
+          <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mb-4">
+            <Sparkles className="w-8 h-8 text-orange-600" />
+          </div>
+          <p className="text-lg font-bold text-gray-900">
+            Create Your Wallpaper
           </p>
-          <p className="mt-2 text-xs text-gray-500">
-            Go to Generator to create your first wallpaper
+          <p className="mt-2 text-sm text-gray-600 max-w-xs">
+            Generate a personalized life calendar wallpaper to track your goals and habits
           </p>
-          <Link href="/generator" className="mt-4">
-            <Button variant="primary">Open Generator</Button>
+          <Link href="/generator" className="mt-6">
+            <Button variant="primary">
+              <Sparkles className="w-4 h-4 mr-2" />
+              Open Generator
+            </Button>
           </Link>
         </div>
       </Card>
@@ -60,69 +113,75 @@ export default function WallpaperCard() {
   }
 
   return (
-    <Card className="p-5 animate-scale-in">
-      <div className="flex items-center justify-between">
+    <Card className="p-6 border border-gray-200/50">
+      <div className="flex items-start justify-between mb-4">
         <div>
-          <h2 className="text-sm font-bold text-gray-900">Your Wallpaper</h2>
-          <p className="text-xs text-gray-500">Live preview + quick actions</p>
+          <h2 className="text-lg font-semibold text-gray-900">Your Wallpaper</h2>
+          <p className="text-sm text-gray-600">
+            {wallpaperStats.percentComplete}% of life lived ({wallpaperStats.weeksLived} weeks)
+          </p>
         </div>
-
-        <span className="flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-[11px] font-semibold text-green-700">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-600" />
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+          <span className="h-1.5 w-1.5 rounded-full bg-green-600 animate-pulse" />
           Live
         </span>
       </div>
 
-      <div className="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Preview */}
-        <div className="flex items-center justify-center rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 p-5 transition-all hover:shadow-lg">
-          <div className="w-[240px] overflow-hidden rounded-[30px] border-2 border-gray-300 bg-black shadow-xl transition-transform hover:scale-105">
-            <img
-              src={wallpaperPng}
-              alt="Wallpaper Preview"
-              className="h-auto w-full"
-              loading="lazy"
-            />
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex flex-col justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold text-gray-700">
-              Quick Actions
-            </p>
-
-            <div className="mt-2 flex flex-wrap gap-2">
-              <Link href="/generator">
-                <Button variant="secondary">Open Generator</Button>
-              </Link>
-
-              <a href={wallpaperPng} download="consistencygrid-wallpaper.png">
-                <Button variant="primary">Download PNG</Button>
-              </a>
-
-              <CopyButton text={wallpaperPng} label="Copy URL" />
-            </div>
-          </div>
-
-          {/* Public Link */}
-          <div>
-            <p className="text-xs font-semibold text-gray-700">Public Link</p>
-
-            <div className="mt-2 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2">
-              <p className="flex-1 break-all text-sm text-gray-700">
-                {publicLink}
-              </p>
-              <CopyButton text={`${window.location.origin}${publicLink}`} label="Copy" />
-            </div>
-
-            <p className="mt-2 text-[11px] text-gray-400">
-              Use this URL in MacroDroid / automation apps.
-            </p>
-          </div>
+      {/* Wallpaper Preview */}
+      <div className="mb-6 flex justify-center">
+        <div className="w-56 overflow-hidden rounded-3xl border-8 border-gray-900 bg-black shadow-xl relative">
+          <img
+            key={refreshKey}
+            src={wallpaperPng}
+            alt="Wallpaper"
+            className="h-auto w-full"
+            loading="lazy"
+          />
         </div>
       </div>
+
+      {/* Quick Actions */}
+      <div className="mb-6">
+        <p className="text-sm font-semibold text-gray-900 mb-3">Quick Actions</p>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/generator">
+            <Button variant="primary" size="sm" className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              Open Generator
+            </Button>
+          </Link>
+
+          <button
+            onClick={handleManualRefresh}
+            className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Refresh
+          </button>
+
+          <a href={wallpaperPng} download="consistencygrid-wallpaper.png">
+            <Button variant="secondary" size="sm" className="flex items-center gap-2">
+              <Download className="w-4 h-4" />
+              Download PNG
+            </Button>
+          </a>
+
+          <CopyButton text={wallpaperPng} label="Copy URL" />
+        </div>
+      </div>
+
+      {/* Public Link */}
+      {publicLink && (
+        <div className="pt-6 border-t border-gray-200">
+          <p className="text-sm font-semibold text-gray-900 mb-2">Public Link</p>
+          <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2">
+            <code className="text-xs text-gray-600 flex-1 break-all">
+              {publicLink}
+            </code>
+            <CopyButton text={`${typeof window !== "undefined" ? window.location.origin : ""}${publicLink}`} label="Copy" />
+          </div>
+        </div>
+      )}
     </Card>
   );
 }

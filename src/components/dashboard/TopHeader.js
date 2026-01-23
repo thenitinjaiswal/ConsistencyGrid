@@ -9,21 +9,29 @@ export default function TopHeader() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadUser() {
-      try {
-        const res = await fetch("/api/settings/me");
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data.user);
-        }
-      } catch (err) {
-        console.error("Failed to load user:", err);
-      } finally {
-        setLoading(false);
+  const loadUser = async () => {
+    try {
+      const res = await fetch("/api/settings/me", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
       }
+    } catch (err) {
+      console.error("Failed to load user:", err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     loadUser();
+    const interval = setInterval(loadUser, 90000);
+    const handleFocus = () => loadUser();
+    window.addEventListener("focus", handleFocus);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", handleFocus);
+    };
   }, []);
 
   const wallpaperUrl = user?.publicToken
