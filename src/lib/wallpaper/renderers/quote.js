@@ -1,41 +1,36 @@
+import { drawSafeText } from "../utils";
+
 /**
  * Draws the motivational quote footer at the bottom of the wallpaper
- * 
- * Renders a centered quote with the app branding below it.
- * Uses text shadows for depth and visual hierarchy.
- * 
- * @param {CanvasRenderingContext2D} context - The canvas 2D rendering context
- * @param {Object} params - Drawing parameters
- * @param {number} params.xCoordinate - X coordinate (not used, quote is centered)
- * @param {number} params.yCoordinate - Y coordinate (not used, positioned from bottom)
- * @param {number} params.width - Canvas width (used for centering)
- * @param {number} params.height - Canvas height (used for bottom positioning)
- * @param {string} params.quote - The quote text to display
- * @param {Object} params.theme - Theme object (currently unused)
+ *
+ * @param {CanvasRenderingContext2D} context
+ * @param {Object} params
+ * @param {number} params.width
+ * @param {number} params.height
+ * @param {string} params.quote
+ * @param {Object} params.theme
  */
-export function drawQuote(context, { xCoordinate, yCoordinate, width, height, quote, theme }) {
-    // Save current context state to restore later
-    context.save();
+export function drawQuote(context, { width, height, quote, theme }) {
+  if (!quote) return;
 
-    // Center-align all text
-    context.textAlign = "center";
+  const quoteY = height - 100;
 
-    // Add subtle text shadow for depth and readability
-    context.shadowColor = "rgba(0,0,0,0.3)";  // Semi-transparent black
-    context.shadowBlur = 4;                    // Soft blur radius
-    context.shadowOffsetY = 2;                 // Slight downward offset
+  // MAIN QUOTE
+  drawSafeText(context, quote.toUpperCase(), width / 2, quoteY, {
+    font: "500 18px Inter, sans-serif",
+    color: "#525252",
+    align: "center",
+    shadow: true,
+    shadowColor: "rgba(0,0,0,0.35)",
+    shadowBlur: 6,
+    shadowOffsetY: 2,
+  });
 
-    // Draw the main quote text
-    context.fillStyle = "#525252";  // Medium gray color
-    context.font = "medium 18px Inter, sans-serif";
-    const quoteY = height - 100;    // Position 100px from bottom
-    context.fillText(quote.toUpperCase(), width / 2, quoteY);
-
-    // Draw the app branding below the quote
-    context.fillStyle = "#333";     // Darker gray for subtle branding
-    context.font = "14px Inter, sans-serif";
-    context.fillText("CONSISTENCY GRID", width / 2, quoteY + 30);
-
-    // Restore context state (removes shadow effects)
-    context.restore();
+  // BRANDING
+  drawSafeText(context, "CONSISTENCY GRID", width / 2, quoteY + 30, {
+    font: "14px Inter, sans-serif",
+    color: "#333",
+    align: "center",
+    shadow: false,
+  });
 }

@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import FullCanvasWallpaperClient from "./FullCanvasWallpaperClient";
+import PublicWallpaperClient from "./PublicWallpaperClient";
 
 export default async function PublicWallpaperPage({ params }) {
   const { token } = await params;
@@ -47,7 +47,7 @@ export default async function PublicWallpaperPage({ params }) {
   const lifeProgress = ((ageYears / s.lifeExpectancyYears) * 100).toFixed(1);
 
   return (
-    <FullCanvasWallpaperClient 
+    <PublicWallpaperClient 
       token={token}
       settings={s}
       ageYears={ageYears}

@@ -1,7 +1,5 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
-
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -10,7 +8,7 @@ import { sendWallpaperToAndroid } from "@/utils/sendWallpaperToAndroid";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import GeneratorForm from "@/components/generator/GeneratorForm";
-import FullCanvasWallpaper from "@/components/FullCanvasWallpaper";
+import GeneratorPreview from "@/components/generator/GeneratorPreview";
 
 // Metadata for SEO (Note: In Next.js App Router, client components can't export metadata directly)
 // This is handled via the layout.js file
@@ -171,13 +169,11 @@ export default function GeneratorPage() {
 
           {/* Right: Preview (5 cols) */}
           <div className="lg:col-span-5">
-            <div className="rounded-2xl border border-white/10 bg-black/50 p-6 sticky top-24">
-              <h2 className="text-lg font-semibold text-white mb-4">Live Wallpaper Preview</h2>
-              <FullCanvasWallpaper 
-                token={publicToken}
-                userSettings={form}
-              />
-            </div>
+            <GeneratorPreview
+              publicToken={publicToken}
+              loading={loading}
+              form={form}
+            />
           </div>
         </div>
       </div>

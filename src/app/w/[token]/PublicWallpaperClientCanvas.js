@@ -2,18 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import CopyLinkButton from '@/components/common/CopyLinkButton';
+import CanvasWallpaperEngine from '@/components/CanvasWallpaperEngine';
 import { RefreshCw } from 'lucide-react';
 
 /**
- * Public Wallpaper - Backend-Rendered with Live Data
+ * Public Wallpaper - Canvas-Only Implementation
  * 
- * This displays the backend-generated wallpaper that includes:
- * - Live habit data and completion status
- * - Active goals and progress
- * - Habit graphs and charts
- * - Quotes and reminders
- * - Life grid with actual completion data
- * - All user customizations
+ * This is the public-facing wallpaper page that renders ONLY using Canvas.
+ * No HTML/CSS overlays - everything is drawn on canvas for production reliability.
  */
 
 export default function PublicWallpaperClient({
@@ -22,11 +18,50 @@ export default function PublicWallpaperClient({
   ageYears,
   lifeProgress,
 }) {
+  const [stats, setStats] = useState({
+    ageYears,
+    lifeProgress: Math.min(100, Math.max(0, lifeProgress)),
+    currentStreak: 0,
+    lifeExpectancy: s.lifeExpectancyYears,
+  });
+
+  const [gridConfig, setGridConfig] = useState({
+    gridSize: 52,
+    blockSize: 12,
+    spacing: 3,
+    rows: 80,
+    cols: 52,
+    activeIndices: new Set(),
+  });
+
   const [refreshKey, setRefreshKey] = useState(Date.now());
-  const [imageLoading, setImageLoading] = useState(true);
 
   /**
-   * Auto-refresh every 10 seconds to show latest habit data
+   * Update grid based on age
+   */
+  useEffect(() => {
+    const birthDate = new Date(s.dob);
+    const today = new Date();
+
+    // Calculate weeks lived
+    const weeksLived = Math.floor(
+      (today - birthDate) / (7 * 24 * 60 * 60 * 1000)
+    );
+
+    // Generate active indices (weeks lived)
+    const activeIndices = new Set();
+    for (let i = 0; i < Math.min(weeksLived, 80 * 52); i++) {
+      activeIndices.add(i);
+    }
+
+    setGridConfig((prev) => ({
+      ...prev,
+      activeIndices,
+    }));
+  }, [s.dob]);
+
+  /**
+   * Auto-refresh every 10 seconds to show current time
    */
   useEffect(() => {
     const interval = setInterval(() => {
@@ -37,11 +72,8 @@ export default function PublicWallpaperClient({
   }, []);
 
   const handleManualRefresh = () => {
-    setImageLoading(true);
     setRefreshKey(Date.now());
   };
-
-  const wallpaperUrl = `/w/${token}/image.png?t=${refreshKey}`;
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black text-white flex items-center justify-center p-4 md:p-8">
@@ -68,19 +100,23 @@ export default function PublicWallpaperClient({
 
         {/* Content */}
         <div className="p-6">
-          {/* Wallpaper Preview with Refresh */}
+          {/* Wallpaper Canvas */}
           <div className="relative group">
-            <img
-              key={refreshKey}
-              src={wallpaperUrl}
-              alt="Wallpaper Preview"
-              className="w-full rounded-2xl border border-white/20 shadow-2xl transition-transform duration-300 group-hover:scale-[1.02]"
-              loading="lazy"
-              onLoad={() => setImageLoading(false)}
-            />
+            <div className="rounded-2xl border border-white/20 shadow-2xl overflow-hidden bg-black">
+              <CanvasWallpaperEngine
+                key={refreshKey}
+                token={token}
+                theme={s.theme || 'dark-minimal'}
+                baseImagePath={null}
+                stats={stats}
+                gridConfig={gridConfig}
+                showPreview={true}
+                onExport={null}
+              />
+            </div>
 
             {/* Hover overlay with refresh */}
-            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl flex items-center justify-center gap-3">
+            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl flex items-center justify-center">
               <button
                 onClick={handleManualRefresh}
                 className="inline-flex items-center gap-2 px-3 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg text-sm font-medium transition-colors"
@@ -88,14 +124,6 @@ export default function PublicWallpaperClient({
                 <RefreshCw className="w-4 h-4" />
                 Refresh
               </button>
-              <a
-                href={wallpaperUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-sm font-medium transition-colors"
-              >
-                Open
-              </a>
             </div>
           </div>
 
@@ -218,7 +246,7 @@ export default function PublicWallpaperClient({
         {/* Footer */}
         <div className="px-6 py-4 border-t border-white/10 bg-white/5">
           <p className="text-xs text-center text-gray-500">
-            🔄 Auto-refreshes every 10 seconds • Habit data live • Production ready
+            🎨 Canvas-rendered • Updates every minute • Production ready
           </p>
         </div>
 
