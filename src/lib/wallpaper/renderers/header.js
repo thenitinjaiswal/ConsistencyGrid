@@ -17,12 +17,12 @@ export function drawDashboardHeader(
   /* ---------------- LEFT COLUMN ---------------- */
 
   drawSafeText(context, "GOALS", xCoordinate, yCoordinate, {
-    font: "bold 40px Inter, sans-serif",
+    font: "bold 40px Arial, sans-serif",
     color: theme.TEXT_SUB,
   });
 
   drawSafeText(context, "GROWTH", xCoordinate, yCoordinate + 50, {
-    font: "bold 40px Inter, sans-serif",
+    font: "bold 40px Arial, sans-serif",
     color: theme.TEXT_MAIN,
   });
 

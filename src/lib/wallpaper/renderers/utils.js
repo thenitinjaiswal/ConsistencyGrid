@@ -72,7 +72,7 @@ export function drawSafeText(
   x,
   y,
   {
-    font = "16px Inter, sans-serif",
+    font = "16px Arial, sans-serif",
     color = "#ffffff",
     align = "left",
     baseline = "alphabetic",
@@ -82,7 +82,13 @@ export function drawSafeText(
   if (!text) return;
 
   ctx.save();
-  ctx.font = font;
+  
+  // Fallback: Replace Inter with Arial if Inter unavailable on server
+  const fontString = font.includes('Inter') 
+    ? font.replace(/Inter/g, 'Arial')
+    : font;
+  
+  ctx.font = fontString;
   ctx.fillStyle = color;
   ctx.textAlign = align;
   ctx.textBaseline = baseline;

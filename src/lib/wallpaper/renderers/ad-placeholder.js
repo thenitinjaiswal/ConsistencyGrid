@@ -1,4 +1,4 @@
-import { drawRoundedRect } from "./utils";
+import { drawRoundedRect, drawSafeText } from "./utils";
 
 /**
  * Draws an advertisement placeholder section (Currently Unused)
@@ -39,12 +39,10 @@ export function drawAdPlaceholder(context, { xCoordinate, yCoordinate, width, he
     drawRoundedRect(context, xCoordinate, yCoordinate, width, height, 12, gradient, "#333");
 
     // Draw centered "ADVERTISEMENT" label
-    context.fillStyle = theme.TEXT_SUB;  // Use theme's secondary text color
-    context.textAlign = "center";
-    context.font = "bold 14px Inter, sans-serif";
-    context.fillText(
-        "ADVERTISEMENT",
-        xCoordinate + width / 2,      // Center horizontally
-        yCoordinate + height / 2 + 5  // Center vertically (+ 5 for optical alignment)
-    );
+    drawSafeText(context, "ADVERTISEMENT", xCoordinate + width / 2, yCoordinate + height / 2 + 5, {
+        font: "bold 14px Arial, sans-serif",
+        color: theme.TEXT_SUB,
+        align: "center",
+        baseline: "middle"
+    });
 }

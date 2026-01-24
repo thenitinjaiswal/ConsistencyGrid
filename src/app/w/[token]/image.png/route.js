@@ -160,11 +160,6 @@ canvasContext.textBaseline = "top";
 canvasContext.textAlign = "left";
 canvasContext.direction = "ltr";
 
-// 🧪 DEBUG TEXT
-canvasContext.fillStyle = "#ffffff";
-canvasContext.font = "bold 48px Inter";
-canvasContext.fillText("TEXT TEST", 50, 50);
-
 
     
 
