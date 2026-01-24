@@ -106,7 +106,38 @@ function drawBackground(ctx, width, height, theme) {
 }
 
 /**
+ * Helper: Draw text with strong shadow for visibility on any background
+ */
+function drawTextWithShadow(ctx, text, x, y, fontSize, fontWeight, textColor, shadowColor = 'rgba(0, 0, 0, 0.8)', shadowBlur = 12) {
+  ctx.save();
+  
+  // Set font properties
+  ctx.font = `${fontWeight} ${fontSize}px Inter, system-ui, -apple-system, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  
+  // Draw dark shadow for visibility
+  ctx.fillStyle = shadowColor;
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+  ctx.shadowBlur = shadowBlur;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 2;
+  
+  // Draw text with shadow
+  ctx.fillText(text, x, y);
+  
+  // Draw bright text on top
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = textColor;
+  ctx.fillText(text, x, y);
+  
+  ctx.restore();
+}
+
+/**
  * Draw current time and date at the top
+ * CRITICAL: Uses strong shadow for visibility on dark/gradient backgrounds
  */
 function drawTimeAndDate(ctx, width, height, theme) {
   const now = new Date();
@@ -123,17 +154,31 @@ function drawTimeAndDate(ctx, width, height, theme) {
   const weekday = weekdays[now.getDay()];
   const dateStr = `${weekday}, ${day} ${month}`;
 
-  // Draw time
-  ctx.fillStyle = theme.TEXT_PRIMARY;
-  ctx.font = 'bold 64px Inter, system-ui, -apple-system, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'top';
-  ctx.fillText(timeStr, width / 2, 80);
+  // Draw time with strong shadow
+  drawTextWithShadow(
+    ctx,
+    timeStr,
+    width / 2,
+    80,
+    '64',
+    'bold',
+    theme.TEXT_PRIMARY || '#fafafa',
+    'rgba(0, 0, 0, 0.95)',
+    14
+  );
 
-  // Draw date
-  ctx.fillStyle = theme.TEXT_SECONDARY;
-  ctx.font = '400 24px Inter, system-ui, -apple-system, sans-serif';
-  ctx.fillText(dateStr, width / 2, 160);
+  // Draw date with strong shadow
+  drawTextWithShadow(
+    ctx,
+    dateStr,
+    width / 2,
+    160,
+    '24',
+    '400',
+    theme.TEXT_SECONDARY || '#a1a1aa',
+    'rgba(0, 0, 0, 0.95)',
+    12
+  );
 }
 
 /**
@@ -180,33 +225,62 @@ function drawGrid(ctx, width, height, theme, gridConfig = {}) {
 
 /**
  * Draw header with age and life stats
+ * Uses shadows for visibility
  */
 function drawHeader(ctx, width, theme, stats = {}) {
   const { ageYears = 0, lifeExpectancy = 80, currentStreak = 0 } = stats;
 
   const headerY = 1100;
-  ctx.fillStyle = theme.TEXT_PRIMARY;
-  ctx.font = '600 16px Inter, system-ui, -apple-system, sans-serif';
+  ctx.save();
   ctx.textAlign = 'left';
 
   // Age stat
-  ctx.fillText(`Age: ${ageYears} years`, 60, headerY);
+  drawTextWithShadow(
+    ctx,
+    `Age: ${ageYears} years`,
+    60,
+    headerY,
+    '16',
+    '600',
+    theme.TEXT_PRIMARY || '#fafafa',
+    'rgba(0, 0, 0, 0.8)',
+    8
+  );
 
   // Life expectancy
-  ctx.fillStyle = theme.TEXT_SECONDARY;
-  ctx.font = '400 14px Inter, system-ui, -apple-system, sans-serif';
-  ctx.fillText(`Life expectancy: ${lifeExpectancy} years`, 60, headerY + 30);
+  drawTextWithShadow(
+    ctx,
+    `Life expectancy: ${lifeExpectancy} years`,
+    60,
+    headerY + 30,
+    '14',
+    '400',
+    theme.TEXT_SECONDARY || '#a1a1aa',
+    'rgba(0, 0, 0, 0.8)',
+    8
+  );
 
   // Streak (if applicable)
   if (currentStreak > 0) {
-    ctx.fillStyle = theme.ACCENT;
-    ctx.font = '600 16px Inter, system-ui, -apple-system, sans-serif';
-    ctx.fillText(`🔥 Streak: ${currentStreak}`, 60, headerY + 60);
+    drawTextWithShadow(
+      ctx,
+      `🔥 Streak: ${currentStreak}`,
+      60,
+      headerY + 60,
+      '16',
+      '600',
+      theme.ACCENT || '#ffffff',
+      'rgba(0, 0, 0, 0.8)',
+      8
+    );
   }
+
+  ctx.restore();
 }
 
 /**
  * Draw a progress bar (e.g., for life progress)
+ * Uses shadows for label and percentage visibility
  */
 function drawProgressBar(ctx, width, theme, config = {}) {
   const {
@@ -218,11 +292,20 @@ function drawProgressBar(ctx, width, theme, config = {}) {
     label = 'Life Progress',
   } = config;
 
-  // Label
-  ctx.fillStyle = theme.TEXT_PRIMARY;
-  ctx.font = '600 14px Inter, system-ui, -apple-system, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText(label, x, y - 20);
+  ctx.save();
+
+  // Label with shadow
+  drawTextWithShadow(
+    ctx,
+    label,
+    x,
+    y - 20,
+    '14',
+    '600',
+    theme.TEXT_PRIMARY || '#fafafa',
+    'rgba(0, 0, 0, 0.8)',
+    8
+  );
 
   // Background bar
   ctx.fillStyle = theme.GRID_INACTIVE;
@@ -233,21 +316,57 @@ function drawProgressBar(ctx, width, theme, config = {}) {
   ctx.fillStyle = theme.ACCENT;
   ctx.fillRect(x, y, progressWidth, barHeight);
 
-  // Percentage text
-  ctx.fillStyle = theme.TEXT_SECONDARY;
-  ctx.font = '400 12px Inter, system-ui, -apple-system, sans-serif';
-  ctx.fillText(`${percentage.toFixed(1)}%`, x + barWidth + 20, y + barHeight / 2 + 4);
+  // Percentage text with shadow
+  drawTextWithShadow(
+    ctx,
+    `${percentage.toFixed(1)}%`,
+    x + barWidth + 20,
+    y + barHeight / 2 + 4,
+    '12',
+    '400',
+    theme.TEXT_SECONDARY || '#a1a1aa',
+    'rgba(0, 0, 0, 0.8)',
+    8
+  );
+
+  ctx.restore();
 }
 
 /**
  * Draw footer with attribution/settings
+ * Uses shadows for visibility
  */
 function drawFooter(ctx, width, height, theme) {
-  ctx.fillStyle = theme.TEXT_SECONDARY;
-  ctx.font = '400 12px Inter, system-ui, -apple-system, sans-serif';
+  ctx.save();
   ctx.textAlign = 'center';
-  ctx.fillText('ConsistencyGrid', width / 2, height - 60);
-  ctx.fillText('Live Wallpaper', width / 2, height - 40);
+
+  // App name
+  drawTextWithShadow(
+    ctx,
+    'ConsistencyGrid',
+    width / 2,
+    height - 60,
+    '12',
+    '400',
+    theme.TEXT_SECONDARY || '#a1a1aa',
+    'rgba(0, 0, 0, 0.8)',
+    8
+  );
+
+  // Subtitle
+  drawTextWithShadow(
+    ctx,
+    'Live Wallpaper',
+    width / 2,
+    height - 40,
+    '12',
+    '400',
+    theme.TEXT_SECONDARY || '#a1a1aa',
+    'rgba(0, 0, 0, 0.8)',
+    8
+  );
+
+  ctx.restore();
 }
 
 /**
