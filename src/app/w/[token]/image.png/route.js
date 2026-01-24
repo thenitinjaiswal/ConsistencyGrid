@@ -151,9 +151,22 @@ export async function GET(request, { params }) {
         ? Math.round(((activityMap[currentDayKey] || 0) / activeHabits.length) * 100)
         : 0;
 
-    // --- DRAWING ---
-    const canvas = createCanvas(canvasWidth, canvasHeight);
-    const canvasContext = canvas.getContext("2d");
+  // --- DRAWING ---
+const canvas = createCanvas(canvasWidth, canvasHeight);
+const canvasContext = canvas.getContext("2d");
+
+// 🔥 FIX
+canvasContext.textBaseline = "top";
+canvasContext.textAlign = "left";
+canvasContext.direction = "ltr";
+
+// 🧪 DEBUG TEXT
+canvasContext.fillStyle = "#ffffff";
+canvasContext.font = "bold 48px Inter";
+canvasContext.fillText("TEXT TEST", 50, 50);
+
+
+    
 
     // ENHANCED THEMES - Optimized color palettes for better visual hierarchy and contrast
     const COLOR_THEMES = {
