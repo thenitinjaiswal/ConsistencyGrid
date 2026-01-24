@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+import { withSentryConfig } from '@sentry/nextjs';
+
 const nextConfig = {
   reactCompiler: true,
 
@@ -64,4 +66,15 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+// Wrap with Sentry
+export default withSentryConfig(nextConfig, {
+  // For all available options, see:
+  // https://github.com/getsentry/sentry-webpack-plugin#options
+
+  org: process.env.SENTRY_ORG || "",
+  project: process.env.SENTRY_PROJECT || "",
+  authToken: process.env.SENTRY_AUTH_TOKEN || "",
+
+  // An auth token is required for uploading source maps.
+  silent: true,
+});

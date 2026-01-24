@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { pageview } from "@/lib/analytics";
 
-export function AnalyticsProvider({ children }) {
+function AnalyticsTracking() {
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
@@ -14,5 +14,14 @@ export function AnalyticsProvider({ children }) {
         pageview(url);
     }, [pathname, searchParams]);
 
-    return children;
+    return null;
+}
+
+export function AnalyticsProvider({ children }) {
+    return (
+        <>
+            <AnalyticsTracking />
+            {children}
+        </>
+    );
 }

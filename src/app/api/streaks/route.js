@@ -70,7 +70,7 @@ export async function GET() {
 
         const milestones = await prisma.milestone.findMany({
             where: { userId: user.id },
-            orderBy: { date: 'asc' },
+            orderBy: { createdAt: 'asc' },
         });
 
         return Response.json({

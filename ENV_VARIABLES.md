@@ -23,6 +23,11 @@ NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
 # Google Search Console Verification (Optional)
 NEXT_PUBLIC_GOOGLE_VERIFICATION=your_verification_code
 
+# Email Service - Resend (for password reset emails)
+RESEND_API_KEY=your_resend_api_key_here
+RESEND_FROM_EMAIL=noreply@yourdomain.com
+NEXT_PUBLIC_APP_URL=https://yourdomain.com
+
 # Email Service (Optional, for notifications)
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587

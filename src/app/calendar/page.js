@@ -7,6 +7,8 @@
 
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import CalendarGrid from "@/components/reminders/CalendarGrid";

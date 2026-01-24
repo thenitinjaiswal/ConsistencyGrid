@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { SessionProvider } from "next-auth/react";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import { AnalyticsProvider } from "./analytics-provider";
@@ -13,11 +14,13 @@ export default function Providers({ children }) {
         refetchInterval={24 * 60 * 60}
         refetchOnWindowFocus={true}
       >
-        <AnalyticsProvider>
-          <PWAInitializer />
-          <PWAInstallPrompt />
-          {children}
-        </AnalyticsProvider>
+        <Suspense fallback={null}>
+          <AnalyticsProvider>
+            <PWAInitializer />
+            <PWAInstallPrompt />
+            {children}
+          </AnalyticsProvider>
+        </Suspense>
       </SessionProvider>
     </ErrorBoundary>
   );

@@ -17,7 +17,11 @@ function calculateWeeksBetween(startDate, endDate) {
 }
 
 function formatDateToDayString(date) {
-    return date.toISOString().split("T")[0];
+    // Convert to local date (not UTC) to match how logs are stored
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 export async function GET(request, { params }) {
@@ -108,10 +112,16 @@ export async function GET(request, { params }) {
     const activityMap = {};
     activeHabits.forEach(habit => {
         habit.logs.forEach(log => {
-            const dayKey = formatDateToDayString(log.date);
-            activityMap[dayKey] = (activityMap[dayKey] || 0) + 1;
+            // Only count logs marked as done
+            if (log.done) {
+                const dayKey = formatDateToDayString(log.date);
+                activityMap[dayKey] = (activityMap[dayKey] || 0) + 1;
+            }
         });
     });
+
+    // Total habits for percentage calculation (needed for heatmap)
+    const totalHabits = activeHabits.length || 1;
 
     const currentDate = new Date();
     const currentDayKey = formatDateToDayString(currentDate);
@@ -313,10 +323,12 @@ export async function GET(request, { params }) {
             width: gridWidth,
             height: canvasHeight,
             theme: activeTheme,
+            themeName: settings.theme,
             mode: settings.yearGridMode,
             dob: settings.dateOfBirth,
             lifeExpectancy: settings.lifeExpectancyYears,
             activityMap: activityMap,
+            totalHabits: totalHabits,
             reminders: activeReminders,
             now: currentDate
         });
@@ -353,10 +365,12 @@ export async function GET(request, { params }) {
             width: contentWidth,
             height: canvasHeight,
             theme: activeTheme,
+            themeName: settings.theme,
             mode: settings.yearGridMode,
             dob: settings.dateOfBirth,
             lifeExpectancy: settings.lifeExpectancyYears,
             activityMap: settings.showHabitLayer ? activityMap : {},
+            totalHabits: totalHabits,
             reminders: activeReminders,
             now: currentDate
         });

@@ -1,6 +1,6 @@
 import { drawRoundedRect } from "./utils";
 
-export function drawGrid(context, { xCoordinate, yCoordinate, width, height, theme, mode, dob, lifeExpectancy, activityMap, reminders = [], now }) {
+export function drawGrid(context, { xCoordinate, yCoordinate, width, height, theme, themeName = "dark-minimal", mode, dob, lifeExpectancy, activityMap, totalHabits = 1, reminders = [], now }) {
     let currentY = yCoordinate;
 
     context.textAlign = "left";
@@ -23,7 +23,13 @@ export function drawGrid(context, { xCoordinate, yCoordinate, width, height, the
     const contentWidth = width;
 
     // Helper Functions
-    const getDayString = (date) => date.toISOString().split("T")[0];
+    const getDayString = (date) => {
+        // Convert to local date (not UTC) to match how logs are stored
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
 
     // State to track where to point the callout
     let anchorPoint = null;
@@ -85,10 +91,33 @@ export function drawGrid(context, { xCoordinate, yCoordinate, width, height, the
 
     const weeksBetween = (date1, date2) => Math.floor((date2.getTime() - date1.getTime()) / (1000 * 60 * 60 * 24 * 7));
 
+    // Theme-specific heatmap color palettes
+    const HEATMAP_PALETTES = {
+        "minimal-dark": { light: "#ffffff", medium: "#bfbfbf", dark: "#7f7f7f", full: "#ffffff" },
+        "dark-minimal": { light: "#ffffff", medium: "#bfbfbf", dark: "#7f7f7f", full: "#ffffff" },
+        "sunset-orange": { light: "#ffb399", medium: "#ff9966", dark: "#ff7f33", full: "#ff8c42" },
+        "orange-glow": { light: "#ffb399", medium: "#ff9966", dark: "#ff7f33", full: "#fb923c" },
+        "ocean-blue": { light: "#6bb6ff", medium: "#3b82f6", dark: "#1e40af", full: "#3b82f6" },
+        "forest-green": { light: "#6ee7b7", medium: "#34d399", dark: "#10b981", full: "#10b981" },
+        "purple-haze": { light: "#d8b4fe", medium: "#c084fc", dark: "#a855f7", full: "#a855f7" },
+        "monochrome": { light: "#cccccc", medium: "#999999", dark: "#555555", full: "#0a0a0a" }
+    };
+
+    // Helper function to get heatmap color based on activity intensity and theme
+    const getHeatmapColor = (completionPercentage, themeName) => {
+        const palette = HEATMAP_PALETTES[themeName] || HEATMAP_PALETTES["dark-minimal"];
+        
+        if (completionPercentage === 0) return theme.GRID_INACTIVE;  // Gray - No activity
+        if (completionPercentage <= 25) return palette.light;         // Light - 1-25%
+        if (completionPercentage <= 50) return palette.medium;        // Medium - 26-50%
+        if (completionPercentage <= 75) return palette.dark;          // Dark - 51-75%
+        return palette.full;                                           // Full - 76-100%
+    };
+
     let finalHeight = 0;
 
     if (mode === "days") {
-        // 365 DAYS GRID (Current Year) - WITH REMINDERS
+        // 365 DAYS GRID (Current Year) - WITH HEATMAP INTENSITY
         const gridCols = 25;
         const gap = 8;
         const boxSize = (contentWidth - (gap * (gridCols - 1))) / gridCols;
@@ -122,13 +151,16 @@ export function drawGrid(context, { xCoordinate, yCoordinate, width, height, the
                 const boxX = xCoordinate + columnIndex * (boxSize + gap);
                 const boxY = currentY + rowIndex * (boxSize + gap);
 
-                // ENHANCEMENT: Added subtle hover-like glow effect for current day
+                // ENHANCEMENT: Heatmap intensity based on activity
                 if (dayNum === currentDayNum) {
                     context.shadowColor = "#FFFFFF";
                     context.shadowBlur = 10;
                     context.fillStyle = "#FFFFFF";
                 } else if (dayNum < currentDayNum) {
-                    context.fillStyle = theme.GRID_ACTIVE;
+                    // Use heatmap color based on activity for past days
+                    const logCount = activityMap[dayDateStr] || 0;
+                    const completionPercentage = totalHabits > 0 ? (logCount / totalHabits) * 100 : 0;
+                    context.fillStyle = getHeatmapColor(completionPercentage, themeName);
                 } else {
                     context.fillStyle = theme.GRID_INACTIVE;
                 }
@@ -140,7 +172,7 @@ export function drawGrid(context, { xCoordinate, yCoordinate, width, height, the
         finalHeight = (rows * (boxSize + gap)) + 100;
 
     } else if (mode === "weeks") {
-        // YEAR GRID (52 Weeks - Current Year)
+        // YEAR GRID (52 Weeks - Current Year) - WITH HEATMAP INTENSITY
         const columns = 13;
         const rows = 4;
         const gap = 12;
@@ -184,13 +216,22 @@ export function drawGrid(context, { xCoordinate, yCoordinate, width, height, the
 
                 const weekReminders = getRemindersForWeek(weekDate);
 
-                // ENHANCEMENT: Added glow for current week
+                // ENHANCEMENT: Heatmap intensity for weeks based on activity
                 if (weekNum === currentWeek) {
                     context.shadowColor = "#FFFFFF";
                     context.shadowBlur = 12;
                     context.fillStyle = "#FFFFFF";
                 } else if (weekNum < currentWeek) {
-                    context.fillStyle = theme.GRID_ACTIVE;
+                    // Calculate completion percentage for the week
+                    let weekActivityCount = 0;
+                    for (let i = 0; i < 7; i++) {
+                        const dayDate = new Date(weekDate);
+                        dayDate.setDate(dayDate.getDate() + i);
+                        const dayStr = getDayString(dayDate);
+                        weekActivityCount += (activityMap[dayStr] || 0);
+                    }
+                    const completionPercentage = totalHabits > 0 ? Math.min(100, (weekActivityCount / (totalHabits * 7)) * 100) : 0;
+                    context.fillStyle = getHeatmapColor(completionPercentage, themeName);
                 } else {
                     context.fillStyle = theme.GRID_INACTIVE;
                 }
@@ -202,7 +243,7 @@ export function drawGrid(context, { xCoordinate, yCoordinate, width, height, the
         finalHeight = (rows * (boxSize + gap)) + 150;
 
     } else if (mode === "life") {
-        // LIFE GRID (Whole Life in Weeks) - FULL DISPLAY
+        // LIFE GRID (Whole Life in Weeks) - HEATMAP INTENSITY
         // Optimized: Uses 52 columns (1 year per row) and scales to fit available height
         const gridCols = 52;
         const gap = 3; // Tighter gap for high density
@@ -247,19 +288,27 @@ export function drawGrid(context, { xCoordinate, yCoordinate, width, height, the
             const boxX = xCoordinate + columnIndex * (boxSize + gap);
             const boxY = currentY + rowIndex * (boxSize + gap);
 
-            // Calculate date for this life week (Optional: Use for reminders if needed)
-            // const weekDate = new Date(birthWeekStart);
-            // weekDate.setDate(weekDate.getDate() + (i * 7));
+            // Calculate date for this life week
+            const weekDate = new Date(birthWeekStart);
+            weekDate.setDate(weekDate.getDate() + (i * 7));
 
-            // Visualization Logic
+            // ENHANCEMENT: Heatmap intensity based on activity
             if (i === weeksLived) {
                 // Current week
                 context.shadowColor = "#FFFFFF";
                 context.shadowBlur = 8;
                 context.fillStyle = "#FFFFFF";
             } else if (i < weeksLived) {
-                // Past weeks
-                context.fillStyle = theme.GRID_ACTIVE;
+                // Past weeks - use heatmap color based on activity
+                let weekActivityCount = 0;
+                for (let j = 0; j < 7; j++) {
+                    const dayDate = new Date(weekDate);
+                    dayDate.setDate(dayDate.getDate() + j);
+                    const dayStr = getDayString(dayDate);
+                    weekActivityCount += (activityMap[dayStr] || 0);
+                }
+                const completionPercentage = totalHabits > 0 ? Math.min(100, (weekActivityCount / (totalHabits * 7)) * 100) : 0;
+                context.fillStyle = getHeatmapColor(completionPercentage, themeName);
             } else {
                 // Future weeks
                 context.fillStyle = theme.GRID_INACTIVE;
@@ -272,7 +321,7 @@ export function drawGrid(context, { xCoordinate, yCoordinate, width, height, the
 
         finalHeight = (rowsNeeded * (boxSize + gap)) + 80;
     } else {
-        // MONTHLY GRID (Current Month calendar)
+        // MONTHLY GRID (Current Month calendar) - WITH HEATMAP INTENSITY
         const columns = 7;
         const rows = 6;
         const gap = 16;
@@ -305,17 +354,24 @@ export function drawGrid(context, { xCoordinate, yCoordinate, width, height, the
                 const boxX = xCoordinate + columnIndex * (boxSize + gap);
                 const boxY = currentY + rowIndex * (boxSize + gap);
 
-                // ENHANCEMENT: Added subtle border and glow effects
+                // ENHANCEMENT: Heatmap intensity for month view based on activity
                 if (!isInMonth) {
                     context.fillStyle = "#18181b";
-                } else if (logCount > 0) {
-                    context.shadowColor = theme.GRID_ACTIVE;
-                    context.shadowBlur = 5;
-                    context.fillStyle = theme.GRID_ACTIVE;
-                } else if (isToday) {
-                    context.shadowColor = "#3f3f46";
-                    context.shadowBlur = 10;
-                    context.fillStyle = "#3f3f46";
+                } else if (logCount > 0 || isToday) {
+                    // Use heatmap color based on activity (today also gets heatmap if there's activity)
+                    const completionPercentage = totalHabits > 0 ? (logCount / totalHabits) * 100 : 0;
+                    if (isToday && logCount === 0) {
+                        // Empty today - show as gray
+                        context.fillStyle = theme.GRID_INACTIVE;
+                    } else {
+                        // Has activity today or any day - show heatmap
+                        context.fillStyle = getHeatmapColor(completionPercentage, themeName);
+                        if (isToday && completionPercentage > 0) {
+                            // Add glow effect for today with activity
+                            context.shadowColor = theme.GRID_ACTIVE;
+                            context.shadowBlur = 8;
+                        }
+                    }
                 } else {
                     context.fillStyle = theme.GRID_INACTIVE;
                 }

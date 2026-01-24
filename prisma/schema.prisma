@@ -15,6 +15,20 @@ model User {
   image       String?
   publicToken String   @unique
   onboarded   Boolean  @default(false)
+  
+  // Password reset fields (for forgot password feature)
+  resetToken    String?   @unique // Single-use token for password reset
+  resetTokenExpiry DateTime? // Token expires after 15 minutes
+  
+  // Subscription fields
+  plan        String   @default("free") // "free", "pro_monthly", "pro_yearly", "lifetime"
+  stripeCustomerId String?
+  stripeSubscriptionId String?
+  subscriptionStatus String? // "active", "canceled", "past_due"
+  subscriptionStartDate DateTime?
+  subscriptionEndDate DateTime?
+  trialEndDate DateTime? // For free trial tracking
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

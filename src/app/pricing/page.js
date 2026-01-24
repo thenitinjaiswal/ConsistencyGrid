@@ -17,39 +17,42 @@ export default function PricingPage() {
     {
       name: "Free",
       icon: Zap,
-      price: "$0",
+      price: "₹0",
       period: "forever",
       description: "Perfect for getting started with life calendar tracking",
       popular: false,
       features: [
         "Life calendar wallpaper generation",
-        "Basic habit tracking (up to 5 habits)",
-        "Goal setting (1 active goal)",
-        "Streak tracking",
+        "Habit tracking (up to 3 habits)",
+        "Goal setting (up to 3 goals)",
+        "Streak tracking & heatmap",
         "Basic analytics",
-        "Auto-update wallpaper URL",
+        "7-day history view",
         "Community support",
       ],
       limitations: [
-        "Limited to 5 habits",
-        "1 active goal at a time",
+        "Limited to 3 habits",
+        "Limited to 3 goals",
+        "7-day history only",
+        "No AI suggestions",
         "Basic themes only",
       ],
       cta: "Get Started Free",
       ctaVariant: "secondary",
     },
     {
-      name: "Pro",
+      name: "Pro Monthly",
       icon: Crown,
-      price: "$9",
+      price: "₹99",
       period: "per month",
       description: "For serious habit trackers and goal achievers",
-      popular: true,
+      popular: false,
       features: [
         "Everything in Free",
-        "Unlimited habits",
-        "Unlimited goals",
+        "Unlimited habits & goals",
+        "Full history access",
         "Advanced analytics & insights",
+        "AI-powered suggestions",
         "All premium themes",
         "Custom wallpaper resolutions",
         "Reminder system",
@@ -59,31 +62,63 @@ export default function PricingPage() {
         "Early access to new features",
       ],
       limitations: [],
-      cta: "Start Pro Trial",
-      ctaVariant: "primary",
-      savings: "Save 20% with annual billing",
+      cta: "Start 14-day Trial",
+      ctaVariant: "secondary",
+      badge: "14-day free trial",
     },
     {
-      name: "Enterprise",
-      icon: Building2,
-      price: "Custom",
-      period: "contact us",
-      description: "For teams and organizations",
-      popular: false,
+      name: "Pro Yearly",
+      icon: Crown,
+      price: "₹499",
+      period: "per year",
+      description: "Best value - Save 59% vs monthly",
+      popular: true,
       features: [
-        "Everything in Pro",
-        "Team collaboration",
-        "Admin dashboard",
-        "Custom branding",
-        "API access",
-        "Dedicated support",
-        "SLA guarantee",
-        "Custom integrations",
-        "Training & onboarding",
+        "Everything in Free",
+        "Unlimited habits & goals",
+        "Full history access",
+        "Advanced analytics & insights",
+        "AI-powered suggestions",
+        "All premium themes",
+        "Custom wallpaper resolutions",
+        "Reminder system",
+        "Calendar view",
+        "Export data (JSON, CSV)",
+        "Priority support",
+        "Early access to new features",
+        "Lifetime access to current features",
       ],
       limitations: [],
-      cta: "Contact Sales",
+      cta: "Get Pro Yearly",
+      ctaVariant: "primary",
+      badge: "Most Popular",
+      launchOffer: {
+        enabled: true,
+        price: "₹299",
+        limit: "First 1000 users",
+        savings: "Save 40% off annual"
+      }
+    },
+    {
+      name: "Lifetime",
+      icon: Building2,
+      price: "₹1,299",
+      period: "one-time",
+      description: "One payment, lifetime access",
+      popular: false,
+      features: [
+        "Everything in Pro Yearly",
+        "Lifetime updates & features",
+        "Lifetime priority support",
+        "Early access to all new features",
+        "Community badge",
+        "Premium backup & restore",
+        "Never worry about subscriptions",
+      ],
+      limitations: [],
+      cta: "Get Lifetime Access",
       ctaVariant: "secondary",
+      badge: "Best for Long-term",
     },
   ];
 
@@ -117,7 +152,7 @@ export default function PricingPage() {
 
       {/* Pricing Cards */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 pb-16 sm:pb-20 md:pb-28">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 auto-rows-max">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8 auto-rows-max">
           {pricingPlans.map((plan, idx) => {
             const Icon = plan.icon;
             const isPopular = plan.popular;
@@ -127,17 +162,30 @@ export default function PricingPage() {
                 key={plan.name}
                 className={`group relative rounded-2xl transition-all duration-300 ${
                   isPopular
-                    ? "md:col-span-1 md:row-span-1 bg-gradient-to-br from-orange-50 via-white to-orange-50/30 border-2 border-orange-300 shadow-2xl hover:shadow-2xl md:scale-105 md:z-10"
+                    ? "lg:col-span-1 lg:row-span-1 bg-gradient-to-br from-orange-50 via-white to-orange-50/30 border-2 border-orange-300 shadow-2xl hover:shadow-2xl lg:scale-105 lg:z-10"
                     : "bg-white border border-gray-200 shadow-lg hover:shadow-xl hover:border-gray-300"
                 }`}
               >
-                {/* Popular Badge */}
-                {isPopular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
-                    <div className="flex items-center gap-1 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-1.5 shadow-lg">
+                {/* Badge */}
+                {(isPopular || plan.badge) && (
+                  <div className={`absolute -top-3 left-1/2 -translate-x-1/2 z-20 ${isPopular ? "" : ""}`}>
+                    <div className={`flex items-center gap-1 rounded-full px-4 py-1.5 shadow-lg ${
+                      isPopular
+                        ? "bg-gradient-to-r from-orange-500 to-orange-600"
+                        : "bg-gradient-to-r from-blue-500 to-blue-600"
+                    }`}>
                       <Zap className="w-4 h-4 text-white fill-white" />
-                      <span className="text-xs font-bold text-white uppercase tracking-wide">Most Popular</span>
+                      <span className="text-xs font-bold text-white uppercase tracking-wide">{plan.badge || plan.name}</span>
                     </div>
+                  </div>
+                )}
+
+                {/* Launch Offer Banner */}
+                {plan.launchOffer?.enabled && (
+                  <div className="bg-gradient-to-r from-green-400 to-emerald-500 text-white px-6 py-3 rounded-t-2xl text-center">
+                    <p className="text-xs font-bold uppercase tracking-widest">🚀 Launch Offer</p>
+                    <p className="text-sm font-bold mt-1">{plan.launchOffer.price} - {plan.launchOffer.limit}</p>
+                    <p className="text-xs text-green-100">{plan.launchOffer.savings}</p>
                   </div>
                 )}
 
@@ -167,8 +215,8 @@ export default function PricingPage() {
                       <span className="text-5xl sm:text-6xl font-bold text-gray-900">
                         {plan.price}
                       </span>
-                      {plan.price !== "Custom" && (
-                        <span className="text-gray-600 font-semibold">
+                      {plan.price !== "Custom" && !plan.price.includes("Custom") && (
+                        <span className="text-gray-600 font-semibold text-sm">
                           /{plan.period}
                         </span>
                       )}
@@ -184,7 +232,7 @@ export default function PricingPage() {
                   {/* CTA Button */}
                   <div className="mb-8">
                     <button
-                      onClick={plan.name === "Enterprise" ? () => window.location.href = "mailto:sales@consistencygrid.com" : handleGetStarted}
+                      onClick={handleGetStarted}
                       className={`w-full rounded-xl px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 group/btn whitespace-nowrap min-h-12 ${isPopular ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95" : "border-2 border-gray-200 bg-white text-gray-800 hover:bg-gray-50 hover:border-orange-300 active:bg-gray-100" }`}
                     >
                       {plan.cta}

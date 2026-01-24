@@ -1,12 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Suspense } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Card from "@/components/ui/Card";
 import { TrendingUp, Flame, Target, RefreshCw, AlertCircle } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
-export default function AnalyticsPage() {
+export const dynamic = "force-dynamic";
+
+function AnalyticsContent() {
     const [stats, setStats] = useState({
         consistencyScore: 0,
         consistencyChange: 0,
@@ -480,5 +483,22 @@ export default function AnalyticsPage() {
                 </div>
             </div>
         </DashboardLayout>
+    );
+}
+
+export default function AnalyticsPage() {
+    return (
+        <Suspense fallback={
+            <DashboardLayout active="Analytics">
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-center">
+                        <div className="animate-spin h-12 w-12 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-4" />
+                        <p className="text-gray-500">Loading analytics...</p>
+                    </div>
+                </div>
+            </DashboardLayout>
+        }>
+            <AnalyticsContent />
+        </Suspense>
     );
 }

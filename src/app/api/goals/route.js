@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { getGoalsList } from "@/lib/dashboard-cache";
 import { invalidateGoalsCache } from "@/lib/cache-invalidation";
 import { getRateLimitErrorResponse, RATE_LIMITS } from "@/lib/rate-limit";
+import { checkGoalLimit, SubscriptionErrors } from "@/lib/subscription-middleware";
 
 /**
  * GET /api/goals
@@ -60,6 +61,21 @@ export async function POST(req) {
     // Check rate limit
     const rateLimitError = getRateLimitErrorResponse(user.id, "goalCreate", RATE_LIMITS.goalCreate);
     if (rateLimitError) return rateLimitError;
+
+    // Check subscription goal limit
+    const limitCheck = await checkGoalLimit(user.id);
+    if (!limitCheck.canCreate) {
+        return Response.json(
+            {
+                message: limitCheck.message,
+                code: "GOAL_LIMIT_REACHED",
+                currentCount: limitCheck.currentCount,
+                limit: limitCheck.limit,
+                upgradeRequired: true,
+            },
+            { status: 403 }
+        );
+    }
 
     try {
         const body = await req.json();
