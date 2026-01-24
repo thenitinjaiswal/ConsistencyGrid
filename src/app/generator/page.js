@@ -10,7 +10,7 @@ import { sendWallpaperToAndroid } from "@/utils/sendWallpaperToAndroid";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import GeneratorForm from "@/components/generator/GeneratorForm";
-import GeneratorPreview from "@/components/generator/GeneratorPreview";
+import GeneratorPreviewWithCanvas from "@/components/generator/GeneratorPreviewWithCanvas";
 
 // Metadata for SEO (Note: In Next.js App Router, client components can't export metadata directly)
 // This is handled via the layout.js file
@@ -171,7 +171,7 @@ export default function GeneratorPage() {
 
           {/* Right: Preview (5 cols) */}
           <div className="lg:col-span-5">
-            <GeneratorPreview
+            <GeneratorPreviewWithCanvas
               publicToken={publicToken}
               loading={loading}
               form={form}
