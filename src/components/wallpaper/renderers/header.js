@@ -142,43 +142,45 @@ export function drawDashboardHeader(
  */
 /**
  * Flame Icon (Lucide Style) - 100% Robust Drawing
+ * Increased size and stroke for better visibility
  */
 function drawFlameIcon(ctx, x, y, size, color) {
     ctx.save();
 
-    // Position adjustments
-    const ox = x - size;
-    const oy = y - size / 2 - 5;
-    const scale = size / 24;
+    // Position adjustments - Center the icon better
+    const ox = x - size - 10;
+    const oy = y - size / 2 - 10;
+    const s = size / 24;
 
     ctx.beginPath();
     ctx.strokeStyle = color;
-    ctx.lineWidth = 2.5 * scale;
+    ctx.lineWidth = 3 * s; // Thicker stroke
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
-    // Lucide Flame Path Geometry (Converted to manual commands)
-    // M 12,2 C 12,2 19,7 19,12 C 19,15.86 15.86,19 12,19 C 8.14,19 5,15.86 5,12 C 5,7 12,2 12,2 Z
-    // (Improved shape for clarity)
+    const sx = (v) => ox + v * s;
+    const sy = (v) => oy + v * s;
 
-    const sx = (v) => ox + v * scale;
-    const sy = (v) => oy + v * scale;
-
-    ctx.moveTo(sx(12), sy(2));
-    ctx.bezierCurveTo(sx(12), sy(2), sx(19), sy(7), sx(19), sy(12));
-    ctx.bezierCurveTo(sx(19), sy(16), sx(16), sy(22), sx(12), sy(22));
-    ctx.bezierCurveTo(sx(8), sy(22), sx(5), sy(16), sx(5), sy(12));
-    ctx.bezierCurveTo(sx(5), sy(7), sx(12), sy(2), sx(12), sy(2));
-
-    // Inner detail
-    ctx.moveTo(sx(12), sy(17));
-    ctx.quadraticCurveTo(sx(10), sy(17), sx(10), sy(14));
-    ctx.quadraticCurveTo(sx(10), sy(11), sx(12), sy(8));
+    // Standard Lucide Flame Path
+    ctx.moveTo(sx(8.5), sy(14.5));
+    ctx.bezierCurveTo(sx(8.5), sy(14.5), sx(11), sy(12), sx(11), sy(12));
+    ctx.bezierCurveTo(sx(11), sy(10.62), sx(10.5), sy(10), sx(10), sy(9));
+    ctx.bezierCurveTo(sx(8.928), sy(6.857), sx(9.776), sy(4.946), sx(12), sy(3));
+    ctx.bezierCurveTo(sx(12.5), sy(5.5), sx(14), sy(7.9), sx(16), sy(9.5));
+    ctx.bezierCurveTo(sx(18), sy(11.1), sx(19), sy(13), sx(19), sy(15));
+    ctx.bezierCurveTo(sx(19), sy(18.866), sx(15.866), sy(22), sx(12), sy(22));
+    ctx.bezierCurveTo(sx(8.134), sy(22), sx(5), sy(18.866), sx(5), sy(15));
+    ctx.bezierCurveTo(sx(5), sy(13.847), sx(5.433), sy(12.706), sx(6), sy(12));
+    ctx.bezierCurveTo(sx(6), sy(12), sx(8.5), sy(14.5), sx(8.5), sy(14.5));
+    ctx.closePath();
 
     ctx.stroke();
 
-    // Fill with soft accent
-    ctx.fillStyle = color + "22"; // Very light fill
+    // Gradient fill for "fire" effect
+    const gradient = ctx.createLinearGradient(ox, oy, ox, oy + size);
+    gradient.addColorStop(0, color + "44"); // 25% opacity
+    gradient.addColorStop(1, color + "11"); // 7% opacity
+    ctx.fillStyle = gradient;
     ctx.fill();
 
     ctx.restore();
@@ -187,21 +189,23 @@ function drawFlameIcon(ctx, x, y, size, color) {
 export function drawStreakWidget(context, { x, y, theme, streak, streakActiveToday }) {
     if (!streak || streak <= 0) return;
 
-    drawSafeText(context, `${streak}`, x - 70, y, {
-        font: "bold 64px 'Plus Jakarta Sans'",
+    // 1. Draw Streak Number
+    drawSafeText(context, `${streak}`, x - 85, y + 10, {
+        font: "bold 72px 'Plus Jakarta Sans'",
         color: theme.TEXT_MAIN,
         align: "right",
     });
 
-    // Replace Emoji with Lucide-style Path Icon
-    const iconColor = streakActiveToday ? theme.ACCENT || "#ff8c42" : "#71717a";
-    drawFlameIcon(context, x, y, 48, iconColor);
+    // 2. Draw Flame Icon (Vibrant Orange if active)
+    const iconColor = streakActiveToday ? "#f97316" : "#71717a"; // Use Lucide orange-500
+    drawFlameIcon(context, x, y, 64, iconColor); // Increased size to 64
 
+    // 3. Status Text
     const statusText = streakActiveToday ? "DONE TODAY" : "NOT LOGGED";
     const statusColor = streakActiveToday ? "#22c55e" : "#ef4444";
 
-    drawSafeText(context, statusText, x, y + 40, {
-        font: "bold 16px 'Plus Jakarta Sans'",
+    drawSafeText(context, statusText, x, y + 55, {
+        font: "bold 18px 'Plus Jakarta Sans'",
         color: statusColor,
         align: "right",
         shadow: false,
