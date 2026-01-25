@@ -11,27 +11,45 @@ import {
     drawLifeHeader
 } from "@/lib/wallpaper/components";
 import path from "path";
+import fs from "fs";
 
 // 🔥 REGISTER FONTS FOR CANVAS - Critical for text rendering on Vercel
 // Canvas library requires explicit font registration in Node.js environment
-try {
-    // Use Noto Sans (bundled with Next.js) as fallback for Inter
-    const fontPath = path.join(
-        process.cwd(),
-        'node_modules',
-        'next',
-        'dist',
-        'compiled',
-        '@vercel',
-        'og',
-        'noto-sans-v27-latin-regular.ttf'
-    );
+let fontRegistered = false;
 
-    registerFont(fontPath, { family: 'Inter' });
-    registerFont(fontPath, { family: 'Arial' });
-    registerFont(fontPath, { family: 'sans-serif' });
+try {
+    // Try multiple font paths for better compatibility
+    const possibleFontPaths = [
+        // Next.js bundled font (primary - local dev)
+        path.join(process.cwd(), 'node_modules', 'next', 'dist', 'compiled', '@vercel', 'og', 'noto-sans-v27-latin-regular.ttf'),
+        // Vercel deployment path
+        path.join('/var/task', 'node_modules', 'next', 'dist', 'compiled', '@vercel', 'og', 'noto-sans-v27-latin-regular.ttf'),
+    ];
+
+    let fontPath = null;
+    for (const testPath of possibleFontPaths) {
+        if (fs.existsSync(testPath)) {
+            fontPath = testPath;
+            console.log('✅ Found font at:', testPath);
+            break;
+        }
+    }
+
+    if (fontPath) {
+        // Register font for all common font families with proper weights
+        registerFont(fontPath, { family: 'Inter', weight: '400', style: 'normal' });
+        registerFont(fontPath, { family: 'Inter', weight: '600', style: 'normal' });
+        registerFont(fontPath, { family: 'Arial', weight: '400', style: 'normal' });
+        registerFont(fontPath, { family: 'sans-serif', weight: '400', style: 'normal' });
+        fontRegistered = true;
+        console.log('✅ Font registered successfully');
+    } else {
+        console.warn('⚠️ Font file not found at any path, using system fonts');
+        console.warn('Tried paths:', possibleFontPaths);
+    }
 } catch (error) {
-    console.warn('⚠️ Font registration failed, using system fonts:', error.message);
+    console.error('❌ Font registration failed:', error.message);
+    console.error('Stack:', error.stack);
 }
 
 // 🔥 FORCE DYNAMIC RENDERING - Prevent static generation on Vercel
@@ -183,10 +201,28 @@ export async function GET(request, { params }) {
     const canvas = createCanvas(canvasWidth, canvasHeight);
     const canvasContext = canvas.getContext("2d");
 
-    // 🔥 FIX
+    // 🔥 CRITICAL: Initialize canvas context for text rendering
+    // Must set these BEFORE any drawing operations
     canvasContext.textBaseline = "top";
     canvasContext.textAlign = "left";
     canvasContext.direction = "ltr";
+
+    // 🔥 CRITICAL: Set default font explicitly
+    // This ensures text renders even if registerFont failed
+    canvasContext.font = "16px Arial, Helvetica, sans-serif";
+    canvasContext.fillStyle = "#ffffff";
+
+    // Test if text rendering works
+    try {
+        const testMetrics = canvasContext.measureText("Test");
+        if (testMetrics.width === 0) {
+            console.error('❌ Text rendering not working - measureText returns 0');
+        } else {
+            console.log('✅ Text rendering working - test width:', testMetrics.width);
+        }
+    } catch (e) {
+        console.error('❌ measureText failed:', e.message);
+    }
 
 
 

@@ -23,33 +23,55 @@ ctx.fillText("Hello", 10, 10);  // ❌ Text nahi dikha (blank)
 
 ## ✅ समाधान (Solution)
 
-### Fix 1: Font Registration Added
+### Fix 1: Robust Font Registration (Advanced)
 **File:** `src/app/w/[token]/image.png/route.js`
 
 ```javascript
-import { createCanvas, registerFont } from "canvas";
+import { registerFont } from "canvas";
+import fs from "fs";
 import path from "path";
 
-// 🔥 REGISTER FONTS FOR CANVAS
 try {
-    // Use Noto Sans (bundled with Next.js) as fallback for Inter
-    const fontPath = path.join(
-        process.cwd(),
-        'node_modules',
-        'next',
-        'dist',
-        'compiled',
-        '@vercel',
-        'og',
-        'noto-sans-v27-latin-regular.ttf'
-    );
+    // Check multiple possible locations for the font file
+    const possibleFontPaths = [
+        // Standard Next.js location
+        path.join(process.cwd(), 'node_modules', 'next', 'dist', 'compiled', '@vercel', 'og', 'noto-sans-v27-latin-regular.ttf'),
+        // Explicit Vercel Lambda location
+        path.join('/var/task', 'node_modules', 'next', 'dist', 'compiled', '@vercel', 'og', 'noto-sans-v27-latin-regular.ttf'),
+    ];
     
-    registerFont(fontPath, { family: 'Inter' });
-    registerFont(fontPath, { family: 'Arial' });
-    registerFont(fontPath, { family: 'sans-serif' });
-} catch (error) {
-    console.warn('⚠️ Font registration failed, using system fonts:', error.message);
+    let fontPath = null;
+    for (const testPath of possibleFontPaths) {
+        if (fs.existsSync(testPath)) {
+            fontPath = testPath;
+            break;
+        }
+    }
+    
+    if (fontPath) {
+        // Register same font file for multiple families to ensure fallback works
+        registerFont(fontPath, { family: 'Inter' });
+        registerFont(fontPath, { family: 'Arial' });
+        registerFont(fontPath, { family: 'sans-serif' });
+        console.log('✅ Font registered from:', fontPath);
+    } else {
+        console.warn('⚠️ Font file missing. Text may not render.');
+    }
+} catch (e) {
+    console.error('❌ Font registration error:', e);
 }
+```
+
+### Fix 2: Explicit Context Initialization
+**File:** `src/app/w/[token]/image.png/route.js`
+
+```javascript
+const canvasContext = canvas.getContext("2d");
+
+// 🔥 Force defaults immediately
+canvasContext.textBaseline = "top";
+canvasContext.font = "16px Arial, Helvetica, sans-serif"; // Default fallback
+canvasContext.fillStyle = "#ffffff";
 ```
 
 **Kya karta hai:**
