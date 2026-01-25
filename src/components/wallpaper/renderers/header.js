@@ -17,12 +17,12 @@ export function drawDashboardHeader(
     /* ---------------- LEFT COLUMN ---------------- */
 
     drawSafeText(context, "GOALS", xCoordinate, yCoordinate, {
-        font: "bold 40px Arial, sans-serif",
+        font: "bold 40px 'Plus Jakarta Sans', sans-serif",
         color: theme.TEXT_SUB,
     });
 
     drawSafeText(context, "GROWTH", xCoordinate, yCoordinate + 50, {
-        font: "bold 40px Arial, sans-serif",
+        font: "bold 40px 'Plus Jakarta Sans', sans-serif",
         color: theme.TEXT_MAIN,
     });
 
@@ -121,13 +121,13 @@ export function drawDashboardHeader(
     }
 
     drawSafeText(context, `${percent}%`, ringX, ringY + 18, {
-        font: "bold 52px Inter, sans-serif",
+        font: "bold 52px 'Plus Jakarta Sans', sans-serif",
         color: theme.TEXT_MAIN,
         align: "center",
     });
 
     drawSafeText(context, "DAILY GOAL", ringX, ringY + 135, {
-        font: "bold 16px Inter, sans-serif",
+        font: "bold 16px 'Plus Jakarta Sans', sans-serif",
         color: theme.TEXT_SUB,
         align: "center",
         shadow: false,
@@ -144,19 +144,19 @@ export function drawStreakWidget(context, { x, y, theme, streak, streakActiveTod
     if (!streak || streak <= 0) return;
 
     drawSafeText(context, `${streak}`, x - 55, y, {
-        font: "bold 56px Inter, sans-serif",
+        font: "bold 56px 'Plus Jakarta Sans', sans-serif",
         color: theme.TEXT_MAIN,
         align: "right",
     });
 
     drawSafeText(context, "🔥", x, y - 5, {
-        font: "42px Inter, sans-serif",
+        font: "42px 'Plus Jakarta Sans', sans-serif",
         align: "right",
         shadow: false,
     });
 
     drawSafeText(context, streakActiveToday ? "✓ Active" : "⚠ Risk", x, y + 30, {
-        font: "bold 14px Inter, sans-serif",
+        font: "bold 14px 'Plus Jakarta Sans', sans-serif",
         color: streakActiveToday ? "#22c55e" : "#ef4444",
         align: "right",
         shadow: false,
@@ -174,13 +174,13 @@ export function drawLifeHeader(context, { canvasWidth, theme, progress }) {
     const y = 200;
 
     drawSafeText(context, "LIFE PROGRESS", x, y, {
-        font: "bold 18px Inter, sans-serif",
+        font: "bold 18px 'Plus Jakarta Sans', sans-serif",
         color: theme.TEXT_SUB,
         align: "center",
     });
 
     drawSafeText(context, `${progress.toFixed(1)}%`, x, y + 50, {
-        font: "bold 36px Inter, sans-serif",
+        font: "bold 36px 'Plus Jakarta Sans', sans-serif",
         color: theme.TEXT_MAIN,
         align: "center",
     });

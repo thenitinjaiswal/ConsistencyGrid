@@ -52,7 +52,7 @@ export function drawSafeText(
     x,
     y,
     {
-        font = "16px Inter, sans-serif", // Browser supports Inter directly if loaded via CSS
+        font = "16px 'Plus Jakarta Sans', sans-serif", // Modern premium font
         color = "#ffffff",
         align = "left",
         baseline = "alphabetic",

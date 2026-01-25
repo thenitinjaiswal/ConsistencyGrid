@@ -161,6 +161,10 @@ export default function WallpaperRenderer() {
 
     return (
         <div style={{ background: '#000', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <link
+                href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+                rel="stylesheet"
+            />
             {status === 'loading' && <p style={{ color: '#fff' }}>Rendering Wallpaper...</p>}
             {status === 'error' && <p style={{ color: 'red' }}>Error: {errorMsg}</p>}
 

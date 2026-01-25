@@ -18,7 +18,7 @@ export function drawQuote(context, { width, height, quote, theme }) {
 
     // MAIN QUOTE
     drawSafeText(context, quote.toUpperCase(), width / 2, quoteY, {
-        font: "500 18px Inter, sans-serif",
+        font: "500 18px 'Plus Jakarta Sans', sans-serif",
         color: "#525252",
         align: "center",
         shadow: true,
@@ -29,7 +29,7 @@ export function drawQuote(context, { width, height, quote, theme }) {
 
     // BRANDING
     drawSafeText(context, "CONSISTENCY GRID", width / 2, quoteY + 30, {
-        font: "14px Inter, sans-serif",
+        font: "14px 'Plus Jakarta Sans', sans-serif",
         color: "#333",
         align: "center",
         shadow: false,
