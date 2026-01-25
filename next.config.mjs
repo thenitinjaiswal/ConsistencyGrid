@@ -30,15 +30,29 @@ const nextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           // Permissions Policy
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-          // Cache Control for static assets
+        ],
+      },
+      // Cache static assets (but exclude wallpaper routes)
+      {
+        source: "/:path((?!api|w).*)",
+        headers: [
           { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
         ],
       },
-      // Cache HTML pages
+      // Cache HTML pages (but exclude wallpaper routes)
       {
-        source: "/:path((?!api).*)",
+        source: "/:path((?!api|w).*)",
         headers: [
           { key: "Cache-Control", value: "public, max-age=3600, s-maxage=3600" },
+        ],
+      },
+      // NO CACHE for wallpaper images - Always serve fresh data
+      {
+        source: "/w/:token/image.png",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate, max-age=0" },
+          { key: "Pragma", value: "no-cache" },
+          { key: "Expires", value: "0" },
         ],
       },
     ];

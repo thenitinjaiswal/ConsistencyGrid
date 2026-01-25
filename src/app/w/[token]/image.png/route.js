@@ -11,6 +11,11 @@ import {
     drawLifeHeader
 } from "@/lib/wallpaper/components";
 
+// 🔥 FORCE DYNAMIC RENDERING - Prevent static generation on Vercel
+// This ensures wallpaper always shows real-time data
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 function calculateWeeksBetween(startDate, endDate) {
     const millisecondsDiff = endDate.getTime() - startDate.getTime();
     return Math.floor(millisecondsDiff / (1000 * 60 * 60 * 24 * 7));
@@ -96,7 +101,7 @@ export async function GET(request, { params }) {
     });
 
     // If no pinned goals, fetch recent active goals as fallback
-    const activeGoals = pinnedGoals.length > 0 
+    const activeGoals = pinnedGoals.length > 0
         ? pinnedGoals
         : await prisma.goal.findMany({
             where: {
@@ -151,17 +156,17 @@ export async function GET(request, { params }) {
         ? Math.round(((activityMap[currentDayKey] || 0) / activeHabits.length) * 100)
         : 0;
 
-  // --- DRAWING ---
-const canvas = createCanvas(canvasWidth, canvasHeight);
-const canvasContext = canvas.getContext("2d");
+    // --- DRAWING ---
+    const canvas = createCanvas(canvasWidth, canvasHeight);
+    const canvasContext = canvas.getContext("2d");
 
-// 🔥 FIX
-canvasContext.textBaseline = "top";
-canvasContext.textAlign = "left";
-canvasContext.direction = "ltr";
+    // 🔥 FIX
+    canvasContext.textBaseline = "top";
+    canvasContext.textAlign = "left";
+    canvasContext.direction = "ltr";
 
 
-    
+
 
     // ENHANCED THEMES - Optimized color palettes for better visual hierarchy and contrast
     const COLOR_THEMES = {
