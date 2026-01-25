@@ -141,25 +141,45 @@ export function drawDashboardHeader(
  * -------------------------------------------------
  */
 /**
- * Flame Icon (Lucide Style)
+ * Flame Icon (Lucide Style) - 100% Robust Drawing
  */
 function drawFlameIcon(ctx, x, y, size, color) {
     ctx.save();
-    ctx.translate(x - size, y - size / 2 - 5);
+
+    // Position adjustments
+    const ox = x - size;
+    const oy = y - size / 2 - 5;
     const scale = size / 24;
-    ctx.scale(scale, scale);
 
-    const p = new Path2D("M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z");
-
+    ctx.beginPath();
     ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2.5 * scale;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
-    ctx.stroke(p);
 
-    // Fill slightly for better visibility
-    ctx.fillStyle = color + "33"; // 20% opacity
-    ctx.fill(p);
+    // Lucide Flame Path Geometry (Converted to manual commands)
+    // M 12,2 C 12,2 19,7 19,12 C 19,15.86 15.86,19 12,19 C 8.14,19 5,15.86 5,12 C 5,7 12,2 12,2 Z
+    // (Improved shape for clarity)
+
+    const sx = (v) => ox + v * scale;
+    const sy = (v) => oy + v * scale;
+
+    ctx.moveTo(sx(12), sy(2));
+    ctx.bezierCurveTo(sx(12), sy(2), sx(19), sy(7), sx(19), sy(12));
+    ctx.bezierCurveTo(sx(19), sy(16), sx(16), sy(22), sx(12), sy(22));
+    ctx.bezierCurveTo(sx(8), sy(22), sx(5), sy(16), sx(5), sy(12));
+    ctx.bezierCurveTo(sx(5), sy(7), sx(12), sy(2), sx(12), sy(2));
+
+    // Inner detail
+    ctx.moveTo(sx(12), sy(17));
+    ctx.quadraticCurveTo(sx(10), sy(17), sx(10), sy(14));
+    ctx.quadraticCurveTo(sx(10), sy(11), sx(12), sy(8));
+
+    ctx.stroke();
+
+    // Fill with soft accent
+    ctx.fillStyle = color + "22"; // Very light fill
+    ctx.fill();
 
     ctx.restore();
 }

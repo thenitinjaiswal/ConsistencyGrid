@@ -64,10 +64,9 @@ export function drawSafeText(
 
     ctx.save();
 
-    // Ensure the font string includes the emoji stack if it's a shorthand
+    // Fallback to simple font stack if no complex one provided
     let finalFont = font;
-    if (!font.includes("Emoji") && !font.includes("sans-serif")) {
-        // If user passed something like "bold 40px", append the stack
+    if (!font.includes(",")) {
         finalFont = `${font}, ${FONT_STACK}`;
     }
 
