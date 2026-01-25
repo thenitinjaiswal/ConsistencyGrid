@@ -80,6 +80,13 @@ export default function Sidebar({ active = "Dashboard", onNavigate }) {
    * Signs out of NextAuth session and redirects to homepage
    */
   async function handleLogout() {
+    // 1. Sync logout with Native Android App (if applicable)
+    if (typeof window !== "undefined" && window.Android && window.Android.clearToken) {
+      console.log("📱 Syncing logout with Android Native...");
+      window.Android.clearToken();
+    }
+
+    // 2. Sign out of NextAuth session
     await signOut({ callbackUrl: "/" });
   }
 
@@ -100,9 +107,9 @@ export default function Sidebar({ active = "Dashboard", onNavigate }) {
         Displays app logo and name
       */}
       <div className="flex items-center gap-2 px-5 py-5 border-b border-gray-200/50">
-        <img 
-          src="/images/logo.png" 
-          alt="ConsistencyGrid Logo" 
+        <img
+          src="/images/logo.png"
+          alt="ConsistencyGrid Logo"
           className="h-8 w-8"
         />
         <span className="text-sm font-bold text-gray-900">ConsistencyGrid</span>

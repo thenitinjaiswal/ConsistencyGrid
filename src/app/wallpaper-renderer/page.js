@@ -56,6 +56,14 @@ export default function WallpaperRenderer() {
 
             const ctx = canvas.getContext('2d');
 
+            // 🔥 CRITICAL: Wait for fonts to be ready before drawing
+            // Canvas fillText will use fallback fonts if the desired font isn't loaded yet
+            if (document.fonts) {
+                console.log('🔄 Waiting for fonts to be ready...');
+                await document.fonts.ready;
+                console.log('✅ Fonts ready');
+            }
+
             // Draw Everything
             const { settings } = data.user;
             const theme = getThemeColors(settings.theme || 'dark-minimal');

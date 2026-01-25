@@ -190,18 +190,14 @@ export function drawLifeHeader(context, { canvasWidth, theme, progress }) {
     const barX = x - barWidth / 2;
     const barY = y + 75;
 
-    context.fillStyle = "rgba(255,255,255,0.1)";
-    context.beginPath();
-    context.roundRect(barX, barY, barWidth, barHeight, 3);
-    context.fill();
+    // Use the safe drawRoundedRect helper instead of ctx.roundRect
+    drawRoundedRect(context, barX, barY, barWidth, barHeight, 3, "rgba(255,255,255,0.1)");
 
     if (progress > 0) {
+        context.save();
         context.shadowColor = theme.ACCENT;
         context.shadowBlur = 10;
-        context.fillStyle = theme.ACCENT;
-        context.beginPath();
-        context.roundRect(barX, barY, (progress / 100) * barWidth, barHeight, 3);
-        context.fill();
-        context.shadowBlur = 0;
+        drawRoundedRect(context, barX, barY, (progress / 100) * barWidth, barHeight, 3, theme.ACCENT);
+        context.restore();
     }
 }

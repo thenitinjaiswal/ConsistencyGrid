@@ -52,7 +52,7 @@ export function drawSafeText(
     x,
     y,
     {
-        font = "16px 'Plus Jakarta Sans', sans-serif", // Modern premium font
+        font = "16px 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'", // Modern premium font with emoji support
         color = "#ffffff",
         align = "left",
         baseline = "alphabetic",
