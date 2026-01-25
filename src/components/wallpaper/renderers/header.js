@@ -140,24 +140,42 @@ export function drawDashboardHeader(
  * STREAK WIDGET
  * -------------------------------------------------
  */
+/**
+ * Flame Icon (Lucide Style)
+ */
+function drawFlameIcon(ctx, x, y, size, color) {
+    ctx.save();
+    ctx.translate(x - size, y - size / 2 - 5);
+    const scale = size / 24;
+    ctx.scale(scale, scale);
+
+    const p = new Path2D("M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z");
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.stroke(p);
+
+    // Fill slightly for better visibility
+    ctx.fillStyle = color + "33"; // 20% opacity
+    ctx.fill(p);
+
+    ctx.restore();
+}
+
 export function drawStreakWidget(context, { x, y, theme, streak, streakActiveToday }) {
     if (!streak || streak <= 0) return;
 
-    // FONT_STACK is injected via drawSafeText automatically now, 
-    // but we'll use a slightly safer emoji approach.
-
-    drawSafeText(context, `${streak}`, x - 65, y, {
+    drawSafeText(context, `${streak}`, x - 70, y, {
         font: "bold 64px 'Plus Jakarta Sans'",
         color: theme.TEXT_MAIN,
         align: "right",
     });
 
-    // Fire emoji - sometimes drawing it separately helps browsers
-    drawSafeText(context, "🔥", x - 10, y - 5, {
-        font: "48px serif", // Using serif as fallback for emojis often works better on mobile
-        align: "right",
-        shadow: false,
-    });
+    // Replace Emoji with Lucide-style Path Icon
+    const iconColor = streakActiveToday ? theme.ACCENT || "#ff8c42" : "#71717a";
+    drawFlameIcon(context, x, y, 48, iconColor);
 
     const statusText = streakActiveToday ? "DONE TODAY" : "NOT LOGGED";
     const statusColor = streakActiveToday ? "#22c55e" : "#ef4444";

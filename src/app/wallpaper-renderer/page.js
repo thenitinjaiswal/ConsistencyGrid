@@ -56,21 +56,28 @@ export default function WallpaperRenderer() {
 
             const ctx = canvas.getContext('2d');
 
-            // 🔥 CRITICAL: Wait for fonts to be ready before drawing
-            // Canvas fillText will use fallback fonts if the desired font isn't loaded yet
+            // 🔥 CRITICAL: Wait for fonts with timeout
             if (document.fonts) {
-                console.log('🔄 Waiting for fonts to be ready...');
-                await document.fonts.ready;
-                console.log('✅ Fonts ready');
+                console.log('🔄 Syncing fonts...');
+                await Promise.race([
+                    document.fonts.ready,
+                    new Promise(resolve => setTimeout(resolve, 2500)) // 2.5s timeout
+                ]);
+                console.log('✅ Font sync step passed');
             }
 
             // Draw Everything
-            const { settings } = data.user;
+            const { settings = {} } = data.user;
             const theme = getThemeColors(settings.theme || 'dark-minimal');
-            const { canvasWidth, canvasHeight } = settings; // Should match canvas.width/height
+            const cWidth = settings.canvasWidth || 1080;
+            const cHeight = settings.canvasHeight || 2340;
+
+            // Re-sync canvas size if needed
+            canvas.width = cWidth;
+            canvas.height = cHeight;
 
             // 1. Background
-            drawBackground(ctx, canvasWidth, canvasHeight, theme);
+            drawBackground(ctx, cWidth, cHeight, theme);
 
             // 2. Life Header
             const birthDate = new Date(settings.dateOfBirth);
@@ -79,17 +86,17 @@ export default function WallpaperRenderer() {
             const lifeProgressPercent = Math.min(100, Math.max(0, (ageMs / lifeExpectancyMs) * 100));
 
             drawLifeHeader(ctx, {
-                canvasWidth,
+                canvasWidth: cWidth,
                 theme,
                 progress: lifeProgressPercent
             });
 
             // 3. Dashboard Header & Streak
-            const verticalCursorY = settings.wallpaperType === "lockscreen" ? canvasHeight * 0.35 : canvasHeight * 0.12;
+            const verticalCursorY = settings.wallpaperType === "lockscreen" ? cHeight * 0.35 : cHeight * 0.12;
 
             if (settings.showAgeStats) {
                 drawStreakWidget(ctx, {
-                    x: canvasWidth * 0.92, // Right margin
+                    x: cWidth * 0.92, // Right margin
                     y: verticalCursorY - 60,
                     theme,
                     streak: data.stats.streak,
@@ -97,9 +104,9 @@ export default function WallpaperRenderer() {
                 });
 
                 drawDashboardHeader(ctx, {
-                    xCoordinate: canvasWidth * 0.08, // Left margin
+                    xCoordinate: cWidth * 0.08, // Left margin
                     yCoordinate: verticalCursorY,
-                    width: canvasWidth * 0.84,
+                    width: cWidth * 0.84,
                     theme,
                     history: data.stats.growthHistory,
                     todayPercent: data.stats.todayCompletionPercentage,
@@ -109,12 +116,11 @@ export default function WallpaperRenderer() {
             }
 
             // 4. Grid (Middle Section)
-            // Simplified logic for now
             drawGrid(ctx, {
-                xCoordinate: canvasWidth * 0.08,
+                xCoordinate: cWidth * 0.08,
                 yCoordinate: verticalCursorY + (settings.showAgeStats ? 250 : 0),
-                width: canvasWidth * 0.84,
-                height: canvasHeight,
+                width: cWidth * 0.84,
+                height: cHeight,
                 theme,
                 themeName: settings.theme,
                 mode: settings.yearGridMode,
@@ -129,9 +135,9 @@ export default function WallpaperRenderer() {
             // 5. Quote
             if (settings.showQuote) {
                 drawQuote(ctx, {
-                    xCoordinate: canvasWidth * 0.08,
-                    yCoordinate: canvasHeight - 120,
-                    width: canvasWidth * 0.84,
+                    xCoordinate: cWidth * 0.08,
+                    yCoordinate: cHeight - 120,
+                    width: cWidth * 0.84,
                     height: 100,
                     theme,
                     quote: settings.quoteText
@@ -156,13 +162,14 @@ export default function WallpaperRenderer() {
         }
     }
 
-    // Helper: Theme Colors (Copied from server logic but needed here)
+    // Helper: Theme Colors
     function getThemeColors(themeName) {
         const themes = {
             "minimal-dark": { BG: "#09090b", CARD: "#18181b", TEXT_MAIN: "#fafafa", TEXT_SUB: "#a1a1aa", ACCENT: "#ffffff", GRID_ACTIVE: "#ffffff", GRID_INACTIVE: "#27272a" },
+            "dark-minimal": { BG: "#09090b", CARD: "#18181b", TEXT_MAIN: "#fafafa", TEXT_SUB: "#a1a1aa", ACCENT: "#ffffff", GRID_ACTIVE: "#ffffff", GRID_INACTIVE: "#27272a" },
             "sunset-orange": { BG: "#09090b", CARD: "#1a0f0a", TEXT_MAIN: "#fafafa", TEXT_SUB: "#a1a1aa", ACCENT: "#ff8c42", GRID_ACTIVE: "#ff8c42", GRID_INACTIVE: "#2a2019" },
-            // Add other themes...
-            "dark-minimal": { BG: "#09090b", CARD: "#18181b", TEXT_MAIN: "#fafafa", TEXT_SUB: "#a1a1aa", ACCENT: "#ffffff", GRID_ACTIVE: "#ffffff", GRID_INACTIVE: "#27272a" }
+            "orange-glow": { BG: "#09090b", CARD: "#1a0f0a", TEXT_MAIN: "#fafafa", TEXT_SUB: "#a1a1aa", ACCENT: "#ff8c42", GRID_ACTIVE: "#ff8c42", GRID_INACTIVE: "#2a2019" },
+            "white-clean": { BG: "#ffffff", CARD: "#f4f4f5", TEXT_MAIN: "#09090b", TEXT_SUB: "#71717a", ACCENT: "#09090b", GRID_ACTIVE: "#09090b", GRID_INACTIVE: "#e4e4e7" },
         };
         return themes[themeName] || themes["dark-minimal"];
     }
