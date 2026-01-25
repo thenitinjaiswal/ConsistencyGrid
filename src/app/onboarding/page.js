@@ -34,7 +34,7 @@ const TOTAL_STEPS = 4;
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -146,11 +146,16 @@ export default function OnboardingPage() {
       }
 
       toast.success("Welcome! Redirecting to your dashboard...");
-      
+
+      // Update session to reflect onboarded status
+      await update({ onboarded: true });
+
       // Redirect to dashboard after brief delay
+      // Using window.location.href instead of router.push for a hard redirect
+      // to ensure the session status is correctly picked up by the middleware.
       setTimeout(() => {
-        router.push("/dashboard");
-      }, 500);
+        window.location.href = "/dashboard";
+      }, 800);
     } catch (error) {
       console.error("Onboarding error:", error);
       toast.error(error.message || "An error occurred. Please try again.");
