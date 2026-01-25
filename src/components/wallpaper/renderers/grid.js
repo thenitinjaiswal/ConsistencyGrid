@@ -20,108 +20,103 @@ export function drawGrid(
 ) {
     let currentY = yCoordinate;
 
-    // Enhanced title with better typography and spacing
-    let titleText = "";
+    // Systematic UI Hierarchy
+    let mainTitle = "";
+    let systemLabel = ""; // e.g., "CALENDAR", "PRODUCTIVITY"
     let subtitleText = "";
     let progressMetric = "";
 
     if (mode === "days") {
-        titleText = "365 DAYS";
+        mainTitle = "365 DAYS";
+        systemLabel = "ANNUAL VIEW";
         const year = now.getFullYear();
         const isLeap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
         subtitleText = `${year} • ${isLeap ? '366' : '365'} days to make count`;
         const dayOfYear = getDayOfYear(now);
         const daysPercent = Math.round((dayOfYear / (isLeap ? 366 : 365)) * 100);
-        progressMetric = `${daysPercent}% complete`;
+        progressMetric = `${daysPercent}% COMPLETE`;
     } else if (mode === "weeks") {
-        titleText = now.getFullYear() + " PROGRESS";
+        mainTitle = now.getFullYear() + " PROGRESS";
+        systemLabel = "WEEKLY METRICS";
         subtitleText = "52 weeks of opportunity";
         const weekNum = getWeekNumber(now);
-        progressMetric = `Week ${weekNum}/52`;
+        progressMetric = `WEEK ${weekNum}/52`;
     } else if (mode === "life") {
-        titleText = "LIFE PROGRESS";
+        mainTitle = "LIFE PROGRESS";
+        systemLabel = "MEMENTO MORI";
         const birthDate = new Date(dob);
         const age = Math.floor((now - birthDate) / (365.25 * 24 * 60 * 60 * 1000));
-        subtitleText = `${age} years • ${lifeExpectancy} years life expectancy`;
+        subtitleText = `${age} YEARS • ${lifeExpectancy}Y EXPECTANCY`;
         const weeksLived = weeksBetween(birthDate, now);
         const totalWeeks = lifeExpectancy * 52;
         const lifePercent = Math.round((weeksLived / totalWeeks) * 100);
-        progressMetric = `${lifePercent}% of life lived`;
+        progressMetric = `${lifePercent}% LIVED`;
     } else {
         const monthName = now.toLocaleString("default", { month: "long" }).toUpperCase();
-        titleText = monthName + " " + now.getFullYear();
+        mainTitle = monthName + " " + now.getFullYear();
+        systemLabel = "MONTHLY VIEW";
         const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
         const dayOfMonth = now.getDate();
-        subtitleText = `${daysInMonth} days in this month`;
-        progressMetric = `Day ${dayOfMonth}/${daysInMonth}`;
+        subtitleText = `${daysInMonth} DAYS TOTAL`;
+        progressMetric = `DAY ${dayOfMonth}/${daysInMonth}`;
     }
 
-    // Premium header with improved spacing and styling
+    // ============ PREMIUM HEADER SECTION ============
     context.save();
-    context.shadowColor = "rgba(0, 0, 0, 0.6)";
-    context.shadowBlur = 16;
-    context.shadowOffsetY = 6;
 
-    const gradient = context.createLinearGradient(
-        xCoordinate,
-        currentY - 20,
-        xCoordinate + 400,
-        currentY + 20
-    );
-    gradient.addColorStop(0, theme.TEXT_PRIMARY || "#ffffff");
-    gradient.addColorStop(0.5, theme.TEXT_PRIMARY || "#fafafa");
-    gradient.addColorStop(1, theme.TEXT_SUB || "#a1a1aa");
-
-    drawSafeText(context, titleText, xCoordinate, currentY, {
-        font: "bold 52px Inter, sans-serif",
-        color: gradient,
+    // 1. SMALL CAPS SYSTEM LABEL
+    drawSafeText(context, systemLabel, xCoordinate, currentY, {
+        font: "700 12px Inter, sans-serif",
+        color: theme.ACCENT || "rgba(255, 255, 255, 0.4)",
         shadow: false,
     });
 
-    currentY += 62;
+    currentY += 32;
 
-    // Decorative line under title with gradient
-    const lineGradient = context.createLinearGradient(xCoordinate, currentY - 8, xCoordinate + 200, currentY - 8);
-    lineGradient.addColorStop(0, theme.ACCENT || "rgba(255, 255, 255, 0.3)");
-    lineGradient.addColorStop(1, "rgba(255, 255, 255, 0.05)");
-    context.strokeStyle = lineGradient;
-    context.lineWidth = 3;
-    context.beginPath();
-    context.moveTo(xCoordinate, currentY - 8);
-    context.lineTo(xCoordinate + 140, currentY - 8);
-    context.stroke();
+    // 2. MAIN TITLE WITH DYNAMIC DEPTH
+    context.shadowColor = "rgba(0, 0, 0, 0.8)";
+    context.shadowBlur = 24;
+    context.shadowOffsetY = 8;
 
-    context.shadowBlur = 0;
-    context.shadowOffsetY = 0;
+    const titleGradient = context.createLinearGradient(xCoordinate, currentY - 20, xCoordinate + 450, currentY + 20);
+    titleGradient.addColorStop(0, theme.TEXT_PRIMARY || "#ffffff");
+    titleGradient.addColorStop(0.6, theme.TEXT_PRIMARY || "#fafafa");
+    titleGradient.addColorStop(1, "rgba(255,255,255,0.3)");
 
-    // Enhanced subtitle section with progress metric
-    drawSafeText(context, subtitleText, xCoordinate, currentY + 20, {
-        font: "500 15px Inter, sans-serif",
-        color: theme.TEXT_SUB || "#71717a",
-        shadow: false,
-    });
-
-    // Progress metric badge
-    const badgeX = xCoordinate + 320;
-    const badgeY = currentY + 4;
-    drawRoundedRect(
-        context,
-        badgeX,
-        badgeY,
-        100,
-        32,
-        12,
-        "rgba(255, 255, 255, 0.08)",
-        "rgba(255, 255, 255, 0.15)"
-    );
-
-    drawSafeText(context, progressMetric, badgeX + 50, badgeY + 21, {
-        font: "600 12px Inter, sans-serif",
-        color: theme.ACCENT || "rgba(255, 255, 255, 0.7)",
+    drawSafeText(context, mainTitle, xCoordinate, currentY, {
+        font: "800 64px Inter, sans-serif",
+        color: titleGradient,
         shadow: false,
     });
 
     currentY += 68;
+
+    // 3. SUBTITLE & PROGRESS BADGE ALIGNMENT
+    context.shadowBlur = 0;
+    context.shadowOffsetY = 0;
+
+    // Subtitle
+    drawSafeText(context, subtitleText, xCoordinate, currentY + 12, {
+        font: "600 14px Inter, sans-serif",
+        color: "rgba(255, 255, 255, 0.3)",
+        shadow: false,
+    });
+
+    // Progress Badge (Right Aligned or Offset)
+    const badgeWidth = 110;
+    const badgeX = xCoordinate + width - badgeWidth;
+    const badgeY = currentY - 4;
+
+    drawRoundedRect(context, badgeX, badgeY, badgeWidth, 30, 8, "rgba(255, 255, 255, 0.06)", "rgba(255, 255, 255, 0.1)");
+
+    drawSafeText(context, progressMetric, badgeX + badgeWidth / 2, badgeY + 19, {
+        font: "800 11px Inter, sans-serif",
+        color: theme.ACCENT || "#ffffff",
+        align: "center",
+        shadow: false,
+    });
+
+    currentY += 56;
     const contentWidth = width;
 
     // Helper functions
@@ -241,49 +236,56 @@ export function drawGrid(
         return palette.full;
     };
 
-    // Premium box drawing with enhanced visual effects
+    // High-Fidelity Box Drawing
     const drawEnhancedBox = (x, y, size, fillColor, isHighlight, borderRadius = 4) => {
         context.save();
 
         if (isHighlight) {
             const palette = HEATMAP_PALETTES[themeName] || HEATMAP_PALETTES["dark-minimal"];
 
-            // Multiple glow rings for premium effect
-            for (let i = 4; i > 0; i--) {
-                context.globalAlpha = 0.2 / i;
+            // Multi-layered light emission
+            for (let i = 5; i > 0; i--) {
+                context.globalAlpha = 0.25 / i;
                 context.fillStyle = palette.full || palette.glow;
-                drawRoundedRect(context, x - i * 2.5, y - i * 2.5, size + i * 5, size + i * 5, borderRadius + 3);
+                const spread = i * 2.5;
+                drawRoundedRect(context, x - spread, y - spread, size + spread * 2, size + spread * 2, borderRadius + 4);
             }
-
             context.globalAlpha = 1;
         }
 
         const isInactive = fillColor === (theme.GRID_INACTIVE || "#27272a") || fillColor === "#18181b";
 
+        // Material depth
         if (!isInactive) {
-            context.shadowColor = "rgba(0, 0, 0, 0.5)";
+            context.shadowColor = "rgba(0, 0, 0, 0.4)";
             context.shadowBlur = 12;
             context.shadowOffsetY = 4;
         }
 
         const borderColor = isHighlight
             ? (HEATMAP_PALETTES[themeName] || HEATMAP_PALETTES["dark-minimal"]).full
-            : isInactive
-                ? "#2a2a2d"
-                : fillColor;
+            : isInactive ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.1)";
 
-        context.fillStyle = fillColor;
+        // 1. Base Tile
         drawRoundedRect(context, x, y, size, size, borderRadius, fillColor, borderColor);
 
-        // Enhanced inner shine effect
+        // 2. Rim Light (Retina detail)
         if (!isInactive) {
             context.shadowBlur = 0;
-            const highlightGradient = context.createLinearGradient(x + 2, y + 2, x + size - 2, y + size - 2);
-            highlightGradient.addColorStop(0, "rgba(255, 255, 255, 0.25)");
-            highlightGradient.addColorStop(0.4, "rgba(255, 255, 255, 0.08)");
-            highlightGradient.addColorStop(1, "rgba(0, 0, 0, 0.1)");
-            context.fillStyle = highlightGradient;
-            drawRoundedRect(context, x + 1.5, y + 1.5, size - 3, size - 3, borderRadius - 1);
+            context.shadowOffsetY = 0;
+            context.lineWidth = 1;
+            context.strokeStyle = "rgba(255, 255, 255, 0.15)";
+            context.strokeRect(x + 0.5, y + 0.5, size - 1, size - 1);
+        }
+
+        // 3. Inner Material Shine
+        if (!isInactive) {
+            const shine = context.createLinearGradient(x, y, x + size, y + size);
+            shine.addColorStop(0, "rgba(255, 255, 255, 0.2)");
+            shine.addColorStop(0.5, "rgba(255, 255, 255, 0)");
+            shine.addColorStop(1, "rgba(0, 0, 0, 0.1)");
+            context.fillStyle = shine;
+            drawRoundedRect(context, x + 1, y + 1, size - 2, size - 2, borderRadius - 1);
         }
 
         context.restore();
@@ -300,9 +302,9 @@ export function drawGrid(
         const isLeap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
         const totalDays = isLeap ? 366 : 365;
         const currentDayNum = getDayOfYear(now);
-        const rows = Math.ceil(totalDays / gridCols);
+        const dayRows = Math.ceil(totalDays / gridCols);
 
-        for (let rowIndex = 0; rowIndex < rows; rowIndex++) {
+        for (let rowIndex = 0; rowIndex < dayRows; rowIndex++) {
             for (let columnIndex = 0; columnIndex < gridCols; columnIndex++) {
                 const dayNum = rowIndex * gridCols + columnIndex + 1;
                 if (dayNum > totalDays) break;
@@ -333,12 +335,12 @@ export function drawGrid(
                 drawEnhancedBox(boxX, boxY, boxSize, fillColor, isToday, 6);
             }
         }
-        finalHeight = rows * (boxSize + gap) + 150;
+        finalHeight = dayRows * (boxSize + gap) + 150;
     }
     // Weeks mode - 52 week grid
     else if (mode === "weeks") {
         const columns = 13;
-        const rows = 4;
+        const weekRows = 4;
         const gap = 16;
         const boxSize = (contentWidth - gap * (columns - 1)) / columns;
         const currentWeek = getWeekNumber(now);
@@ -346,7 +348,7 @@ export function drawGrid(
         const simpleWeekOneStart = new Date(startOfYear);
         simpleWeekOneStart.setDate(simpleWeekOneStart.getDate() - simpleWeekOneStart.getDay());
 
-        for (let rowIndex = 0; rowIndex < rows; rowIndex++) {
+        for (let rowIndex = 0; rowIndex < weekRows; rowIndex++) {
             for (let columnIndex = 0; columnIndex < columns; columnIndex++) {
                 const index = rowIndex * columns + columnIndex;
                 const weekNum = index + 1;
@@ -381,7 +383,7 @@ export function drawGrid(
                 drawEnhancedBox(boxX, boxY, boxSize, fillColor, isCurrentWeek, 9);
             }
         }
-        finalHeight = rows * (boxSize + gap) + 200;
+        finalHeight = weekRows * (boxSize + gap) + 200;
     }
     // Life mode - entire life grid
     else if (mode === "life") {
@@ -438,7 +440,7 @@ export function drawGrid(
     // Monthly calendar mode
     else {
         const columns = 7;
-        const rows = 6;
+        let monthRows = 6;
         const gap = 20;
         const boxSize = (contentWidth - gap * (columns - 1)) / columns;
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -451,25 +453,49 @@ export function drawGrid(
         for (let i = 0; i < 7; i++) {
             const labelX = xCoordinate + i * (boxSize + gap) + boxSize / 2;
 
-            // Enhanced background for day labels
-            context.fillStyle = "rgba(255, 255, 255, 0.08)";
-            drawRoundedRect(context, labelX - boxSize / 2 - 2, labelY - 16, boxSize + 4, 28, 8);
+            // Transparent badge for labels
+            context.fillStyle = "rgba(255, 255, 255, 0.04)";
+            drawRoundedRect(context, labelX - 25, labelY - 12, 50, 24, 6);
 
             context.textAlign = "center";
-            drawSafeText(context, dayLabels[i], labelX, labelY + 10, {
-                font: "700 11px Inter, sans-serif",
-                color: theme.TEXT_SUB || "#71717a",
+            drawSafeText(context, dayLabels[i], labelX, labelY + 6, {
+                font: "800 10px Inter, sans-serif",
+                color: "rgba(255, 255, 255, 0.2)",
                 shadow: false,
             });
             context.textAlign = "left";
         }
         currentY += 40;
 
-        for (let rowIndex = 0; rowIndex < rows; rowIndex++) {
+        for (let rowIndex = 0; rowIndex < monthRows; rowIndex++) {
+            let rowHasDaysInMonth = false;
+
+            // Check if this row has any days in the current month
+            for (let col = 0; col < columns; col++) {
+                const dIdx = rowIndex * 7 + col;
+                const checkDate = new Date(startOfMonth);
+                checkDate.setDate(1 + dIdx - dayOffset);
+                if (checkDate.getMonth() === now.getMonth()) {
+                    rowHasDaysInMonth = true;
+                    break;
+                }
+            }
+
+            if (!rowHasDaysInMonth) {
+                monthRows = rowIndex; // Actual number of rows used
+                break;
+            }
+
             for (let columnIndex = 0; columnIndex < columns; columnIndex++) {
                 const dayIndex = rowIndex * 7 + columnIndex;
                 const date = new Date(startOfMonth);
                 date.setDate(1 + dayIndex - dayOffset);
+
+                const isToday = getDayString(date) === getDayString(now);
+                const isInMonth = date.getMonth() === now.getMonth();
+
+                // SKIPPED: Removing extra grids from other months
+                if (!isInMonth) continue;
 
                 const boxX = xCoordinate + columnIndex * (boxSize + gap);
                 const boxY = currentY + rowIndex * (boxSize + gap);
@@ -478,14 +504,10 @@ export function drawGrid(
                     anchorPoint = { x: boxX, y: boxY, size: boxSize };
                 }
 
-                const isToday = getDayString(date) === getDayString(now);
-                const isInMonth = date.getMonth() === now.getMonth();
                 const logCount = activityMap[getDayString(date)] || 0;
 
                 let fillColor;
-                if (!isInMonth) {
-                    fillColor = "#18181b";
-                } else if (isToday) {
+                if (isToday) {
                     const completionPercentage = totalHabits > 0 ? (logCount / totalHabits) * 100 : 0;
                     if (completionPercentage > 0) {
                         fillColor = getHeatmapColor(completionPercentage);
@@ -503,55 +525,56 @@ export function drawGrid(
                 drawEnhancedBox(boxX, boxY, boxSize, fillColor, isToday, 11);
 
                 // Draw date number with enhanced styling
-                if (isInMonth) {
-                    context.textAlign = "center";
-                    const textColor = isToday ? "#09090b" : logCount > 0 ? "#fafafa" : "#71717a";
+                context.textAlign = "center";
+                const textColor = isToday ? "#000000" : logCount > 0 ? "#ffffff" : "rgba(255,255,255,0.2)";
 
-                    if (isToday) {
-                        drawSafeText(
-                            context,
-                            date.getDate().toString(),
-                            boxX + boxSize / 2,
-                            boxY + boxSize / 2 + 8,
-                            {
-                                font: "bold 20px Inter, sans-serif",
-                                color: textColor,
-                                shadow: false,
-                            }
-                        );
-                    } else if (logCount > 0) {
-                        drawSafeText(
-                            context,
-                            date.getDate().toString(),
-                            boxX + boxSize / 2,
-                            boxY + boxSize / 2 + 7,
-                            {
-                                font: "700 16px Inter, sans-serif",
-                                color: textColor,
-                                shadow: false,
-                            }
-                        );
-                    } else {
-                        drawSafeText(
-                            context,
-                            date.getDate().toString(),
-                            boxX + boxSize / 2,
-                            boxY + boxSize / 2 + 7,
-                            {
-                                font: "600 15px Inter, sans-serif",
-                                color: textColor,
-                                shadow: false,
-                            }
-                        );
-                    }
-                    context.textAlign = "left";
+                if (isToday) {
+                    drawSafeText(
+                        context,
+                        date.getDate().toString(),
+                        boxX + boxSize / 2,
+                        boxY + boxSize / 2 + 8,
+                        {
+                            font: "800 20px Inter, sans-serif",
+                            color: textColor,
+                            shadow: false,
+                        }
+                    );
+                } else {
+                    drawSafeText(
+                        context,
+                        date.getDate().toString(),
+                        boxX + boxSize / 2,
+                        boxY + boxSize / 2 + 7,
+                        {
+                            font: logCount > 0 ? "800 16px Inter, sans-serif" : "600 15px Inter, sans-serif",
+                            color: textColor,
+                            shadow: false,
+                        }
+                    );
                 }
+                context.textAlign = "left";
             }
         }
-        finalHeight = rows * (boxSize + gap) + 160;
+        finalHeight = monthRows * (boxSize + gap) + 160;
+
+        // Intensity Legend
+        const legendX = xCoordinate;
+        const legendY = currentY + monthRows * (boxSize + gap) + 20;
+        const legendBoxSize = 12;
+        const legendGap = 8;
+
+        drawSafeText(context, "LESS", legendX, legendY + 10, { font: "700 10px Inter, sans-serif", color: "rgba(255,255,255,0.2)" });
+
+        [0, 25, 50, 75, 100].forEach((p, i) => {
+            const lx = legendX + 40 + i * (legendBoxSize + legendGap);
+            drawEnhancedBox(lx, legendY, legendBoxSize, getHeatmapColor(p), false, 3);
+        });
+
+        drawSafeText(context, "MORE", legendX + 40 + 5 * (legendBoxSize + legendGap) + 4, legendY + 10, { font: "700 10px Inter, sans-serif", color: "rgba(255,255,255,0.2)" });
     }
 
-    // Enhanced reminder callout with improved design
+    // ============ REMINDER CALLOUT (EXACT MATCH TO NEW DESIGN) ============
     if (anchorPoint && targetReminders.length > 0) {
         const boxWidth = 360;
         const itemHeight = 64;
@@ -576,27 +599,38 @@ export function drawGrid(
 
         context.save();
 
-        // White connection line with gradient
-        const lineGradient = context.createLinearGradient(
-            anchorPoint.x + anchorPoint.size / 2,
-            anchorPoint.y + anchorPoint.size / 2,
-            calloutX + boxWidth / 2,
-            calloutY + boxHeight
-        );
-        lineGradient.addColorStop(0, "rgba(255, 255, 255, 0.9)");
+        // 1. ANCHOR TERMINAL (Glow on the day itself)
+        const ax = anchorPoint.x + anchorPoint.size / 2;
+        const ay = anchorPoint.y + anchorPoint.size / 2;
+
+        context.beginPath();
+        context.arc(ax, ay, 4, 0, Math.PI * 2);
+        context.fillStyle = "#ffffff";
+        context.shadowBlur = 10;
+        context.shadowColor = "#ffffff";
+        context.fill();
+
+        // 2. CONNECTION LINE
+        const lineGradient = context.createLinearGradient(ax, ay, calloutX + boxWidth / 2, calloutY + boxHeight);
+        lineGradient.addColorStop(0, "rgba(255, 255, 255, 1)");
         lineGradient.addColorStop(1, "rgba(255, 255, 255, 0.4)");
         context.strokeStyle = lineGradient;
         context.lineWidth = 2.5;
 
         context.beginPath();
-        const anchorCenterX = anchorPoint.x + anchorPoint.size / 2;
-        const anchorCenterY = anchorPoint.y + anchorPoint.size / 2;
-        const calloutBottomCenterX = calloutX + boxWidth / 2;
-        const calloutBottomY = calloutY + boxHeight;
-
-        context.moveTo(anchorCenterX, anchorCenterY);
-        context.lineTo(calloutBottomCenterX, calloutBottomY);
+        context.moveTo(ax, ay);
+        const cpY = (ay + calloutY + boxHeight) / 2;
+        context.bezierCurveTo(ax, cpY, calloutX + boxWidth / 2, cpY, calloutX + boxWidth / 2, calloutY + boxHeight);
         context.stroke();
+
+        // 3. CALLOUT TERMINAL
+        context.beginPath();
+        context.arc(calloutX + boxWidth / 2, calloutY + boxHeight, 3, 0, Math.PI * 2);
+        context.fillStyle = "rgba(255, 255, 255, 0.5)";
+        context.fill();
+
+        context.restore();
+        context.save();
 
         // Card background with enhanced styling
         context.shadowColor = "rgba(0, 0, 0, 0.8)";
