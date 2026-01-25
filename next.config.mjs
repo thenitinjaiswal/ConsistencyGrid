@@ -73,10 +73,8 @@ const nextConfig = {
   poweredByHeader: false,
 
   // 🔥 CRITICAL: Ensure font files are included in the serverless function bundle
-  experimental: {
-    outputFileTracingIncludes: {
-      '/w/[token]/image.png': ['./src/fonts/**/*'],
-    },
+  outputFileTracingIncludes: {
+    '/w/[token]/image.png': ['./src/fonts/**/*'],
   },
 
   // Turbopack Configuration (Next.js 16 default bundler)
