@@ -1,4 +1,4 @@
-import { drawSafeText } from "../utils";
+import { drawSafeText } from "./utils";
 
 /**
  * Draws the motivational quote footer at the bottom of the wallpaper

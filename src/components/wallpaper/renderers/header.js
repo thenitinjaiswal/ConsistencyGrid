@@ -1,4 +1,4 @@
-import { drawRoundedRect, drawSafeText } from "../utils";
+import { drawRoundedRect, drawSafeText } from "./utils";
 
 /**
  * DASHBOARD HEADER

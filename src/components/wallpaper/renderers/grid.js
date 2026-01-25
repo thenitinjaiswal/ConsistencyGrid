@@ -1,4 +1,4 @@
-import { drawRoundedRect, drawSafeText } from "../utils";
+import { drawRoundedRect, drawSafeText } from "./utils";
 
 export function drawGrid(
     context,
