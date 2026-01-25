@@ -21,7 +21,7 @@ ctx.fillText("Hello", 10, 10);  // ❌ Text nahi dikha (blank)
 
 ---
 
-## ✅ समाधान (Solution)
+## ✅ (Solution)
 
 ### Fix 1: Robust Font Registration (Advanced)
 **File:** `src/app/w/[token]/image.png/route.js`

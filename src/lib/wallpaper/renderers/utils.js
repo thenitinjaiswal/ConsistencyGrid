@@ -83,12 +83,18 @@ export function drawSafeText(
 
   ctx.save();
 
-  // Enhanced font fallback chain for better compatibility
-  // Priority: Inter → Arial → Helvetica → sans-serif (system default)
+  // Enhanced safe text drawing with nuclear fallback
+  // FORCE ARIAL: The header works because it uses Arial. Grid/Charts fail because they use Inter.
+  // We map Inter -> Arial globally here to guarantee Vercel rendering.
   let fontString = font;
+
   if (font.includes('Inter')) {
-    // Replace Inter with comprehensive fallback chain
-    fontString = font.replace(/Inter/g, 'Inter, Arial, Helvetica, sans-serif');
+    // Replace Inter with Arial completely
+    fontString = font.replace(/Inter/g, 'Arial');
+    // Ensure fallback chain ends with sans-serif
+    if (!fontString.includes('sans-serif')) {
+      fontString += ', sans-serif';
+    }
   } else if (!font.includes('Arial') && !font.includes('sans-serif')) {
     // Add fallback to any custom font
     fontString = font + ', Arial, sans-serif';
