@@ -7,7 +7,6 @@ import {
     drawGrid,
     drawBottomSection,
     drawQuote,
-    drawAdPlaceholder,
     drawLifeHeader
 } from "@/lib/wallpaper/components";
 import path from "path";
