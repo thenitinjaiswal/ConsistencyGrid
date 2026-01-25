@@ -54,6 +54,10 @@ export default function GeneratorPage() {
 
         if (data?.user?.publicToken) {
           setPublicToken(data.user.publicToken);
+          // Android Bridge: Save token for background workers
+          if (window.Android && window.Android.saveToken) {
+            window.Android.saveToken(data.user.publicToken);
+          }
         }
 
         if (data?.settings) {
