@@ -143,21 +143,28 @@ export function drawDashboardHeader(
 export function drawStreakWidget(context, { x, y, theme, streak, streakActiveToday }) {
     if (!streak || streak <= 0) return;
 
-    drawSafeText(context, `${streak}`, x - 55, y, {
-        font: "bold 56px 'Plus Jakarta Sans', sans-serif",
+    // FONT_STACK is injected via drawSafeText automatically now, 
+    // but we'll use a slightly safer emoji approach.
+
+    drawSafeText(context, `${streak}`, x - 65, y, {
+        font: "bold 64px 'Plus Jakarta Sans'",
         color: theme.TEXT_MAIN,
         align: "right",
     });
 
-    drawSafeText(context, "🔥", x, y - 5, {
-        font: "42px 'Plus Jakarta Sans', sans-serif",
+    // Fire emoji - sometimes drawing it separately helps browsers
+    drawSafeText(context, "🔥", x - 10, y - 5, {
+        font: "48px serif", // Using serif as fallback for emojis often works better on mobile
         align: "right",
         shadow: false,
     });
 
-    drawSafeText(context, streakActiveToday ? "✓ Active" : "⚠ Risk", x, y + 30, {
-        font: "bold 14px 'Plus Jakarta Sans', sans-serif",
-        color: streakActiveToday ? "#22c55e" : "#ef4444",
+    const statusText = streakActiveToday ? "DONE TODAY" : "NOT LOGGED";
+    const statusColor = streakActiveToday ? "#22c55e" : "#ef4444";
+
+    drawSafeText(context, statusText, x, y + 40, {
+        font: "bold 16px 'Plus Jakarta Sans'",
+        color: statusColor,
         align: "right",
         shadow: false,
     });

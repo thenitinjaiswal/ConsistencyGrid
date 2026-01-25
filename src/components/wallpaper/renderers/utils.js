@@ -41,10 +41,11 @@ export function drawRoundedRect(
     ctx.restore();
 }
 
+// Premium font stack with robust emoji support
+export const FONT_STACK = "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'";
+
 /**
  * SAFE TEXT DRAW
- * Browser automatically handles fonts, so we don't need 'registerFont'.
- * We can use CSS-loaded fonts directly.
  */
 export function drawSafeText(
     ctx,
@@ -52,7 +53,7 @@ export function drawSafeText(
     x,
     y,
     {
-        font = "16px 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'", // Modern premium font with emoji support
+        font = `16px ${FONT_STACK}`,
         color = "#ffffff",
         align = "left",
         baseline = "alphabetic",
@@ -62,7 +63,15 @@ export function drawSafeText(
     if (!text) return;
 
     ctx.save();
-    ctx.font = font;
+
+    // Ensure the font string includes the emoji stack if it's a shorthand
+    let finalFont = font;
+    if (!font.includes("Emoji") && !font.includes("sans-serif")) {
+        // If user passed something like "bold 40px", append the stack
+        finalFont = `${font}, ${FONT_STACK}`;
+    }
+
+    ctx.font = finalFont;
     ctx.fillStyle = color;
     ctx.textAlign = align;
     ctx.textBaseline = baseline;

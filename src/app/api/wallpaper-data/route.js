@@ -8,11 +8,18 @@ function calculateWeeksBetween(startDate, endDate) {
     return Math.floor(millisecondsDiff / (1000 * 60 * 60 * 24 * 7));
 }
 
+const TIMEZONE = "Asia/Kolkata";
+
 function formatDateToDayString(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    // Force formatting in IST to match user's local day
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: TIMEZONE,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    });
+    // canada format 'en-CA' gives YYYY-MM-DD
+    return formatter.format(date);
 }
 
 export async function GET(request) {
@@ -128,6 +135,8 @@ export async function GET(request) {
     let tempDate = new Date(currentDate);
     const todayLogged = (activityMap[formatDateToDayString(tempDate)] || 0) > 0;
 
+    console.log(`[STREAK] Today: ${currentDayKey}, Logged: ${todayLogged}`);
+
     if (todayLogged) {
         currentStreak++;
     }
@@ -135,10 +144,21 @@ export async function GET(request) {
     tempDate = new Date(currentDate);
     tempDate.setDate(tempDate.getDate() - 1);
 
-    while ((activityMap[formatDateToDayString(tempDate)] || 0) > 0) {
-        currentStreak++;
-        tempDate.setDate(tempDate.getDate() - 1);
+    while (true) {
+        const dayStr = formatDateToDayString(tempDate);
+        const logged = (activityMap[dayStr] || 0) > 0;
+
+        console.log(`[STREAK] Checking ${dayStr}: ${logged}`);
+
+        if (logged) {
+            currentStreak++;
+            tempDate.setDate(tempDate.getDate() - 1);
+        } else {
+            break;
+        }
     }
+
+    console.log(`[STREAK] Final: ${currentStreak}`);
 
     // 5. Fetch Active Reminders
     const activeReminders = await prisma.reminder.findMany({
