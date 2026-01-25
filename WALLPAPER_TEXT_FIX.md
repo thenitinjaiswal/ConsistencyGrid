@@ -23,43 +23,27 @@ ctx.fillText("Hello", 10, 10);  // ❌ Text nahi dikha (blank)
 
 ## ✅ (Solution)
 
-### Fix 1: Robust Font Registration (Advanced)
-**File:** `src/app/w/[token]/image.png/route.js`
+### Fix 1: Bundled Font with Explicit Tracing (The Definitive Fix)
+**Step 1:** Copy font to `src/fonts/Inter-Regular.ttf`
+```bash
+mkdir src/fonts
+copy path/to/font.ttf src/fonts/Inter-Regular.ttf
+```
 
+**Step 2:** Configure `next.config.mjs` to include font
 ```javascript
-import { registerFont } from "canvas";
-import fs from "fs";
-import path from "path";
+experimental: {
+  outputFileTracingIncludes: {
+    '/w/[token]/image.png': ['./src/fonts/**/*'],
+  },
+},
+```
 
-try {
-    // Check multiple possible locations for the font file
-    const possibleFontPaths = [
-        // Standard Next.js location
-        path.join(process.cwd(), 'node_modules', 'next', 'dist', 'compiled', '@vercel', 'og', 'noto-sans-v27-latin-regular.ttf'),
-        // Explicit Vercel Lambda location
-        path.join('/var/task', 'node_modules', 'next', 'dist', 'compiled', '@vercel', 'og', 'noto-sans-v27-latin-regular.ttf'),
-    ];
-    
-    let fontPath = null;
-    for (const testPath of possibleFontPaths) {
-        if (fs.existsSync(testPath)) {
-            fontPath = testPath;
-            break;
-        }
-    }
-    
-    if (fontPath) {
-        // Register same font file for multiple families to ensure fallback works
-        registerFont(fontPath, { family: 'Inter' });
-        registerFont(fontPath, { family: 'Arial' });
-        registerFont(fontPath, { family: 'sans-serif' });
-        console.log('✅ Font registered from:', fontPath);
-    } else {
-        console.warn('⚠️ Font file missing. Text may not render.');
-    }
-} catch (e) {
-    console.error('❌ Font registration error:', e);
-}
+**Step 3:** Register font in `route.js`
+```javascript
+const fontPath = path.join(process.cwd(), 'src', 'fonts', 'Inter-Regular.ttf');
+registerFont(fontPath, { family: 'Inter' });
+registerFont(fontPath, { family: 'Arial' }); // Trick: Map Arial to Inter too!
 ```
 
 ### Fix 2: Explicit Context Initialization

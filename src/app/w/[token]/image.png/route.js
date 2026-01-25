@@ -18,34 +18,23 @@ import fs from "fs";
 let fontRegistered = false;
 
 try {
-    // Try multiple font paths for better compatibility
-    const possibleFontPaths = [
-        // Next.js bundled font (primary - local dev)
-        path.join(process.cwd(), 'node_modules', 'next', 'dist', 'compiled', '@vercel', 'og', 'noto-sans-v27-latin-regular.ttf'),
-        // Vercel deployment path
-        path.join('/var/task', 'node_modules', 'next', 'dist', 'compiled', '@vercel', 'og', 'noto-sans-v27-latin-regular.ttf'),
-    ];
+    // Path to the bundled font file
+    // We explicitly trace this file in next.config.mjs
+    const fontPath = path.join(process.cwd(), 'src', 'fonts', 'Inter-Regular.ttf');
 
-    let fontPath = null;
-    for (const testPath of possibleFontPaths) {
-        if (fs.existsSync(testPath)) {
-            fontPath = testPath;
-            console.log('✅ Found font at:', testPath);
-            break;
-        }
-    }
-
-    if (fontPath) {
+    if (fs.existsSync(fontPath)) {
         // Register font for all common font families with proper weights
+        // TRICK: Map Inter.ttf to 'Arial' so even if utils.js forces Arial, we get Inter!
         registerFont(fontPath, { family: 'Inter', weight: '400', style: 'normal' });
         registerFont(fontPath, { family: 'Inter', weight: '600', style: 'normal' });
         registerFont(fontPath, { family: 'Arial', weight: '400', style: 'normal' });
         registerFont(fontPath, { family: 'sans-serif', weight: '400', style: 'normal' });
         fontRegistered = true;
-        console.log('✅ Font registered successfully');
+        console.log('✅ Font registered successfully from:', fontPath);
     } else {
-        console.warn('⚠️ Font file not found at any path, using system fonts');
-        console.warn('Tried paths:', possibleFontPaths);
+        console.warn('⚠️ Font file missing at:', fontPath);
+        // Fallback: Try to find any TTF file in current directory recursively (debug mostly)
+        console.log('CWD contents:', fs.readdirSync(process.cwd()));
     }
 } catch (error) {
     console.error('❌ Font registration failed:', error.message);
