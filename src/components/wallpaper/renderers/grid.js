@@ -61,7 +61,7 @@ export function drawGrid(
     gradient.addColorStop(1, theme.TEXT_SUB || "#a1a1aa");
 
     drawSafeText(context, titleText, xCoordinate, currentY, {
-        font: "bold 44px 'Plus Jakarta Sans', sans-serif",
+        font: "bold 44px Inter, sans-serif",
         color: gradient,
         shadow: false,
     });
@@ -81,7 +81,7 @@ export function drawGrid(
 
     // Draw subtitle with enhanced styling
     drawSafeText(context, subtitleText, xCoordinate, currentY + 18, {
-        font: "500 14px 'Plus Jakarta Sans', sans-serif",
+        font: "500 14px Inter, sans-serif",
         color: theme.TEXT_SUB || "#71717a",
         shadow: false,
     });
@@ -414,7 +414,7 @@ export function drawGrid(
 
             context.textAlign = "center";
             drawSafeText(context, dayLabels[i], labelX, labelY + 8, {
-                font: "700 10px 'Plus Jakarta Sans', sans-serif",
+                font: "700 10px Inter, sans-serif",
                 color: theme.TEXT_SUB || "#71717a",
                 shadow: false,
             });
@@ -475,7 +475,7 @@ export function drawGrid(
                             boxX + boxSize / 2,
                             boxY + boxSize / 2 + 7,
                             {
-                                font: "bold 18px 'Plus Jakarta Sans', sans-serif",
+                                font: "bold 18px Inter, sans-serif",
                                 color: textColor,
                                 shadow: false,
                             }
@@ -488,7 +488,7 @@ export function drawGrid(
                             boxX + boxSize / 2,
                             boxY + boxSize / 2 + 6,
                             {
-                                font: "700 15px 'Plus Jakarta Sans', sans-serif",
+                                font: "700 15px Inter, sans-serif",
                                 color: textColor,
                                 shadow: false,
                             }
@@ -501,7 +501,7 @@ export function drawGrid(
                             boxX + boxSize / 2,
                             boxY + boxSize / 2 + 6,
                             {
-                                font: "600 14px 'Plus Jakarta Sans', sans-serif",
+                                font: "600 14px Inter, sans-serif",
                                 color: textColor,
                                 shadow: false,
                             }

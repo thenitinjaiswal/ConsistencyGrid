@@ -41,8 +41,8 @@ export function drawRoundedRect(
     ctx.restore();
 }
 
-// Premium font stack with robust emoji support
-export const FONT_STACK = "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'";
+// Cross-platform font stack (Inter is registered on server and client)
+export const FONT_STACK = "'Inter', -apple-system, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji'";
 
 /**
  * SAFE TEXT DRAW
@@ -64,13 +64,8 @@ export function drawSafeText(
 
     ctx.save();
 
-    // Fallback to simple font stack if no complex one provided
-    let finalFont = font;
-    if (!font.includes(",")) {
-        finalFont = `${font}, ${FONT_STACK}`;
-    }
-
-    ctx.font = finalFont;
+    // Auto-append stack if it's a simple shorthand without commas
+    ctx.font = font.includes(",") ? font : `${font}, ${FONT_STACK}`;
     ctx.fillStyle = color;
     ctx.textAlign = align;
     ctx.textBaseline = baseline;

@@ -17,12 +17,12 @@ export function drawDashboardHeader(
     /* ---------------- LEFT COLUMN ---------------- */
 
     drawSafeText(context, "GOALS", xCoordinate, yCoordinate, {
-        font: "bold 40px 'Plus Jakarta Sans', sans-serif",
+        font: "bold 40px Inter, sans-serif",
         color: theme.TEXT_SUB,
     });
 
     drawSafeText(context, "GROWTH", xCoordinate, yCoordinate + 50, {
-        font: "bold 40px 'Plus Jakarta Sans', sans-serif",
+        font: "bold 40px Inter, sans-serif",
         color: theme.TEXT_MAIN,
     });
 
@@ -121,13 +121,13 @@ export function drawDashboardHeader(
     }
 
     drawSafeText(context, `${percent}%`, ringX, ringY + 18, {
-        font: "bold 52px 'Plus Jakarta Sans', sans-serif",
+        font: "bold 52px Inter, sans-serif",
         color: theme.TEXT_MAIN,
         align: "center",
     });
 
     drawSafeText(context, "DAILY GOAL", ringX, ringY + 135, {
-        font: "bold 16px 'Plus Jakarta Sans', sans-serif",
+        font: "bold 16px Inter, sans-serif",
         color: theme.TEXT_SUB,
         align: "center",
         shadow: false,
@@ -189,23 +189,28 @@ function drawFlameIcon(ctx, x, y, size, color) {
 export function drawStreakWidget(context, { x, y, theme, streak, streakActiveToday }) {
     if (!streak || streak <= 0) return;
 
-    // 1. Draw Streak Number
-    drawSafeText(context, `${streak}`, x - 85, y + 10, {
-        font: "bold 72px 'Plus Jakarta Sans'",
+    // Vibrant Orange for active
+    const iconColor = streakActiveToday ? "#f97316" : "#71717a";
+
+    // 1. Draw Streak Number (Huge Impact)
+    // Align it to the right, slightly offset for the icon
+    drawSafeText(context, `${streak}`, x - 95, y + 45, {
+        font: "bold 180px 'Inter'",
         color: theme.TEXT_MAIN,
         align: "right",
+        baseline: "middle"
     });
 
-    // 2. Draw Flame Icon (Vibrant Orange if active)
-    const iconColor = streakActiveToday ? "#f97316" : "#71717a"; // Use Lucide orange-500
-    drawFlameIcon(context, x, y, 64, iconColor); // Increased size to 64
+    // 2. Draw Flame Icon
+    // Centered vertically with the number
+    drawFlameIcon(context, x, y + 15, 80, iconColor);
 
     // 3. Status Text
     const statusText = streakActiveToday ? "DONE TODAY" : "NOT LOGGED";
     const statusColor = streakActiveToday ? "#22c55e" : "#ef4444";
 
-    drawSafeText(context, statusText, x, y + 55, {
-        font: "bold 18px 'Plus Jakarta Sans'",
+    drawSafeText(context, statusText, x, y + 115, {
+        font: "bold 22px 'Inter'",
         color: statusColor,
         align: "right",
         shadow: false,
@@ -223,13 +228,13 @@ export function drawLifeHeader(context, { canvasWidth, theme, progress }) {
     const y = 200;
 
     drawSafeText(context, "LIFE PROGRESS", x, y, {
-        font: "bold 18px 'Plus Jakarta Sans', sans-serif",
+        font: "bold 18px Inter, sans-serif",
         color: theme.TEXT_SUB,
         align: "center",
     });
 
     drawSafeText(context, `${progress.toFixed(1)}%`, x, y + 50, {
-        font: "bold 36px 'Plus Jakarta Sans', sans-serif",
+        font: "bold 36px Inter, sans-serif",
         color: theme.TEXT_MAIN,
         align: "center",
     });

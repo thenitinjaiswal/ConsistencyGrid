@@ -38,7 +38,7 @@ export function drawBottomSection(
 
     if (habits && habits.length > 0 && settings.showHabitLayer !== false) {
         drawSafeText(context, "HABITS", leftColumnX, leftY, {
-            font: "bold 24px 'Plus Jakarta Sans', sans-serif",
+            font: "bold 24px Inter, sans-serif",
             color: theme.TEXT_SUB,
         });
         leftY += 40;
@@ -98,14 +98,14 @@ export function drawBottomSection(
                     : habit.title || "Untitled";
 
             drawSafeText(context, title, titleX, leftY + 20, {
-                font: "20px 'Plus Jakarta Sans', sans-serif",
+                font: "20px Inter, sans-serif",
                 color: theme.TEXT_MAIN,
             });
 
             // Scheduled time
             if (habit.scheduledTime) {
                 drawSafeText(context, habit.scheduledTime, titleX + 160, leftY + 20, {
-                    font: "14px 'Plus Jakarta Sans', sans-serif",
+                    font: "14px Inter, sans-serif",
                     color: habitColor,
                     shadow: false,
                 });
@@ -123,12 +123,12 @@ export function drawBottomSection(
         const goal = goals[0];
 
         drawSafeText(context, "FOCUS", rightColumnX, rightY, {
-            font: "bold 20px 'Plus Jakarta Sans', sans-serif",
+            font: "bold 20px Inter, sans-serif",
             color: theme.TEXT_SUB,
         });
 
         drawSafeText(context, goal.title || "Goal", rightColumnX, rightY + 40, {
-            font: "bold 24px 'Plus Jakarta Sans', sans-serif",
+            font: "bold 24px Inter, sans-serif",
             color: theme.TEXT_MAIN,
         });
 
@@ -165,7 +165,7 @@ export function drawBottomSection(
         }
 
         drawSafeText(context, `${progress}% complete`, rightColumnX + columnWidth, barY + 30, {
-            font: "16px 'Plus Jakarta Sans', sans-serif",
+            font: "16px Inter, sans-serif",
             color: theme.TEXT_SUB,
             align: "right",
             shadow: false,
