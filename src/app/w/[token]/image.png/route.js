@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { createCanvas } from "canvas";
+import { createCanvas, registerFont } from "canvas";
 import {
     drawBackground,
     drawDashboardHeader,
@@ -10,6 +10,29 @@ import {
     drawAdPlaceholder,
     drawLifeHeader
 } from "@/lib/wallpaper/components";
+import path from "path";
+
+// 🔥 REGISTER FONTS FOR CANVAS - Critical for text rendering on Vercel
+// Canvas library requires explicit font registration in Node.js environment
+try {
+    // Use Noto Sans (bundled with Next.js) as fallback for Inter
+    const fontPath = path.join(
+        process.cwd(),
+        'node_modules',
+        'next',
+        'dist',
+        'compiled',
+        '@vercel',
+        'og',
+        'noto-sans-v27-latin-regular.ttf'
+    );
+
+    registerFont(fontPath, { family: 'Inter' });
+    registerFont(fontPath, { family: 'Arial' });
+    registerFont(fontPath, { family: 'sans-serif' });
+} catch (error) {
+    console.warn('⚠️ Font registration failed, using system fonts:', error.message);
+}
 
 // 🔥 FORCE DYNAMIC RENDERING - Prevent static generation on Vercel
 // This ensures wallpaper always shows real-time data

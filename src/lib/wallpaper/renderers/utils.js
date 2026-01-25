@@ -21,8 +21,8 @@
  * // Draw a rounded rectangle with border
  * drawRoundedRect(ctx, 10, 10, 100, 50, 8, '#ffffff', '#000000');
  *//**
- * Draw a rounded rectangle
- */
+* Draw a rounded rectangle
+*/
 export function drawRoundedRect(
   ctx,
   x,
@@ -82,12 +82,18 @@ export function drawSafeText(
   if (!text) return;
 
   ctx.save();
-  
-  // Fallback: Replace Inter with Arial if Inter unavailable on server
-  const fontString = font.includes('Inter') 
-    ? font.replace(/Inter/g, 'Arial')
-    : font;
-  
+
+  // Enhanced font fallback chain for better compatibility
+  // Priority: Inter → Arial → Helvetica → sans-serif (system default)
+  let fontString = font;
+  if (font.includes('Inter')) {
+    // Replace Inter with comprehensive fallback chain
+    fontString = font.replace(/Inter/g, 'Inter, Arial, Helvetica, sans-serif');
+  } else if (!font.includes('Arial') && !font.includes('sans-serif')) {
+    // Add fallback to any custom font
+    fontString = font + ', Arial, sans-serif';
+  }
+
   ctx.font = fontString;
   ctx.fillStyle = color;
   ctx.textAlign = align;
