@@ -14,6 +14,7 @@ export default function WallpaperPreference() {
   const [autoUpdate, setAutoUpdate] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [hasAndroidBridge, setHasAndroidBridge] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
 
   // Detect mobile/tablet on mount and window resize
   useEffect(() => {
@@ -34,6 +35,11 @@ export default function WallpaperPreference() {
 
     checkMobileView();
     window.addEventListener("resize", checkMobileView);
+
+    // Load local backup if storage is available
+    const localTarget = localStorage.getItem("wallpaper_target_backup");
+    if (localTarget) setTarget(localTarget);
+
     return () => window.removeEventListener("resize", checkMobileView);
   }, []);
 
@@ -60,14 +66,19 @@ export default function WallpaperPreference() {
   // Send preference to Android app
   const handleTargetChange = (newTarget) => {
     setTarget(newTarget);
+    localStorage.setItem("wallpaper_target_backup", newTarget);
 
     // Send to Android bridge if available
     if (hasAndroidBridge && window.Android.setWallpaperTarget) {
       try {
+        setIsApplying(true);
         window.Android.setWallpaperTarget(newTarget);
         console.log(`[WallpaperPreference] Sent to Android target: ${newTarget}`);
+        // Minimal visual feedback duration
+        setTimeout(() => setIsApplying(false), 800);
       } catch (error) {
         console.error("[WallpaperPreference] Failed to send target to Android:", error);
+        setIsApplying(false);
       }
     } else if (!isMobile) {
       // Silent - desktop users won't see this anyway
@@ -99,7 +110,7 @@ export default function WallpaperPreference() {
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-gray-900">Wallpaper Preference</h3>
         <p className="text-sm text-gray-500 mt-1">
-          Choose where to apply the wallpaper
+          {isApplying ? "Saving to your device..." : "Choose where to apply the wallpaper"}
         </p>
       </div>
 
