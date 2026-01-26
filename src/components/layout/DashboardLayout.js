@@ -1,9 +1,22 @@
 "use client";
+import { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 import Sidebar from "@/components/dashboard/Sidebar";
 import BottomNav from "@/components/dashboard/BottomNav";
 
 export default function DashboardLayout({ children, active = "Dashboard" }) {
+    useEffect(() => {
+        // Initialize Android background updates if bridge is available
+        if (typeof window !== "undefined" && window.Android && window.Android.setAutoUpdateEnabled) {
+            try {
+                window.Android.setAutoUpdateEnabled(true);
+                console.log("📱 Android Auto-Update initialized successfully");
+            } catch (error) {
+                console.error("📱 Android bridge error:", error);
+            }
+        }
+    }, []);
+
     return (
         <main className="flex min-h-screen bg-[#fffaf1]">
             {/* 
@@ -48,10 +61,10 @@ export default function DashboardLayout({ children, active = "Dashboard" }) {
                 */}
                 <div className="flex items-center justify-center bg-[#fffaf1] p-4 border-b border-gray-200/50 lg:hidden sticky top-0 z-30">
                     <div className="flex items-center gap-2">
-                        <img 
-                          src="/images/logo.png" 
-                          alt="ConsistencyGrid Logo" 
-                          className="h-6 w-6"
+                        <img
+                            src="/images/logo.png"
+                            alt="ConsistencyGrid Logo"
+                            className="h-6 w-6"
                         />
                         <span className="text-sm font-semibold text-gray-900">
                             ConsistencyGrid

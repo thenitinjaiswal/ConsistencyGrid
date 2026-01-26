@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import toast from "react-hot-toast";
 import { Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { sendWallpaperToAndroid } from "@/utils/sendWallpaperToAndroid";
 
 function getLocalDateString(date) {
   const year = date.getFullYear();
@@ -18,6 +19,7 @@ export default function HabitCard() {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [savingIds, setSavingIds] = useState(new Set());
+  const [publicToken, setPublicToken] = useState("");
 
   // Load habits
   const loadHabits = useCallback(async () => {
@@ -26,6 +28,15 @@ export default function HabitCard() {
       if (!res.ok) throw new Error("Failed to load");
       const json = await res.json();
       setHabits(json.habits || []);
+
+      // Get public token for wallpaper updates
+      const settingsRes = await fetch("/api/settings/me");
+      if (settingsRes.ok) {
+        const settingsData = await settingsRes.json();
+        if (settingsData?.user?.publicToken) {
+          setPublicToken(settingsData.user.publicToken);
+        }
+      }
     } catch (error) {
       console.error("Failed to load habits:", error);
       toast.error("Failed to load habits");
@@ -99,6 +110,12 @@ export default function HabitCard() {
       if (!data?.log) throw new Error("Invalid response");
 
       toast.success("✓ Updated");
+
+      // Android Bridge: Auto-update wallpaper on habit toggle
+      if (publicToken) {
+        const wallpaperUrl = `${window.location.origin}/w/${publicToken}/image.png`;
+        sendWallpaperToAndroid(wallpaperUrl);
+      }
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to update");
@@ -241,17 +258,16 @@ export default function HabitCard() {
                     const log = habit.logs?.find(l => getLocalDateString(new Date(l.date)) === day.date);
                     const completed = log?.done;
                     const isClickable = day.isToday;
-                    
+
                     return (
                       <button
                         key={day.date}
                         onClick={() => isClickable && toggleHabit(habit.id, day.date)}
                         disabled={savingIds.has(habit.id) || !isClickable}
-                        className={`h-7 w-7 sm:h-8 sm:w-8 rounded-lg font-bold text-xs transition-all flex-shrink-0 ${
-                          isClickable 
-                            ? 'hover:scale-105 cursor-pointer' 
+                        className={`h-7 w-7 sm:h-8 sm:w-8 rounded-lg font-bold text-xs transition-all flex-shrink-0 ${isClickable
+                            ? 'hover:scale-105 cursor-pointer'
                             : 'cursor-not-allowed opacity-40'
-                        }`}
+                          }`}
                         style={{
                           backgroundColor: completed ? color : "#f3f4f6",
                           color: completed ? "white" : "#9ca3af",
@@ -275,17 +291,16 @@ export default function HabitCard() {
                     const log = habit.logs?.find(l => getLocalDateString(new Date(l.date)) === day.date);
                     const completed = log?.done;
                     const isClickable = day.isToday;
-                    
+
                     return (
                       <button
                         key={day.date}
                         onClick={() => isClickable && toggleHabit(habit.id, day.date)}
                         disabled={savingIds.has(habit.id) || !isClickable}
-                        className={`w-full flex items-center gap-3 p-2.5 rounded-lg transition-colors ${
-                          isClickable 
-                            ? 'hover:bg-white cursor-pointer' 
+                        className={`w-full flex items-center gap-3 p-2.5 rounded-lg transition-colors ${isClickable
+                            ? 'hover:bg-white cursor-pointer'
                             : 'cursor-not-allowed opacity-50'
-                        }`}
+                          }`}
                       >
                         <div
                           className="h-5 w-5 rounded-md flex items-center justify-center flex-shrink-0"

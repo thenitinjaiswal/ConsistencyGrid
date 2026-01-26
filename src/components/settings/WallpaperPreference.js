@@ -11,6 +11,7 @@ import { useState, useEffect } from "react";
  */
 export default function WallpaperPreference() {
   const [target, setTarget] = useState("BOTH");
+  const [autoUpdate, setAutoUpdate] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [hasAndroidBridge, setHasAndroidBridge] = useState(false);
 
@@ -19,10 +20,10 @@ export default function WallpaperPreference() {
     const checkMobileView = () => {
       // Check viewport width
       const isMobileWidth = window.innerWidth <= 1024;
-      
+
       // Check user agent for Android WebView
       const isAndroidWebView = /webview|android/i.test(navigator.userAgent);
-      
+
       // Show on mobile width OR Android WebView
       const isMobileScreen = isMobileWidth || isAndroidWebView;
       setIsMobile(isMobileScreen);
@@ -50,6 +51,20 @@ export default function WallpaperPreference() {
       }
     } else if (!isMobile) {
       // Silent - desktop users won't see this anyway
+    }
+  };
+
+  // Handle Auto-Update change
+  const handleAutoUpdateChange = (enabled) => {
+    setAutoUpdate(enabled);
+
+    if (hasAndroidBridge && window.Android.setAutoUpdateEnabled) {
+      try {
+        window.Android.setAutoUpdateEnabled(enabled);
+        console.log(`[WallpaperPreference] Auto-update ${enabled ? "enabled" : "disabled"}`);
+      } catch (error) {
+        console.error("[WallpaperPreference] Failed to set auto-update:", error);
+      }
     }
   };
 
@@ -129,6 +144,44 @@ export default function WallpaperPreference() {
             <p className="text-xs text-gray-500">Apply to both home and lock screens (default)</p>
           </div>
         </label>
+      </div>
+
+      {/* Auto Update Section */}
+      <div className="mt-8 pt-6 border-t border-gray-100">
+        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <span>⏰</span>
+          Daily Auto Update
+        </h3>
+        <p className="text-sm text-gray-500 mt-1 mb-4">
+          Automatically update your wallpaper every day at 12 PM
+        </p>
+
+        <label className="flex items-center justify-between p-3 rounded-lg border-2 border-dashed border-gray-200 hover:border-orange-200 bg-gray-50/30 cursor-pointer transition-all">
+          <div>
+            <p className="font-medium text-gray-900">Background Updates</p>
+            <p className="text-xs text-gray-500">Updates even when app is closed</p>
+          </div>
+          <div className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ring-2 ring-offset-2 ring-transparent">
+            <input
+              type="checkbox"
+              className="sr-only"
+              checked={autoUpdate}
+              onChange={(e) => handleAutoUpdateChange(e.target.checked)}
+            />
+            <span
+              className={`${autoUpdate ? 'bg-orange-500' : 'bg-gray-200'
+                } relative inline-block h-6 w-11 rounded-full transition-colors duration-200 ease-in-out`}
+            >
+              <span
+                className={`${autoUpdate ? 'translate-x-6' : 'translate-x-1'
+                  } inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ease-in-out mt-1`}
+              />
+            </span>
+          </div>
+        </label>
+        <p className="mt-3 text-[10px] text-gray-400 italic">
+          Note: This feature requires the Android app to be installed.
+        </p>
       </div>
 
       {/* Bridge Status (for debugging) */}
