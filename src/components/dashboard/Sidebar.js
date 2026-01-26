@@ -34,8 +34,10 @@ import {
   BarChart3,
   Settings,
   HelpCircle,
-  LogOut
+  LogOut,
+  RefreshCw
 } from "lucide-react";
+import { sendWallpaperToAndroid } from "@/utils/sendWallpaperToAndroid";
 
 /**
  * Main navigation menu items
@@ -55,6 +57,7 @@ const menu = [
 
 export default function Sidebar({ active = "Dashboard", onNavigate }) {
   const [user, setUser] = useState(null);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   /**
    * Load user profile data on component mount
@@ -97,6 +100,24 @@ export default function Sidebar({ active = "Dashboard", onNavigate }) {
   const handleNavClick = () => {
     if (onNavigate) {
       onNavigate();
+    }
+  };
+
+  /**
+   * Handle manual wallpaper sync
+   */
+  const handleSyncWallpaper = async () => {
+    if (!user?.publicToken) return;
+
+    setIsSyncing(true);
+    try {
+      const wallpaperUrl = `${window.location.origin}/w/${user.publicToken}/image.png`;
+      sendWallpaperToAndroid(wallpaperUrl);
+    } catch (err) {
+      console.error("Sync error:", err);
+    } finally {
+      // Small timeout for visual feedback
+      setTimeout(() => setIsSyncing(false), 1000);
     }
   };
 
@@ -165,6 +186,17 @@ export default function Sidebar({ active = "Dashboard", onNavigate }) {
           <Settings className="w-5 h-5" />
           Settings
         </Link>
+
+        {/* Sync Wallpaper (Android Only) */}
+        {typeof window !== "undefined" && window.Android && (
+          <button
+            onClick={handleSyncWallpaper}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-orange-600 hover:bg-orange-50 transition-colors"
+          >
+            <RefreshCw className={`w-5 h-5 ${isSyncing ? "animate-spin" : ""}`} />
+            Sync Wallpaper
+          </button>
+        )}
 
         {/* Help Link */}
         <Link

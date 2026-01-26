@@ -45,9 +45,9 @@ export default function WallpaperPreference() {
     if (hasAndroidBridge && window.Android.setWallpaperTarget) {
       try {
         window.Android.setWallpaperTarget(newTarget);
-        console.log(`[WallpaperPreference] Sent to Android: ${newTarget}`);
+        console.log(`[WallpaperPreference] Sent to Android target: ${newTarget}`);
       } catch (error) {
-        console.error("[WallpaperPreference] Failed to send to Android:", error);
+        console.error("[WallpaperPreference] Failed to send target to Android:", error);
       }
     } else if (!isMobile) {
       // Silent - desktop users won't see this anyway

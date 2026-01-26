@@ -18,6 +18,7 @@ import {
     Zap,
     Target
 } from "lucide-react";
+import { sendWallpaperToAndroid } from "@/utils/sendWallpaperToAndroid";
 import Card from "@/components/ui/Card";
 
 export default function GoalsPage() {
@@ -36,6 +37,7 @@ export default function GoalsPage() {
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
     const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
     const [isInsightsModalOpen, setIsInsightsModalOpen] = useState(false);
+    const [publicToken, setPublicToken] = useState("");
 
     useEffect(() => {
         async function loadData() {
@@ -45,6 +47,15 @@ export default function GoalsPage() {
                 if (goalsRes.ok) {
                     const goalsData = await goalsRes.json();
                     setGoals(goalsData || []);
+                }
+
+                // Get public token
+                const settingsRes = await fetch("/api/settings/me");
+                if (settingsRes.ok) {
+                    const settingsData = await settingsRes.json();
+                    if (settingsData?.user?.publicToken) {
+                        setPublicToken(settingsData.user.publicToken);
+                    }
                 }
             } catch (error) {
                 console.error("Failed to load goals data:", error);
@@ -110,8 +121,8 @@ export default function GoalsPage() {
         }).length;
 
         // Get highest age target from life milestones
-        const ageTarget = lifeMilestones.length > 0 
-            ? Math.max(...lifeMilestones.map(m => m.age || 35)) 
+        const ageTarget = lifeMilestones.length > 0
+            ? Math.max(...lifeMilestones.map(m => m.age || 35))
             : 35;
 
         // Calculate overall percentage
@@ -167,6 +178,12 @@ export default function GoalsPage() {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ isCompleted: subGoal.isCompleted })
                 });
+
+                // Android Bridge: Trigger update
+                if (publicToken) {
+                    const wallpaperUrl = `${window.location.origin}/w/${publicToken}/image.png`;
+                    sendWallpaperToAndroid(wallpaperUrl);
+                }
             } catch (error) {
                 console.error("Failed to update subgoal:", error);
                 setGoals(originalGoals); // Revert on error
@@ -177,22 +194,34 @@ export default function GoalsPage() {
     const handleAddGoal = (newGoal) => {
         setGoals(prev => [newGoal, ...prev]);
         setIsModalOpen(false);
-        
+
         // Update stats
         setStats(prev => ({
             ...prev,
             total: prev.total + 1
         }));
+
+        // Android Bridge: Trigger update
+        if (publicToken) {
+            const wallpaperUrl = `${window.location.origin}/w/${publicToken}/image.png`;
+            sendWallpaperToAndroid(wallpaperUrl);
+        }
     };
 
     const handleDeleteGoal = (goalId) => {
         setGoals(prev => prev.filter(goal => goal.id !== goalId));
-        
+
         // Update stats
         setStats(prev => ({
             ...prev,
             total: Math.max(0, prev.total - 1)
         }));
+
+        // Android Bridge: Trigger update
+        if (publicToken) {
+            const wallpaperUrl = `${window.location.origin}/w/${publicToken}/image.png`;
+            sendWallpaperToAndroid(wallpaperUrl);
+        }
     };
 
     const handleEditGoal = (goal) => {
@@ -206,14 +235,32 @@ export default function GoalsPage() {
         );
         setIsUpdateModalOpen(false);
         setEditingGoal(null);
+
+        // Android Bridge: Trigger update
+        if (publicToken) {
+            const wallpaperUrl = `${window.location.origin}/w/${publicToken}/image.png`;
+            sendWallpaperToAndroid(wallpaperUrl);
+        }
+    };
+
+    const handlePinGoal = (goalId, isPinned) => {
+        setGoals(prev =>
+            prev.map(goal => goal.id === goalId ? { ...goal, isPinned } : goal)
+        );
+
+        // Android Bridge: Trigger update
+        if (publicToken) {
+            const wallpaperUrl = `${window.location.origin}/w/${publicToken}/image.png`;
+            sendWallpaperToAndroid(wallpaperUrl);
+        }
     };
 
     return (
         <DashboardLayout active="Goals">
             <div className="mx-auto max-w-7xl space-y-8">
                 {/* Add Goal Modal */}
-                <AddGoalModal 
-                    isOpen={isModalOpen} 
+                <AddGoalModal
+                    isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
                     onAdd={handleAddGoal}
                 />
@@ -255,7 +302,7 @@ export default function GoalsPage() {
                             <Filter className="w-4 h-4" />
                             Filter
                         </button>
-                        <button 
+                        <button
                             onClick={() => setIsModalOpen(true)}
                             className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors shadow-sm"
                         >
@@ -294,7 +341,7 @@ export default function GoalsPage() {
                             </div>
                         </div>
                         <div className="flex-shrink-0">
-                            <button 
+                            <button
                                 onClick={() => setIsInsightsModalOpen(true)}
                                 className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold transition-colors">
                                 View Detailed Insights
@@ -348,13 +395,13 @@ export default function GoalsPage() {
                                     {goals
                                         .filter(goal => goal.category?.toLowerCase() !== "lifemilestone")
                                         .map(goal => (
-                                            <GoalCard key={goal.id} goal={goal} onToggleSubGoal={handleToggleSubGoal} onDelete={handleDeleteGoal} onEdit={handleEditGoal} />
+                                            <GoalCard key={goal.id} goal={goal} onToggleSubGoal={handleToggleSubGoal} onDelete={handleDeleteGoal} onEdit={handleEditGoal} onPin={handlePinGoal} />
                                         ))}
                                 </>
                             )}
 
                             {/* Add New Placeholder */}
-                            <button 
+                            <button
                                 onClick={() => setIsModalOpen(true)}
                                 className="w-full border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center justify-center text-gray-400 hover:border-orange-500 hover:text-orange-500 hover:bg-orange-50/50 transition-all group cursor-pointer"
                             >
@@ -395,6 +442,7 @@ export default function GoalsPage() {
                                                 onDelete={handleDeleteGoal}
                                                 onEdit={() => handleEditGoal(goal)}
                                                 onToggleSubGoal={handleToggleSubGoal}
+                                                onPin={handlePinGoal}
                                             />
                                         ))
                                     ) : (
@@ -403,7 +451,7 @@ export default function GoalsPage() {
                                 })()}
                             </div>
 
-                            <button 
+                            <button
                                 onClick={() => setIsTimelineModalOpen(true)}
                                 className="w-full mt-2 flex items-center justify-center gap-1 text-sm font-bold text-orange-500 hover:text-orange-600 py-2 hover:bg-orange-50 rounded-lg transition-colors"
                             >

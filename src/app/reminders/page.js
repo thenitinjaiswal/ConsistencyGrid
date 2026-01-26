@@ -15,6 +15,7 @@ import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import ReminderModal from "@/components/reminders/ReminderModal";
 import ReminderList from "@/components/reminders/ReminderList";
+import { sendWallpaperToAndroid } from "@/utils/sendWallpaperToAndroid";
 
 export default function RemindersPage() {
     const [reminders, setReminders] = useState([]);
@@ -22,6 +23,7 @@ export default function RemindersPage() {
     const [showModal, setShowModal] = useState(false);
     const [editingReminder, setEditingReminder] = useState(null);
     const [filter, setFilter] = useState("upcoming"); // upcoming, past, all
+    const [publicToken, setPublicToken] = useState("");
 
     useEffect(() => {
         loadReminders();
@@ -35,6 +37,15 @@ export default function RemindersPage() {
 
             if (data.reminders) {
                 setReminders(data.reminders);
+            }
+
+            // Get public token
+            const settingsRes = await fetch("/api/settings/me");
+            if (settingsRes.ok) {
+                const settingsData = await settingsRes.json();
+                if (settingsData?.user?.publicToken) {
+                    setPublicToken(settingsData.user.publicToken);
+                }
             }
         } catch (error) {
             console.error("Load reminders error:", error);
@@ -60,6 +71,12 @@ export default function RemindersPage() {
 
     const handleSave = () => {
         loadReminders();
+
+        // Android Bridge: Trigger update
+        if (publicToken) {
+            const wallpaperUrl = `${window.location.origin}/w/${publicToken}/image.png`;
+            sendWallpaperToAndroid(wallpaperUrl);
+        }
     };
 
     // Filter reminders
@@ -143,8 +160,8 @@ export default function RemindersPage() {
                         <button
                             onClick={() => setFilter("upcoming")}
                             className={`px-4 py-2 font-medium transition-colors border-b-2 ${filter === "upcoming"
-                                    ? "border-orange-500 text-orange-600"
-                                    : "border-transparent text-gray-500 hover:text-gray-700"
+                                ? "border-orange-500 text-orange-600"
+                                : "border-transparent text-gray-500 hover:text-gray-700"
                                 }`}
                         >
                             Upcoming ({upcomingCount})
@@ -152,8 +169,8 @@ export default function RemindersPage() {
                         <button
                             onClick={() => setFilter("past")}
                             className={`px-4 py-2 font-medium transition-colors border-b-2 ${filter === "past"
-                                    ? "border-orange-500 text-orange-600"
-                                    : "border-transparent text-gray-500 hover:text-gray-700"
+                                ? "border-orange-500 text-orange-600"
+                                : "border-transparent text-gray-500 hover:text-gray-700"
                                 }`}
                         >
                             Past ({pastCount})
@@ -161,8 +178,8 @@ export default function RemindersPage() {
                         <button
                             onClick={() => setFilter("all")}
                             className={`px-4 py-2 font-medium transition-colors border-b-2 ${filter === "all"
-                                    ? "border-orange-500 text-orange-600"
-                                    : "border-transparent text-gray-500 hover:text-gray-700"
+                                ? "border-orange-500 text-orange-600"
+                                : "border-transparent text-gray-500 hover:text-gray-700"
                                 }`}
                         >
                             All ({reminders.length})
@@ -180,7 +197,7 @@ export default function RemindersPage() {
                         <ReminderList
                             reminders={filteredReminders}
                             onEdit={handleEdit}
-                            onRefresh={loadReminders}
+                            onRefresh={handleSave}
                         />
 
                         {filteredReminders.length === 0 && !loading && (

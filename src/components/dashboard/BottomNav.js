@@ -12,6 +12,7 @@
  */
 
 "use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
     LayoutDashboard,
@@ -22,8 +23,10 @@ import {
     Bell,
     Calendar,
     BarChart3,
-    Settings
+    Settings,
+    RefreshCw
 } from "lucide-react";
+import { sendWallpaperToAndroid } from "@/utils/sendWallpaperToAndroid";
 
 /**
  * Full menu items list matching the sidebar
@@ -41,6 +44,32 @@ const bottomMenu = [
 ];
 
 export default function BottomNav({ active = "Dashboard" }) {
+    const [hasAndroidBridge, setHasAndroidBridge] = useState(false);
+    const [publicToken, setPublicToken] = useState("");
+    const [isSyncing, setIsSyncing] = useState(false);
+
+    useEffect(() => {
+        setHasAndroidBridge(!!(window.Android && window.Android.saveWallpaperUrl));
+
+        async function loadToken() {
+            try {
+                const res = await fetch("/api/settings/me");
+                if (res.ok) {
+                    const data = await res.json();
+                    setPublicToken(data.user?.publicToken || "");
+                }
+            } catch (err) { }
+        }
+        loadToken();
+    }, []);
+
+    const handleSync = () => {
+        if (!publicToken) return;
+        setIsSyncing(true);
+        const wallpaperUrl = `${window.location.origin}/w/${publicToken}/image.png`;
+        sendWallpaperToAndroid(wallpaperUrl);
+        setTimeout(() => setIsSyncing(false), 1000);
+    };
     return (
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 lg:hidden shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
             {/* 
@@ -73,6 +102,19 @@ export default function BottomNav({ active = "Dashboard" }) {
                         </Link>
                     );
                 })}
+
+                {/* Sync Button (Android Only) */}
+                {hasAndroidBridge && (
+                    <button
+                        onClick={handleSync}
+                        className="flex flex-col items-center justify-center gap-1 min-w-[72px] flex-shrink-0 text-orange-600 active:scale-95 transition-transform px-2 py-1 rounded-lg"
+                    >
+                        <RefreshCw className={`w-6 h-6 ${isSyncing ? "animate-spin" : "stroke-[2.5px]"}`} />
+                        <span className="text-[10px] font-medium leading-none whitespace-nowrap">
+                            Sync
+                        </span>
+                    </button>
+                )}
             </nav>
 
 
