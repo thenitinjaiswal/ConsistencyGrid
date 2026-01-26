@@ -138,6 +138,12 @@ export default function HabitCard() {
 
       setHabits(prev => prev.filter(h => h.id !== habitId));
       toast.success("Habit deleted");
+
+      // Android Bridge: Auto-update wallpaper on habit deletion
+      if (publicToken) {
+        const wallpaperUrl = `${window.location.origin}/w/${publicToken}/image.png`;
+        sendWallpaperToAndroid(wallpaperUrl);
+      }
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to delete habit");
@@ -265,8 +271,8 @@ export default function HabitCard() {
                         onClick={() => isClickable && toggleHabit(habit.id, day.date)}
                         disabled={savingIds.has(habit.id) || !isClickable}
                         className={`h-7 w-7 sm:h-8 sm:w-8 rounded-lg font-bold text-xs transition-all flex-shrink-0 ${isClickable
-                            ? 'hover:scale-105 cursor-pointer'
-                            : 'cursor-not-allowed opacity-40'
+                          ? 'hover:scale-105 cursor-pointer'
+                          : 'cursor-not-allowed opacity-40'
                           }`}
                         style={{
                           backgroundColor: completed ? color : "#f3f4f6",
@@ -298,8 +304,8 @@ export default function HabitCard() {
                         onClick={() => isClickable && toggleHabit(habit.id, day.date)}
                         disabled={savingIds.has(habit.id) || !isClickable}
                         className={`w-full flex items-center gap-3 p-2.5 rounded-lg transition-colors ${isClickable
-                            ? 'hover:bg-white cursor-pointer'
-                            : 'cursor-not-allowed opacity-50'
+                          ? 'hover:bg-white cursor-pointer'
+                          : 'cursor-not-allowed opacity-50'
                           }`}
                       >
                         <div

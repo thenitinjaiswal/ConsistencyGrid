@@ -1,13 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { sendWallpaperToAndroid } from "@/utils/sendWallpaperToAndroid";
 
 export default function AddHabitModal({ open, onClose, onHabitAdded }) {
   const [title, setTitle] = useState("");
   const [scheduledTime, setScheduledTime] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [publicToken, setPublicToken] = useState("");
+
+  useEffect(() => {
+    if (!open) return;
+    async function loadToken() {
+      try {
+        const res = await fetch("/api/settings/me");
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.user?.publicToken) {
+            setPublicToken(data.user.publicToken);
+          }
+        }
+      } catch (err) {
+        console.error("Token load error:", err);
+      }
+    }
+    loadToken();
+  }, [open]);
 
   if (!open) return null;
 
@@ -34,15 +54,21 @@ export default function AddHabitModal({ open, onClose, onHabitAdded }) {
 
       const newHabit = await res.json();
       toast.success("Habit added successfully! 🎯");
-      
+
       // Reset form
       setTitle("");
       setScheduledTime("");
       setError("");
-      
+
       // Callback to parent to refresh
       if (onHabitAdded) onHabitAdded(newHabit);
-      
+
+      // Android Bridge: Auto-update wallpaper
+      if (publicToken) {
+        const wallpaperUrl = `${window.location.origin}/w/${publicToken}/image.png`;
+        sendWallpaperToAndroid(wallpaperUrl);
+      }
+
       onClose();
     } catch (err) {
       console.error("Error adding habit:", err);
