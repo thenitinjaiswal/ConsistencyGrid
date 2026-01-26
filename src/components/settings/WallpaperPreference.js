@@ -37,6 +37,26 @@ export default function WallpaperPreference() {
     return () => window.removeEventListener("resize", checkMobileView);
   }, []);
 
+  // Fetch initial state from Android bridge
+  useEffect(() => {
+    if (hasAndroidBridge) {
+      try {
+        if (window.Android.getWallpaperTarget) {
+          const savedTarget = window.Android.getWallpaperTarget();
+          setTarget(savedTarget);
+          console.log(`[WallpaperPreference] Loaded target: ${savedTarget}`);
+        }
+        if (window.Android.isAutoUpdateEnabled) {
+          const savedAutoUpdate = window.Android.isAutoUpdateEnabled();
+          setAutoUpdate(savedAutoUpdate);
+          console.log(`[WallpaperPreference] Loaded auto-update: ${savedAutoUpdate}`);
+        }
+      } catch (error) {
+        console.error("[WallpaperPreference] Error fetching initial state:", error);
+      }
+    }
+  }, [hasAndroidBridge]);
+
   // Send preference to Android app
   const handleTargetChange = (newTarget) => {
     setTarget(newTarget);

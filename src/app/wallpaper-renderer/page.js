@@ -36,29 +36,29 @@ export default function WallpaperRenderer() {
 
         fetchDataAndRender(token);
 
-        // 🎯 Auto-update wallpaper at 12:00 PM
+        // 🎯 Auto-update wallpaper at 12:00 AM (Midnight)
         let timerId;
-        const scheduleNextNoonUpdate = () => {
+        const scheduleNextMidnightUpdate = () => {
             const now = new Date();
-            const nextNoon = new Date(now);
-            nextNoon.setHours(12, 0, 0, 0);
+            const nextMidnight = new Date(now);
+            nextMidnight.setHours(0, 0, 0, 0);
 
-            // If it's already past 12pm today, set for tomorrow
-            if (now >= nextNoon) {
-                nextNoon.setDate(nextNoon.getDate() + 1);
+            // If it's already past 12am today (which it always is unless it's exactly midnight), set for tomorrow
+            if (now >= nextMidnight) {
+                nextMidnight.setDate(nextMidnight.getDate() + 1);
             }
 
-            const msToWait = nextNoon.getTime() - now.getTime();
-            console.log(`⏰ Next auto-update scheduled for 12:00 PM in ${Math.round(msToWait / 1000 / 60)} minutes`);
+            const msToWait = nextMidnight.getTime() - now.getTime();
+            console.log(`⏰ Next auto-update scheduled for 12:00 AM in ${Math.round(msToWait / 1000 / 60)} minutes`);
 
             timerId = setTimeout(() => {
-                console.log('🔔 12:00 PM reached! Auto-updating wallpaper...');
+                console.log('🔔 12:00 AM reached! Auto-updating wallpaper...');
                 fetchDataAndRender(token);
-                scheduleNextNoonUpdate(); // Reschedule for next day
+                scheduleNextMidnightUpdate(); // Reschedule for next day
             }, msToWait);
         };
 
-        scheduleNextNoonUpdate();
+        scheduleNextMidnightUpdate();
         return () => clearTimeout(timerId);
     }, []);
 
