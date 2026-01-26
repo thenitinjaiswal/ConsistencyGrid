@@ -14,7 +14,8 @@ export default function WallpaperPreference() {
   const [autoUpdate, setAutoUpdate] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [hasAndroidBridge, setHasAndroidBridge] = useState(false);
-  const [isApplying, setIsApplying] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [debugInfo, setDebugInfo] = useState("");
 
   // Detect mobile/tablet on mount and window resize
   useEffect(() => {
@@ -43,45 +44,70 @@ export default function WallpaperPreference() {
     return () => window.removeEventListener("resize", checkMobileView);
   }, []);
 
-  // Fetch initial state from Android bridge
+  // Fetch initial state and verify bridge
   useEffect(() => {
     if (hasAndroidBridge) {
       try {
         if (window.Android.getWallpaperTarget) {
           const savedTarget = window.Android.getWallpaperTarget();
           setTarget(savedTarget);
-          console.log(`[WallpaperPreference] Loaded target: ${savedTarget}`);
+          setDebugInfo(`Target: ${savedTarget}`);
         }
         if (window.Android.isAutoUpdateEnabled) {
           const savedAutoUpdate = window.Android.isAutoUpdateEnabled();
           setAutoUpdate(savedAutoUpdate);
-          console.log(`[WallpaperPreference] Loaded auto-update: ${savedAutoUpdate}`);
         }
       } catch (error) {
         console.error("[WallpaperPreference] Error fetching initial state:", error);
+        setDebugInfo("Error reading settings");
       }
     }
   }, [hasAndroidBridge]);
 
   // Send preference to Android app
   const handleTargetChange = (newTarget) => {
+    // Optimistic UI update
     setTarget(newTarget);
     localStorage.setItem("wallpaper_target_backup", newTarget);
 
-    // Send to Android bridge if available
     if (hasAndroidBridge && window.Android.setWallpaperTarget) {
       try {
-        setIsApplying(true);
         window.Android.setWallpaperTarget(newTarget);
-        console.log(`[WallpaperPreference] Sent to Android target: ${newTarget}`);
-        // Minimal visual feedback duration
-        setTimeout(() => setIsApplying(false), 800);
+        setDebugInfo(`Set to ${newTarget}...`);
+
+        // Re-read back to verify it stuck
+        setTimeout(() => {
+          if (window.Android.getWallpaperTarget) {
+            const actual = window.Android.getWallpaperTarget();
+            setDebugInfo(`Verified: ${actual}`);
+          }
+        }, 1000);
       } catch (error) {
         console.error("[WallpaperPreference] Failed to send target to Android:", error);
-        setIsApplying(false);
+        setDebugInfo("Failed to save");
       }
-    } else if (!isMobile) {
-      // Silent - desktop users won't see this anyway
+    }
+  };
+
+  const handleManualTest = async () => {
+    if (!hasAndroidBridge) return;
+
+    setIsSyncing(true);
+    try {
+      // Get self token from API
+      const res = await fetch("/api/settings/me");
+      const data = await res.json();
+      const token = data.user?.publicToken;
+
+      if (token && window.Android.saveWallpaperUrl) {
+        setDebugInfo("Syncing target...");
+        const url = `${window.location.origin}/w/${token}/image.png`;
+        window.Android.saveWallpaperUrl(url);
+      }
+    } catch (err) {
+      console.error("Test error:", err);
+    } finally {
+      setTimeout(() => setIsSyncing(false), 2000);
     }
   };
 
@@ -110,7 +136,7 @@ export default function WallpaperPreference() {
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-gray-900">Wallpaper Preference</h3>
         <p className="text-sm text-gray-500 mt-1">
-          {isApplying ? "Saving to your device..." : "Choose where to apply the wallpaper"}
+          Select which screen to update
         </p>
       </div>
 
@@ -175,6 +201,15 @@ export default function WallpaperPreference() {
             <p className="text-xs text-gray-500">Apply to both home and lock screens (default)</p>
           </div>
         </label>
+
+        {/* Test Button */}
+        <button
+          onClick={handleManualTest}
+          disabled={isSyncing}
+          className="w-full mt-4 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 border-orange-200 text-orange-600 font-bold hover:bg-orange-50 active:scale-95 transition-all disabled:opacity-50"
+        >
+          {isSyncing ? "Updating Wallpaper..." : "🚀 Apply to Selected Screen Now"}
+        </button>
       </div>
 
       {/* Auto Update Section */}
@@ -216,12 +251,10 @@ export default function WallpaperPreference() {
       </div>
 
       {/* Bridge Status (for debugging) */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="mt-4 pt-4 border-t border-gray-200 text-xs text-gray-500">
-          <p>Mobile view: {isMobile ? "✅ Yes" : "❌ No"}</p>
-          <p>Android bridge: {hasAndroidBridge ? "✅ Available" : "⚠️ Not available"}</p>
-        </div>
-      )}
+      <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between text-[10px] text-gray-400 font-mono">
+        <div>Bridge: {hasAndroidBridge ? "CONNECTED" : "DISCONNECTED"}</div>
+        <div className="text-orange-400 font-bold">{debugInfo}</div>
+      </div>
     </div>
   );
 }
