@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Download, Copy, CheckCircle2, Clock } from "lucide-react";
 import Button from "@/components/ui/Button";
 
@@ -19,11 +20,12 @@ import Button from "@/components/ui/Button";
  * @param {boolean} loading - Loading state indicator
  * @param {Object} form - Current form settings
  */
-export default function GeneratorPreview({ publicToken, loading, form }) {
+export default function GeneratorPreview({ publicToken, loading, form, onReset }) {
+    const router = useRouter(); // Initialize router
     // ============================================================================================
     // STATE MANAGEMENT
     // ============================================================================================
-    
+
     const [copied, setCopied] = useState(false);
     const [previewUrl, setPreviewUrl] = useState("");
     const [time, setTime] = useState(new Date());
@@ -32,7 +34,7 @@ export default function GeneratorPreview({ publicToken, loading, form }) {
     // ============================================================================================
     // EFFECTS: CLOCK & TIMER
     // ============================================================================================
-    
+
     /**
      * Update clock display every second
      * Shows real-time preview of what the wallpaper will look like
@@ -45,7 +47,7 @@ export default function GeneratorPreview({ publicToken, loading, form }) {
     // ============================================================================================
     // EFFECTS: LIVE PREVIEW GENERATOR
     // ============================================================================================
-    
+
     /**
      * Generate live preview URL with current form settings
      * Debounced to avoid excessive API calls during rapid form changes
@@ -86,7 +88,7 @@ export default function GeneratorPreview({ publicToken, loading, form }) {
     // ============================================================================================
     // EVENT HANDLERS: DOWNLOAD & COPY
     // ============================================================================================
-    
+
     /**
      * Download the current wallpaper as PNG
      * Uses the current preview URL with all active settings
@@ -120,17 +122,17 @@ export default function GeneratorPreview({ publicToken, loading, form }) {
 
     return (
         <div className="sticky top-6 space-y-4">
-            
+
             {/* ┌─────────────────────────────────────────────────────────────────────────────────┐ */}
             {/* │ ACTION BUTTONS BAR - Download, Copy, Reset                                      │ */}
             {/* │ - Responsive spacing and sizing                                                 │ */}
             {/* │ - Feedback states (success, disabled, hover)                                    │ */}
             {/* └─────────────────────────────────────────────────────────────────────────────────┘ */}
-            
+
             <div className="space-y-2 mb-4">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                     <button
-                        onClick={() => window.location.reload()}
+                        onClick={onReset}
                         title="Reload to reset all settings"
                         className="rounded-xl border border-gray-200 bg-white px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95"
                     >
@@ -178,15 +180,15 @@ export default function GeneratorPreview({ publicToken, loading, form }) {
             {/* │ - Live preview of wallpaper                                                    │ */}
             {/* │ - Real-time clock display                                                      │ */}
             {/* └─────────────────────────────────────────────────────────────────────────────────┘ */}
-            
+
             <div className="relative mx-auto h-[580px] sm:h-[600px] w-[290px] sm:w-[300px] overflow-hidden rounded-[38px] sm:rounded-[40px] border-8 border-gray-900 bg-black shadow-2xl hover:shadow-3xl transition-shadow">
-                
+
                 {/* Dynamic Island / Notch - iPhone Style */}
                 <div className="absolute top-0 left-1/2 h-6 sm:h-7 w-32 sm:w-40 -translate-x-1/2 rounded-b-3xl bg-black z-20 shadow-lg" />
 
                 {/* Screen Content Container */}
                 <div className="h-full w-full bg-gray-900 text-white flex items-center justify-center relative overflow-hidden">
-                    
+
                     {/* Loading Overlay */}
                     {loading && (
                         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-30 flex items-center justify-center">
@@ -196,7 +198,7 @@ export default function GeneratorPreview({ publicToken, loading, form }) {
                             </div>
                         </div>
                     )}
-                    
+
                     {/* Lock Screen Clock Simulation */}
                     <div className="absolute top-[12%] left-0 right-0 z-10 flex flex-col items-center justify-center pointer-events-none">
                         <h1 className="text-5xl sm:text-6xl font-bold tracking-tight text-white/95 drop-shadow-lg font-mono">

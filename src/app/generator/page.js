@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 import { sendWallpaperToAndroid } from "@/utils/sendWallpaperToAndroid";
 
@@ -14,6 +15,7 @@ import GeneratorPreview from "@/components/generator/GeneratorPreview";
 // This is handled via the layout.js file
 
 export default function GeneratorPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [publicToken, setPublicToken] = useState("");
 
@@ -46,61 +48,62 @@ export default function GeneratorPage() {
   });
 
   // Load settings
-  useEffect(() => {
-    async function loadSettings() {
-      try {
-        const res = await fetch("/api/settings/me");
-        const data = await res.json();
+  const fetchSettings = useCallback(async () => {
+    try {
+      const res = await fetch("/api/settings/me");
+      const data = await res.json();
 
-        if (data?.user?.publicToken) {
-          setPublicToken(data.user.publicToken);
-          // Android Bridge: Save token for background workers
-          if (window.Android && window.Android.saveToken) {
-            window.Android.saveToken(data.user.publicToken);
-          }
+      if (data?.user?.publicToken) {
+        setPublicToken(data.user.publicToken);
+        // Android Bridge: Save token for background workers
+        if (window.Android && window.Android.saveToken) {
+          window.Android.saveToken(data.user.publicToken);
         }
-
-        if (data?.settings) {
-          const s = data.settings;
-          setForm((prev) => ({
-            ...prev,
-            dob: s.dob ? s.dob.split("T")[0] : "",
-            lifeExpectancyYears: s.lifeExpectancyYears ?? 80,
-            theme: s.theme ?? "dark-minimal",
-            width: s.width ?? 1080,
-            height: s.height ?? 2340,
-
-            yearGridMode: s.yearGridMode ?? "weeks",
-            wallpaperType: s.wallpaperType ?? "lockscreen",
-
-            showLifeGrid: s.showLifeGrid ?? true,
-            showYearGrid: s.showYearGrid ?? true,
-            showAgeStats: s.showAgeStats ?? true,
-
-            showMissedDays: s.showMissedDays ?? false,
-            showHabitLayer: s.showHabitLayer ?? true,
-            showLegend: s.showLegend ?? false,
-
-            showQuote: s.showQuote ?? false,
-            quote: s.quote ?? "",
-
-            goalEnabled: s.goalEnabled ?? false,
-            goalTitle: s.goalTitle ?? "",
-            goalStartDate: s.goalStartDate
-              ? s.goalStartDate.split("T")[0]
-              : "",
-            goalDurationDays: s.goalDurationDays ?? 30,
-            goalUnit: s.goalUnit ?? "day",
-          }));
-        }
-      } catch (err) {
-        console.log("Load settings error:", err);
-      } finally {
-        setLoading(false);
       }
+
+      if (data?.settings) {
+        const s = data.settings;
+        setForm((prev) => ({
+          ...prev,
+          dob: s.dob ? s.dob.split("T")[0] : "",
+          lifeExpectancyYears: s.lifeExpectancyYears ?? 80,
+          theme: s.theme ?? "dark-minimal",
+          width: s.width ?? 1080,
+          height: s.height ?? 2340,
+
+          yearGridMode: s.yearGridMode ?? "weeks",
+          wallpaperType: s.wallpaperType ?? "lockscreen",
+
+          showLifeGrid: s.showLifeGrid ?? true,
+          showYearGrid: s.showYearGrid ?? true,
+          showAgeStats: s.showAgeStats ?? true,
+
+          showMissedDays: s.showMissedDays ?? false,
+          showHabitLayer: s.showHabitLayer ?? true,
+          showLegend: s.showLegend ?? false,
+
+          showQuote: s.showQuote ?? false,
+          quote: s.quote ?? "",
+
+          goalEnabled: s.goalEnabled ?? false,
+          goalTitle: s.goalTitle ?? "",
+          goalStartDate: s.goalStartDate
+            ? s.goalStartDate.split("T")[0]
+            : "",
+          goalDurationDays: s.goalDurationDays ?? 30,
+          goalUnit: s.goalUnit ?? "day",
+        }));
+      }
+    } catch (err) {
+      // console.log("Load settings error:", err);
+    } finally {
+      setLoading(false);
     }
-    loadSettings();
   }, []);
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
 
   async function handleSave() {
     if (!form.dob) {
@@ -130,7 +133,8 @@ export default function GeneratorPage() {
 
       // Reload token if it was just created (edge case)
       if (!publicToken) {
-        window.location.reload();
+        fetchSettings();
+        router.refresh();
       }
     } catch (err) {
       toast.error(err.message || "Failed to save settings");
@@ -177,6 +181,7 @@ export default function GeneratorPage() {
               publicToken={publicToken}
               loading={loading}
               form={form}
+              onReset={fetchSettings}
             />
           </div>
         </div>

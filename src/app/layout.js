@@ -1,5 +1,8 @@
 import "./globals.css";
 import Providers from "./providers";
+import { Inter } from "next/font/google";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
   title: {
@@ -76,12 +79,12 @@ export default function RootLayout({ children }) {
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#6366f1" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
-        
+
         {/* PWA Meta Tags */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Consistency Grid" />
-        
+
         {/* Google Analytics */}
         {gaId && (
           <>
@@ -104,7 +107,7 @@ export default function RootLayout({ children }) {
           </>
         )}
       </head>
-      <body>
+      <body className={inter.className}>
         <Providers>{children}</Providers>
       </body>
     </html>

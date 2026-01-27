@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import AddHabitModal from "./AddHabitModal";
 
 export default function HabitHeader({ onHabitAdded }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
 
   const handleHabitAdded = (newHabit) => {
@@ -12,7 +14,8 @@ export default function HabitHeader({ onHabitAdded }) {
       onHabitAdded(newHabit);
     } else {
       // Fallback: reload the page
-      window.location.reload();
+      // Fallback: reload the page
+      router.refresh();
     }
   };
 
