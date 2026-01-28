@@ -72,7 +72,18 @@ export default function RemindersPage() {
     const handleSave = () => {
         loadReminders();
 
-        // Android Bridge: Trigger update
+        // Trigger immediate wallpaper refresh (for web wallpaper renderer)
+        // This ensures reminders show up immediately without waiting for midnight update
+        if (typeof window !== 'undefined' && window.refreshWallpaper) {
+            try {
+                window.refreshWallpaper();
+                console.log('✅ Wallpaper refresh triggered');
+            } catch (error) {
+                console.error('Failed to refresh wallpaper:', error);
+            }
+        }
+
+        // Android Bridge: Trigger update for native app
         if (publicToken) {
             const wallpaperUrl = `${window.location.origin}/w/${publicToken}/image.png`;
             sendWallpaperToAndroid(wallpaperUrl);

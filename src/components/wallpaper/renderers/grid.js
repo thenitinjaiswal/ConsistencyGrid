@@ -177,9 +177,26 @@ export function drawGrid(
             endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
         }
 
+        // Only show reminders that are ACTIVE TODAY and visible in current grid
         const visibleReminders = reminders.filter((r) => {
-            const rDate = new Date(r.startDate);
-            return rDate >= startDate && rDate <= endDate;
+            const reminderStart = new Date(r.startDate);
+            const reminderEnd = new Date(r.endDate);
+
+            // Normalize dates to midnight for accurate comparison
+            reminderStart.setHours(0, 0, 0, 0);
+            reminderEnd.setHours(23, 59, 59, 999);
+
+            const nowDate = new Date(now);
+            nowDate.setHours(0, 0, 0, 0);
+
+            // Reminder must:
+            // 1. Overlap with the visible calendar range
+            const overlapsWithView = reminderStart <= endDate && reminderEnd >= startDate;
+
+            // 2. Be active TODAY (current date is within reminder's date range)
+            const isActiveToday = reminderStart <= nowDate && reminderEnd >= nowDate;
+
+            return overlapsWithView && isActiveToday;
         });
 
         const remindersByDate = {};

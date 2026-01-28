@@ -24,6 +24,14 @@ export default function WallpaperRenderer() {
             if (token) await fetchDataAndRender(token);
         };
 
+        // Expose refresh function for manual triggers (e.g., after adding/editing reminder)
+        window.refreshWallpaper = async () => {
+            console.log('🔄 Manual wallpaper refresh triggered');
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');
+            if (token) await fetchDataAndRender(token);
+        };
+
         // Automatic render on load
         const params = new URLSearchParams(window.location.search);
         const token = params.get('token');
