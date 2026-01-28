@@ -57,8 +57,8 @@ export async function GET(request) {
 
     const settings = {
         theme: getSettingValue("theme", "dark-minimal"),
-        canvasWidth: 1080, // Standard width
-        canvasHeight: 2340, // Standard height
+        canvasWidth: getSettingValue("canvasWidth", 1080, "number"),
+        canvasHeight: getSettingValue("canvasHeight", 2340, "number"),
         dateOfBirth: getSettingValue("dob", "2000-01-01"),
         lifeExpectancyYears: getSettingValue("lifeExpectancyYears", 80, "number"),
         yearGridMode: getSettingValue("yearGridMode", "weeks"),

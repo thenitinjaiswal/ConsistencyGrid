@@ -83,9 +83,10 @@ export default function WallpaperRenderer() {
             const canvas = canvasRef.current;
             if (!canvas) return;
 
-            // Set canvas size (vertical FHD)
-            canvas.width = 1080;
-            canvas.height = 2340;
+            // Set initial canvas size from data (will be strictly enforced below)
+            const { settings = {} } = data.user;
+            canvas.width = settings.canvasWidth || 1080;
+            canvas.height = settings.canvasHeight || 2340;
 
             const ctx = canvas.getContext('2d');
 
@@ -100,7 +101,6 @@ export default function WallpaperRenderer() {
             }
 
             // Draw Everything
-            const { settings = {} } = data.user;
             const theme = getThemeColors(settings.theme || 'dark-minimal');
             const cWidth = settings.canvasWidth || 1080;
             const cHeight = settings.canvasHeight || 2340;
