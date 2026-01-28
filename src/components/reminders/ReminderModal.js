@@ -10,6 +10,7 @@
 
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import { sendWallpaperToAndroid } from "@/utils/sendWallpaperToAndroid";
 import {
     X,
     Calendar,
@@ -47,6 +48,25 @@ export default function ReminderModal({ isOpen, onClose, onSave, editReminder = 
     });
 
     const [isMultiDay, setIsMultiDay] = useState(false);
+    const [publicToken, setPublicToken] = useState("");
+
+    // Load public token for wallpaper updates
+    useEffect(() => {
+        async function loadToken() {
+            try {
+                const res = await fetch("/api/settings/me");
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data?.user?.publicToken) {
+                        setPublicToken(data.user.publicToken);
+                    }
+                }
+            } catch (err) {
+                console.error("Token load error:", err);
+            }
+        }
+        loadToken();
+    }, []);
 
     // Populate form when editing
     useEffect(() => {
@@ -130,6 +150,12 @@ export default function ReminderModal({ isOpen, onClose, onSave, editReminder = 
 
                 if (!res.ok) throw new Error("Failed to create reminder");
                 toast.success("Reminder created!");
+            }
+
+            // 🎯 Trigger wallpaper update
+            if (publicToken) {
+                const wallpaperUrl = `${window.location.origin}/w/${publicToken}/image.png`;
+                sendWallpaperToAndroid(wallpaperUrl);
             }
 
             onSave?.();

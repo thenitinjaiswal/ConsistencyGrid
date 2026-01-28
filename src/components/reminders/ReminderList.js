@@ -7,8 +7,9 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import { sendWallpaperToAndroid } from "@/utils/sendWallpaperToAndroid";
 import {
     Calendar,
     Star,
@@ -41,6 +42,25 @@ const ICON_MAP = {
 
 export default function ReminderList({ reminders, onEdit, onDelete, onRefresh }) {
     const [deletingId, setDeletingId] = useState(null);
+    const [publicToken, setPublicToken] = useState("");
+
+    // Load public token for wallpaper updates
+    useEffect(() => {
+        async function loadToken() {
+            try {
+                const res = await fetch("/api/settings/me");
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data?.user?.publicToken) {
+                        setPublicToken(data.user.publicToken);
+                    }
+                }
+            } catch (err) {
+                console.error("Token load error:", err);
+            }
+        }
+        loadToken();
+    }, []);
 
     const handleDelete = async (id) => {
         if (!confirm("Are you sure you want to delete this reminder?")) {
@@ -56,6 +76,13 @@ export default function ReminderList({ reminders, onEdit, onDelete, onRefresh })
             if (!res.ok) throw new Error("Failed to delete");
 
             toast.success("Reminder deleted");
+
+            // 🎯 Trigger wallpaper update
+            if (publicToken) {
+                const wallpaperUrl = `${window.location.origin}/w/${publicToken}/image.png`;
+                sendWallpaperToAndroid(wallpaperUrl);
+            }
+
             onRefresh?.();
         } catch (error) {
             console.error("Delete error:", error);

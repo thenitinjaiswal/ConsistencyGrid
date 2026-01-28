@@ -86,8 +86,8 @@ export default function TodayProgressCard() {
           <span className="ml-3 text-sm font-semibold text-gray-700">{percent}%</span>
         </div>
         <p className="text-xs text-gray-500">
-          {percent === 100 && data.total > 0 
-            ? "🎉 All habits completed today!" 
+          {percent === 100 && data.total > 0
+            ? "🎉 All habits completed today!"
             : `${data.total - data.completed} habit${data.total - data.completed !== 1 ? 's' : ''} remaining`}
         </p>
       </div>
