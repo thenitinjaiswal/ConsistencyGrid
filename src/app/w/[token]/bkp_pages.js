@@ -47,7 +47,7 @@ export default async function PublicWallpaperPage({ params }) {
   const lifeProgress = ((ageYears / s.lifeExpectancyYears) * 100).toFixed(1);
 
   return (
-    <PublicWallpaperClient
+    <PublicWallpaperClient 
       token={token}
       settings={s}
       ageYears={ageYears}

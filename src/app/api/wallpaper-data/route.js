@@ -160,20 +160,11 @@ export async function GET(request) {
 
     console.log(`[STREAK] Final: ${currentStreak}`);
 
-    // 5. Fetch Active Reminders (FILTER BY TODAY'S DATE)
-    // Only show reminders that are active today:
-    // - startDate <= today (reminder has started)
-    // - endDate >= today (reminder hasn't ended)
-    const today = new Date(currentDate);
-    today.setHours(0, 0, 0, 0); // Start of day
-
+    // 5. Fetch Active Reminders
     const activeReminders = await prisma.reminder.findMany({
         where: {
             userId: currentUser.id,
-            isActive: true,
-            // 🎯 Date filtering: show only reminders active TODAY
-            startDate: { lte: today },
-            endDate: { gte: today }
+            isActive: true
         },
         orderBy: [
             { priority: 'desc' },

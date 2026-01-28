@@ -45,6 +45,14 @@ const GRID_MODES = [
         icon: Clock,
     },
     {
+        id: "week_strip",
+        emoji: "⚡",
+        name: "Week Grid (Tactical)",
+        description: "7 days strip",
+        details: "Tactical view of your current week",
+        icon: Calendar,
+    },
+    {
         id: "month",
         emoji: "📆",
         name: "Month",
@@ -69,31 +77,27 @@ export default function GridModeSelector({ mode, onChange }) {
                             key={gridMode.id}
                             onClick={() => onChange(gridMode.id)}
                             title={`Select ${gridMode.name}: ${gridMode.details}`}
-                            className={`group relative flex items-center gap-3 sm:gap-4 rounded-xl border-2 p-3 sm:p-4 text-left transition-all duration-200 ${
-                                isActive
-                                    ? "border-orange-500 bg-gradient-to-r from-orange-50 to-orange-100 shadow-md"
-                                    : "border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-50/50"
-                            }`}
+                            className={`group relative flex items-center gap-3 sm:gap-4 rounded-xl border-2 p-3 sm:p-4 text-left transition-all duration-200 ${isActive
+                                ? "border-orange-500 bg-gradient-to-r from-orange-50 to-orange-100 shadow-md"
+                                : "border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-50/50"
+                                }`}
                         >
                             {/* Icon Container */}
-                            <div className={`flex h-10 sm:h-12 w-10 sm:w-12 items-center justify-center rounded-lg flex-shrink-0 transition-all ${
-                                isActive 
-                                    ? "bg-gradient-to-br from-orange-100 to-orange-200 text-orange-600 shadow-md" 
-                                    : "bg-gray-100 text-gray-500 group-hover:bg-orange-100 group-hover:text-orange-600"
-                            }`}>
+                            <div className={`flex h-10 sm:h-12 w-10 sm:w-12 items-center justify-center rounded-lg flex-shrink-0 transition-all ${isActive
+                                ? "bg-gradient-to-br from-orange-100 to-orange-200 text-orange-600 shadow-md"
+                                : "bg-gray-100 text-gray-500 group-hover:bg-orange-100 group-hover:text-orange-600"
+                                }`}>
                                 <span className="text-lg sm:text-xl">{gridMode.emoji}</span>
                             </div>
 
                             {/* Text Content */}
                             <div className="flex-1 min-w-0">
-                                <h4 className={`text-sm font-bold truncate transition-colors ${
-                                    isActive ? "text-orange-700" : "text-gray-900 group-hover:text-orange-700"
-                                }`}>
+                                <h4 className={`text-sm font-bold truncate transition-colors ${isActive ? "text-orange-700" : "text-gray-900 group-hover:text-orange-700"
+                                    }`}>
                                     {gridMode.name}
                                 </h4>
-                                <p className={`text-xs truncate transition-colors ${
-                                    isActive ? "text-orange-600/80" : "text-gray-500"
-                                }`}>
+                                <p className={`text-xs truncate transition-colors ${isActive ? "text-orange-600/80" : "text-gray-500"
+                                    }`}>
                                     {gridMode.description}
                                 </p>
                             </div>
