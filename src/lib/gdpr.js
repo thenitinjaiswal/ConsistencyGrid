@@ -11,7 +11,7 @@ export async function generateDataExport(userId) {
   try {
     console.log('[EXPORT] Starting data export...');
     console.log('[EXPORT] User ID:', userId);
-    
+
     // First, test the simple endpoint
     console.log('[EXPORT] Testing simple endpoint...');
     const simpleTestRes = await fetch(`/api/gdpr/simple-test`, {
@@ -58,7 +58,7 @@ export async function generateDataExport(userId) {
     const data = await userRes.json();
     console.log('[EXPORT] Data exported successfully');
     console.log('[EXPORT] Response data structure:', Object.keys(data));
-    
+
     return {
       success: true,
       data: data.data,
@@ -80,7 +80,7 @@ export async function generateDataExport(userId) {
  */
 export function convertToCSV(data) {
   const csv = [];
-  
+
   // Add header with export info
   csv.push(`# ConsistencyGrid - GDPR Data Export`);
   csv.push(`# Generated: ${new Date().toISOString()}`);
@@ -178,21 +178,27 @@ function escapeCSV(value) {
  */
 export function downloadDataExport(data, format = 'json') {
   try {
-    let content;
-    let filename;
-    let mimeType;
+    const filename = `consistency-grid-export-${new Date().toISOString().split('T')[0]}.${format}`;
+    const mimeType = format === 'csv' ? 'text/csv;charset=utf-8;' : 'application/json;charset=utf-8;';
+    const content = format === 'csv' ? convertToCSV(data) : JSON.stringify(data, null, 2);
 
-    if (format === 'csv') {
-      content = convertToCSV(data);
-      filename = `consistency-grid-export-${new Date().toISOString().split('T')[0]}.csv`;
-      mimeType = 'text/csv;charset=utf-8;';
-    } else {
-      content = JSON.stringify(data, null, 2);
-      filename = `consistency-grid-export-${new Date().toISOString().split('T')[0]}.json`;
-      mimeType = 'application/json;charset=utf-8;';
+    // ✅ Android App Bridge Support
+    if (typeof window !== 'undefined' && window.Android && window.Android.downloadFile) {
+      try {
+        const blob = new Blob([content], { type: mimeType });
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64data = reader.result;
+          window.Android.downloadFile(base64data, filename, mimeType);
+        };
+        reader.readAsDataURL(blob);
+        return { success: true, filename };
+      } catch (err) {
+        console.error('Android download failed, falling back to browser', err);
+      }
     }
 
-    // Create blob
+    // Standard Browser Download
     const blob = new Blob([content], { type: mimeType });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);

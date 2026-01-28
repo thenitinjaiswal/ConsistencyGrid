@@ -22,7 +22,7 @@ export function convertToJSON(data) {
 
 export function convertToCSV(data) {
   const rows = [];
-  
+
   // User section
   rows.push('=== USER PROFILE ===');
   if (data.user) {
@@ -102,10 +102,29 @@ export function convertToCSV(data) {
 }
 
 export function downloadFile(content, filename, mimeType) {
+  // ✅ Android App Bridge Support
+  if (typeof window !== 'undefined' && window.Android && window.Android.downloadFile) {
+    try {
+      // For CSV/Text, we need to pass it as a base64 string or just a string if the bridge handles it.
+      // Our bridge expects base64 or cleaned base64.
+      const blob = new Blob([content], { type: mimeType });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64data = reader.result;
+        window.Android.downloadFile(base64data, filename, mimeType);
+      };
+      reader.readAsDataURL(blob);
+      return;
+    } catch (err) {
+      console.error('Android download failed, falling back to browser', err);
+    }
+  }
+
+  // Standard Browser Download
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  
+
   link.href = url;
   link.download = filename;
   document.body.appendChild(link);
@@ -117,9 +136,9 @@ export function downloadFile(content, filename, mimeType) {
 export async function exportData(format = 'json') {
   try {
     const data = await fetchUserData();
-    
+
     let content, filename, mimeType;
-    
+
     if (format === 'csv') {
       content = convertToCSV(data);
       filename = `consistency-grid-export-${new Date().toISOString().split('T')[0]}.csv`;
@@ -129,9 +148,9 @@ export async function exportData(format = 'json') {
       filename = `consistency-grid-export-${new Date().toISOString().split('T')[0]}.json`;
       mimeType = 'application/json;charset=utf-8;';
     }
-    
+
     downloadFile(content, filename, mimeType);
-    
+
     return {
       success: true,
       filename,

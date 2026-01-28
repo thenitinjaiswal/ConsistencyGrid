@@ -96,6 +96,28 @@ export default function GeneratorPreview({ publicToken, loading, form, onReset }
     async function handleDownload() {
         if (!publicToken) return;
         const url = previewUrl || `/w/${publicToken}/image.png`;
+
+        // ✅ Android App Bridge Support
+        if (typeof window !== 'undefined' && window.Android && window.Android.downloadFile) {
+            try {
+                // For images, we can fetch it and convert to base64, 
+                // or just try to trigger the native download listener.
+                // Triggering native download listener is easier for direct URLs.
+                // But for perfect reliability with auth/sessions, we can fetch it here.
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const base64data = reader.result;
+                    window.Android.downloadFile(base64data, "consistency-grid.png", "image/png");
+                };
+                reader.readAsDataURL(blob);
+                return;
+            } catch (err) {
+                console.error('Android image download failed', err);
+            }
+        }
+
         const link = document.createElement("a");
         link.href = url;
         link.download = "consistency-grid.png";
