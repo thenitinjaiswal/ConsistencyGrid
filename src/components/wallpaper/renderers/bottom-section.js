@@ -17,13 +17,32 @@ export function drawBottomSection(
         streak,
     }
 ) {
-    const contentWidth = width;
+    const cardPadding = 24;
+    const cardWidth = width;
+
+    // We want to pin this to the bottom of the available height if possible
+    // But for now we just draw it where yCoordinate starts, expecting yCoordinate to be correct
+
+    context.save();
+
+    // Glassmorphism Card Background
+    drawRoundedRect(
+        context,
+        xCoordinate,
+        yCoordinate,
+        cardWidth,
+        height > 0 ? height : 400, // Fallback if height is not passed correctly
+        24,
+        "rgba(255, 255, 255, 0.02)",
+        "rgba(255, 255, 255, 0.05)"
+    );
+
+    const contentWidth = cardWidth - (cardPadding * 2);
     const columnGap = 40;
-    // Simplified for mobile view (single column if needed, but keeping two for now)
     const columnWidth = (contentWidth - columnGap) / 2;
 
-    const leftColumnX = xCoordinate;
-    const rightColumnX = xCoordinate + columnWidth + columnGap;
+    const leftColumnX = xCoordinate + cardPadding;
+    const rightColumnX = xCoordinate + cardPadding + columnWidth + columnGap;
 
     const getDayString = (date) => {
         const y = date.getFullYear();
@@ -34,141 +53,148 @@ export function drawBottomSection(
 
     /* ---------------- LEFT COLUMN : HABITS ---------------- */
 
-    let leftY = yCoordinate;
+    let currentY = yCoordinate + cardPadding;
 
     if (habits && habits.length > 0 && settings.showHabitLayer !== false) {
-        drawSafeText(context, "HABITS", leftColumnX, leftY, {
-            font: "bold 24px Inter, sans-serif",
-            color: theme.TEXT_SUB,
-        });
-        leftY += 40;
+        // Label with tiny indicator
+        context.fillStyle = theme.ACCENT || "#ffffff";
+        context.beginPath();
+        context.roundRect(leftColumnX, currentY, 3, 16, 1.5);
+        context.fill();
 
-        const maxHabits = Math.min(habits.length, 6);
-        const habitSpacing = 85;
+        drawSafeText(context, "DAILY HABITS", leftColumnX + 12, currentY + 12, {
+            font: "900 12px Inter, sans-serif",
+            color: theme.TEXT_SUB || "rgba(255,255,255,0.4)",
+            letterSpacing: 2
+        });
+
+        currentY += 40;
+
+        const maxHabits = 5;
+        const habitSpacing = 52; // More compact
         const habitColors = [
-            "#10b981", "#f59e0b", "#06b6d4", "#8b5cf6", "#ec4899", "#6366f1",
+            "#34d399", "#fbbf24", "#22d3ee", "#a78bfa", "#f472b6", "#818cf8",
         ];
 
         habits.slice(0, maxHabits).forEach((habit, index) => {
             const habitColor = habitColors[index % habitColors.length];
-            // simplified log check
             const logs = habit.logs || [];
             const isDone = logs.some(
                 (log) => getDayString(new Date(log.date)) === nowDay
             );
 
-            const checkboxSize = 28;
-            const checkboxX = leftColumnX;
-            const checkboxY = leftY - 3;
+            const dotSize = 10;
+            const itemX = leftColumnX;
+            const itemY = currentY;
 
-            // Checkbox
+            // Status Circle
             context.beginPath();
-            context.arc(
-                checkboxX + checkboxSize / 2,
-                checkboxY + checkboxSize / 2,
-                checkboxSize / 2,
-                0,
-                Math.PI * 2
-            );
-            context.strokeStyle = isDone ? habitColor : "#3f3f46";
-            context.lineWidth = 2.5;
-            context.stroke();
-
+            context.arc(itemX + dotSize, itemY + 10, dotSize, 0, Math.PI * 2);
             if (isDone) {
                 context.fillStyle = habitColor;
                 context.fill();
-                // Checkmark
-                /*
-                context.beginPath();
-                context.moveTo(checkboxX + 8, checkboxY + 14);
-                context.lineTo(checkboxX + 12, checkboxY + 20);
-                context.lineTo(checkboxX + 22, checkboxY + 8);
-                context.strokeStyle = "#fff";
-                context.lineWidth = 3;
+                // Glow
+                context.shadowColor = habitColor;
+                context.shadowBlur = 10;
                 context.stroke();
-                */
+                context.shadowBlur = 0;
+            } else {
+                context.strokeStyle = "rgba(255,255,255,0.1)";
+                context.lineWidth = 2;
+                context.stroke();
             }
-
-            const titleX = checkboxX + checkboxSize + 18;
 
             // Habit Title
-            const title =
-                habit.title && habit.title.length > 14
-                    ? habit.title.slice(0, 14) + "…"
-                    : habit.title || "Untitled";
+            const title = habit.title || "Untitled";
+            const truncatedTitle = title.length > 18 ? title.slice(0, 18) + "…" : title;
 
-            drawSafeText(context, title, titleX, leftY + 20, {
-                font: "20px Inter, sans-serif",
-                color: theme.TEXT_MAIN,
+            drawSafeText(context, truncatedTitle.toUpperCase(), itemX + 32, itemY + 14, {
+                font: "800 15px Inter, sans-serif",
+                color: isDone ? "#ffffff" : "rgba(255,255,255,0.7)",
+                letterSpacing: 0.5
             });
 
-            // Scheduled time
-            if (habit.scheduledTime) {
-                drawSafeText(context, habit.scheduledTime, titleX + 160, leftY + 20, {
-                    font: "14px Inter, sans-serif",
-                    color: habitColor,
-                    shadow: false,
-                });
-            }
-
-            leftY += habitSpacing;
+            currentY += habitSpacing;
         });
     }
 
-    /* ---------------- RIGHT COLUMN : GOALS ---------------- */
+    /* ---------------- RIGHT COLUMN : FOCUS ---------------- */
 
-    let rightY = yCoordinate;
+    let focusY = yCoordinate + cardPadding;
 
     if (goals && goals.length > 0) {
         const goal = goals[0];
 
-        drawSafeText(context, "FOCUS", rightColumnX, rightY, {
-            font: "bold 20px Inter, sans-serif",
-            color: theme.TEXT_SUB,
+        // Label
+        context.fillStyle = theme.ACCENT || "#ffffff";
+        context.beginPath();
+        context.roundRect(rightColumnX, focusY, 3, 16, 1.5);
+        context.fill();
+
+        drawSafeText(context, "ACTIVE FOCUS", rightColumnX + 12, focusY + 12, {
+            font: "900 12px Inter, sans-serif",
+            color: theme.TEXT_SUB || "rgba(255,255,255,0.4)",
+            letterSpacing: 2
         });
 
-        drawSafeText(context, goal.title || "Goal", rightColumnX, rightY + 40, {
-            font: "bold 24px Inter, sans-serif",
+        focusY += 40;
+
+        // Goal Title
+        const gTitle = goal.title || "Goal";
+        const truncatedGTitle = gTitle.length > 20 ? gTitle.slice(0, 20) + "…" : gTitle;
+
+        drawSafeText(context, truncatedGTitle.toUpperCase(), rightColumnX, focusY + 15, {
+            font: "900 18px Inter, sans-serif",
             color: theme.TEXT_MAIN,
+            letterSpacing: 0.5
         });
 
-        const barY = rightY + 60;
-        const barHeight = 10;
+        focusY += 45;
 
-        drawRoundedRect(
-            context,
-            rightColumnX,
-            barY,
-            columnWidth,
-            barHeight,
-            5,
-            "rgba(255,255,255,0.1)"
-        );
+        // Progress Bar Track
+        const barWidth = columnWidth;
+        const barHeight = 8;
+        drawRoundedRect(context, rightColumnX, focusY, barWidth, barHeight, 4, "rgba(255,255,255,0.05)");
 
         let progress = goal.progress || 0;
-
         if (goal.subGoals && goal.subGoals.length > 0) {
             const done = goal.subGoals.filter((g) => g.isCompleted).length;
             progress = Math.round((done / goal.subGoals.length) * 100);
         }
 
         if (progress > 0) {
-            drawRoundedRect(
-                context,
-                rightColumnX,
-                barY,
-                (columnWidth * progress) / 100,
-                barHeight,
-                5,
-                theme.ACCENT
-            );
+            // Gradient for progress bar
+            const grad = context.createLinearGradient(rightColumnX, 0, rightColumnX + barWidth, 0);
+            grad.addColorStop(0, theme.ACCENT);
+            grad.addColorStop(1, "#ffffff");
+
+            drawRoundedRect(context, rightColumnX, focusY, (barWidth * progress) / 100, barHeight, 4, grad);
         }
 
-        drawSafeText(context, `${progress}% complete`, rightColumnX + columnWidth, barY + 30, {
-            font: "16px Inter, sans-serif",
-            color: theme.TEXT_SUB,
+        drawSafeText(context, `${progress}% COMPLETE`, rightColumnX + barWidth, focusY + 30, {
+            font: "900 11px Inter, sans-serif",
+            color: theme.ACCENT,
             align: "right",
             shadow: false,
         });
+
+        // Subgoal preview (compact)
+        if (goal.subGoals && goal.subGoals.length > 0) {
+            focusY += 60;
+            const nextSubgoal = goal.subGoals.find(s => !s.isCompleted);
+            if (nextSubgoal) {
+                drawSafeText(context, "NEXT STEP:", rightColumnX, focusY, {
+                    font: "700 10px Inter, sans-serif",
+                    color: "rgba(255,255,255,0.3)",
+                    letterSpacing: 1
+                });
+                drawSafeText(context, nextSubgoal.title.toUpperCase(), rightColumnX, focusY + 20, {
+                    font: "800 13px Inter, sans-serif",
+                    color: "rgba(255,255,255,0.6)",
+                });
+            }
+        }
     }
+
+    context.restore();
 }

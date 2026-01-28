@@ -12,7 +12,7 @@ export function drawDashboardHeader(
     { xCoordinate, yCoordinate, width, theme, history, todayPercent }
 ) {
     const contentWidth = width;
-    const statsHeight = 380;
+    const statsHeight = 280;
 
     /* ---------------- LEFT COLUMN ---------------- */
 
@@ -141,25 +141,28 @@ export function drawDashboardHeader(
  * -------------------------------------------------
  */
 /**
- * Flame Icon (Lucide Style) - 100% Robust Drawing
- * Increased size and stroke for better visibility
+ * Flame Icon (Lucide Style) - Simplified and predictable
  */
 function drawFlameIcon(ctx, x, y, size, color) {
     ctx.save();
 
-    // Position adjustments - Center the icon better
-    const ox = x - size - 10;
-    const oy = y - size / 2 - 10;
+    // x, y are the top-left of the icon box for simplicity
     const s = size / 24;
-
-    ctx.beginPath();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 3 * s; // Thicker stroke
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
+    const ox = x;
+    const oy = y;
 
     const sx = (v) => ox + v * s;
     const sy = (v) => oy + v * s;
+
+    // Glowing Core (from the earlier version)
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 15;
+
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3 * s;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
 
     // Standard Lucide Flame Path
     ctx.moveTo(sx(8.5), sy(14.5));
@@ -176,44 +179,76 @@ function drawFlameIcon(ctx, x, y, size, color) {
 
     ctx.stroke();
 
-    // Gradient fill for "fire" effect
+    // Fill for visibility
     const gradient = ctx.createLinearGradient(ox, oy, ox, oy + size);
-    gradient.addColorStop(0, color + "44"); // 25% opacity
-    gradient.addColorStop(1, color + "11"); // 7% opacity
+    gradient.addColorStop(0, color + "66");
+    gradient.addColorStop(1, color + "22");
     ctx.fillStyle = gradient;
     ctx.fill();
 
     ctx.restore();
 }
 
-export function drawStreakWidget(context, { x, y, theme, streak, streakActiveToday }) {
+export function drawStreakWidget(
+    context,
+    { x, y, theme, streak, streakActiveToday }
+) {
     if (!streak || streak <= 0) return;
 
-    // Vibrant Orange for active
+    // ===== Colors =====
     const iconColor = streakActiveToday ? "#f97316" : "#71717a";
+    const statusColor = streakActiveToday ? "#22c55e" : "#ef4444";
+    const statusText = streakActiveToday ? "SYSTEM ACTIVE" : "SIGNAL LOST";
 
-    // 1. Draw Streak Number (Huge Impact)
-    // Align it to the right, slightly offset for the icon
-    drawSafeText(context, `${streak}`, x - 95, y + 45, {
-        font: "bold 180px 'Inter'",
-        color: theme.TEXT_MAIN,
-        align: "right",
-        baseline: "middle"
+    // ===== Typography =====
+    const streakFont = "bold 80px Inter, sans-serif";
+    const statusFont = "bold 14px Inter, sans-serif";
+
+    // ===== Layout constants =====
+    const iconSize = 70;
+    const gap = 12;
+    const statusOffsetY = 52;
+
+    // ===== Measure streak text =====
+    context.font = streakFont;
+    const streakText = String(streak);
+    const textMetrics = context.measureText(streakText);
+    const textWidth = textMetrics.width;
+
+    // ===== Widget total width =====
+    const widgetWidth = textWidth + gap + iconSize;
+
+    // x = RIGHT edge of widget
+    const startX = x - widgetWidth;
+
+    // ===== Vertical centering =====
+    const centerY = y;
+
+    // ===== 1. Draw Streak Number =====
+    drawSafeText(context, streakText, startX, centerY, {
+        font: streakFont,
+        color: theme.TEXT_MAIN || "#ffffff",
+        align: "left",
+        baseline: "middle",
+        shadow: true,
     });
 
-    // 2. Draw Flame Icon
-    // Centered vertically with the number
-    drawFlameIcon(context, x, y + 15, 80, iconColor);
+    // ===== 2. Draw Flame Icon =====
+    drawFlameIcon(
+        context,
+        startX + textWidth + gap,
+        centerY - iconSize / 2,
+        iconSize,
+        iconColor
+    );
 
-    // 3. Status Text
-    const statusText = streakActiveToday ? "DONE TODAY" : "NOT LOGGED";
-    const statusColor = streakActiveToday ? "#22c55e" : "#ef4444";
-
-    drawSafeText(context, statusText, x, y + 115, {
-        font: "bold 22px 'Inter'",
+    // ===== 3. Draw Status Label =====
+    drawSafeText(context, statusText, x, centerY + statusOffsetY, {
+        font: statusFont,
         color: statusColor,
         align: "right",
-        shadow: false,
+        baseline: "top",
+        letterSpacing: 2,
     });
 }
 

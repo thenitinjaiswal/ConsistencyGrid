@@ -26,6 +26,9 @@ try {
         // TRICK: Map Inter.ttf to 'Arial' so even if utils.js forces Arial, we get Inter!
         registerFont(fontPath, { family: 'Inter', weight: '400', style: 'normal' });
         registerFont(fontPath, { family: 'Inter', weight: '600', style: 'normal' });
+        registerFont(fontPath, { family: 'Inter', weight: '700', style: 'normal' });
+        registerFont(fontPath, { family: 'Inter', weight: '800', style: 'normal' });
+        registerFont(fontPath, { family: 'Inter', weight: '900', style: 'normal' });
         registerFont(fontPath, { family: 'Arial', weight: '400', style: 'normal' });
         registerFont(fontPath, { family: 'sans-serif', weight: '400', style: 'normal' });
         fontRegistered = true;
@@ -341,7 +344,7 @@ export async function GET(request, { params }) {
         // Draw Streak Widget (Top Right) - Independent of Header Layout
         drawStreakWidget(canvasContext, {
             x: horizontalMargin + contentWidth,
-            y: verticalCursorY - 60, // Moved up to separate from header
+            y: verticalCursorY - 100, // Moved up to separate from header
             theme: activeTheme,
             streak: currentStreak,
             streakActiveToday: todayLogged
@@ -357,7 +360,7 @@ export async function GET(request, { params }) {
             streak: currentStreak,
             streakActiveToday: todayLogged // Pass streak status
         });
-        verticalCursorY += headerHeight + 40; // CHANGED: Added consistent spacing after header
+        verticalCursorY += headerHeight + 20; // REDUCED: Tighter spacing after header
     } else {
         verticalCursorY += 80; // CHANGED: Reduced spacing when header is hidden
     }
@@ -434,16 +437,23 @@ export async function GET(request, { params }) {
             reminders: activeReminders,
             now: currentDate
         });
-        verticalCursorY += gridHeight + 40;
+        verticalCursorY += gridHeight + 10; // REDUCED GAP
 
         // 4. Bottom Section
-        const remainingHeight = canvasHeight - verticalCursorY - 120; // Leave space for quote
+        const minBottomSectionHeight = 420; // Height of our new premium card
+        const bottomPadding = 120; // Space for quote
 
-        // (Use pre-calculated streak)
+        // Calculate a "pinned" Y that puts the section at the bottom
+        // Reduced the 40 offset to 10
+        const pinnedY = canvasHeight - bottomPadding - minBottomSectionHeight - 10;
+
+        // Use the lower of the two positions (sequential vs pinned) to avoid overlap
+        const finalSectionY = Math.max(verticalCursorY, pinnedY);
+        const remainingHeight = canvasHeight - finalSectionY - bottomPadding;
 
         drawBottomSection(canvasContext, {
             xCoordinate: horizontalMargin,
-            yCoordinate: verticalCursorY,
+            yCoordinate: finalSectionY,
             width: contentWidth,
             height: remainingHeight,
             theme: activeTheme,

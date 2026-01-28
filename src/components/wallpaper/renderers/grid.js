@@ -1,4 +1,119 @@
 import { drawRoundedRect, drawSafeText } from "./utils";
+import { drawWeekStrip } from "./week-strip";
+
+// Helper functions
+const getDayString = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+};
+
+const getWeekNumber = (dateInstance) => {
+    const date = new Date(
+        Date.UTC(
+            dateInstance.getFullYear(),
+            dateInstance.getMonth(),
+            dateInstance.getDate()
+        )
+    );
+    date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    return Math.ceil(((date - yearStart) / 86400000 + 1) / 7);
+};
+
+const getDayOfYear = (dateInstance) => {
+    const start = new Date(dateInstance.getFullYear(), 0, 0);
+    const diff = dateInstance - start;
+    const oneDay = 1000 * 60 * 60 * 24;
+    return Math.floor(diff / oneDay);
+};
+
+const weeksBetween = (d1, d2) =>
+    Math.floor((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24 * 7));
+
+/**
+ * DAILY AGENDA RENDERER
+ * -------------------------------------------------
+ */
+export function drawDailyAgenda(context, { x, y, width, reminders, theme, now }) {
+    const padding = 20;
+    const rowHeight = 70;
+    const iconSize = 24;
+
+    context.save();
+
+    // 1. Table Header
+    drawSafeText(context, "TODAY'S AGENDA", x, y, {
+        font: "900 12px Inter, sans-serif",
+        color: theme.ACCENT || "rgba(255,255,255,0.4)",
+        letterSpacing: 3
+    });
+
+    // Glass HUD Status
+    drawSafeText(context, "SYSTEM.READY // SCANNING", x + width, y, {
+        font: "800 10px Inter, sans-serif",
+        color: "rgba(255,255,255,0.2)",
+        letterSpacing: 1,
+        align: "right"
+    });
+
+    let currentY = y + 35;
+
+    // Filter for TODAY'S reminders only
+    const todayReminders = reminders.filter(r => {
+        const d = new Date(now);
+        const rDate = new Date(r.startDate);
+        return rDate.getDate() === d.getDate() &&
+            rDate.getMonth() === d.getMonth() &&
+            rDate.getFullYear() === d.getFullYear();
+    });
+
+    const boxHeight = Math.max(80, todayReminders.length * rowHeight + 20);
+
+    // Glass Container
+    drawRoundedRect(context, x, currentY, width, boxHeight, 16, "rgba(255,255,255,0.02)", "rgba(255,255,255,0.05)");
+
+    if (todayReminders.length > 0) {
+        todayReminders.forEach((r, i) => {
+            const rowY = currentY + 15 + i * rowHeight;
+
+            // Neon vertical indicator
+            drawRoundedRect(context, x + 15, rowY, 4, rowHeight - 20, 2, theme.ACCENT || "#ffffff");
+
+            // Reminder Title
+            const rText = r.title || "Untitled";
+            const truncated = rText.length > 40 ? rText.slice(0, 40) + "…" : rText;
+
+            drawSafeText(context, truncated.toUpperCase(), x + 35, rowY + 12, {
+                font: "900 15px Inter, sans-serif",
+                color: theme.TEXT_MAIN,
+                align: "left",
+                letterSpacing: 1
+            });
+
+            // Time if available
+            if (r.startTime) {
+                drawSafeText(context, r.startTime, x + width - 25, rowY + 12, {
+                    font: "800 12px Inter, sans-serif",
+                    color: "rgba(255,255,255,0.3)",
+                    align: "right"
+                });
+            }
+        });
+    } else {
+        // Empty State
+        drawSafeText(context, "NO EVENTS SCHEDULED FOR TODAY", x + width / 2, currentY + boxHeight / 2 + 5, {
+            font: "800 12px Inter, sans-serif",
+            color: "rgba(255,255,255,0.1)",
+            align: "center",
+            letterSpacing: 2
+        });
+    }
+
+    context.restore();
+    return boxHeight + 40; // Height of this section
+}
 
 export function drawGrid(
     context,
@@ -51,6 +166,12 @@ export function drawGrid(
         const totalWeeks = lifeExpectancy * 52;
         const lifePercent = Math.round((weeksLived / totalWeeks) * 100);
         progressMetric = `${lifePercent}% LIVED`;
+    } else if (mode === "week_strip") {
+        mainTitle = "TACTICAL WEEK";
+        systemLabel = "ACTIVE OPERATIONS";
+        subtitleText = "Current 7-day performance";
+        const dayOfYear = getDayOfYear(now);
+        progressMetric = `DAY ${dayOfYear}`;
     } else {
         const monthName = now.toLocaleString("default", { month: "long" }).toUpperCase();
         mainTitle = monthName + " " + now.getFullYear();
@@ -65,13 +186,14 @@ export function drawGrid(
     context.save();
 
     // 1. SMALL CAPS SYSTEM LABEL
-    drawSafeText(context, systemLabel, xCoordinate, currentY, {
+    drawSafeText(context, systemLabel, xCoordinate, currentY - 20, {
         font: "700 12px Inter, sans-serif",
         color: theme.ACCENT || "rgba(255, 255, 255, 0.4)",
+        baseline: "top",
         shadow: false,
     });
 
-    currentY += 32;
+    currentY += 40;
 
     // 2. MAIN TITLE WITH DYNAMIC DEPTH
     context.shadowColor = "rgba(0, 0, 0, 0.8)";
@@ -86,10 +208,11 @@ export function drawGrid(
     drawSafeText(context, mainTitle, xCoordinate, currentY, {
         font: "800 64px Inter, sans-serif",
         color: titleGradient,
+        baseline: "top",
         shadow: false,
     });
 
-    currentY += 68;
+    currentY += 76;
 
     // 3. SUBTITLE & PROGRESS BADGE ALIGNMENT
     context.shadowBlur = 0;
@@ -119,37 +242,6 @@ export function drawGrid(
     currentY += 56;
     const contentWidth = width;
 
-    // Helper functions
-    const getDayString = (date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
-        return `${year}-${month}-${day}`;
-    };
-
-    const getWeekNumber = (dateInstance) => {
-        const date = new Date(
-            Date.UTC(
-                dateInstance.getFullYear(),
-                dateInstance.getMonth(),
-                dateInstance.getDate()
-            )
-        );
-        date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
-        const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-        return Math.ceil(((date - yearStart) / 86400000 + 1) / 7);
-    };
-
-    const getDayOfYear = (dateInstance) => {
-        const start = new Date(dateInstance.getFullYear(), 0, 0);
-        const diff = dateInstance - start;
-        const oneDay = 1000 * 60 * 60 * 24;
-        return Math.floor(diff / oneDay);
-    };
-
-    const weeksBetween = (d1, d2) =>
-        Math.floor((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24 * 7));
-
     // Reminder tracking
     let anchorPoint = null;
     let targetReminders = [];
@@ -172,6 +264,17 @@ export function drawGrid(
         } else if (mode === "weeks") {
             startDate = new Date(now.getFullYear(), 0, 1);
             endDate = new Date(now.getFullYear(), 11, 31);
+        } else if (mode === "week_strip") {
+            // Current week Mon-Sun
+            startDate = new Date(now);
+            const day = startDate.getDay();
+            const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
+            startDate.setDate(diff);
+            startDate.setHours(0, 0, 0, 0);
+
+            endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 6);
+            endDate.setHours(23, 59, 59, 999);
         } else {
             startDate = new Date(now.getFullYear(), now.getMonth(), 1);
             endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -311,7 +414,33 @@ export function drawGrid(
     let finalHeight = 0;
 
     // Days mode - 365 day grid
-    if (mode === "days") {
+    if (mode === "week_strip") {
+        const result = drawWeekStrip(context, {
+            xCoordinate,
+            yCoordinate: currentY,
+            width: contentWidth,
+            theme,
+            activityMap,
+            totalHabits,
+            now,
+            reminders // Pass reminders here too
+        });
+
+        const stripHeight = result.height;
+        anchorPoint = result.anchorPoint;
+
+        // Add Daily Agenda below the strip
+        const tableHeight = drawDailyAgenda(context, {
+            x: xCoordinate,
+            y: currentY + stripHeight + 40,
+            width: contentWidth,
+            reminders,
+            theme,
+            now
+        });
+
+        finalHeight = (currentY - yCoordinate) + stripHeight + tableHeight + 20;
+    } else if (mode === "days") {
         const gridCols = 25;
         const gap = 12;
         const boxSize = (contentWidth - gap * (gridCols - 1)) / gridCols;
@@ -352,7 +481,7 @@ export function drawGrid(
                 drawEnhancedBox(boxX, boxY, boxSize, fillColor, isToday, 6);
             }
         }
-        finalHeight = dayRows * (boxSize + gap) + 150;
+        finalHeight = (currentY - yCoordinate) + dayRows * (boxSize + gap) + 30;
     }
     // Weeks mode - 52 week grid
     else if (mode === "weeks") {
@@ -400,7 +529,7 @@ export function drawGrid(
                 drawEnhancedBox(boxX, boxY, boxSize, fillColor, isCurrentWeek, 9);
             }
         }
-        finalHeight = weekRows * (boxSize + gap) + 200;
+        finalHeight = (currentY - yCoordinate) + weekRows * (boxSize + gap) + 40;
     }
     // Life mode - entire life grid
     else if (mode === "life") {
@@ -452,7 +581,7 @@ export function drawGrid(
             drawEnhancedBox(boxX, boxY, boxSize, fillColor, isCurrentWeek, Math.max(2, boxSize / 3.5));
         }
 
-        finalHeight = rowsNeeded * (boxSize + gap) + 120;
+        finalHeight = (currentY - yCoordinate) + rowsNeeded * (boxSize + gap) + 20;
     }
     // Monthly calendar mode
     else {
@@ -573,11 +702,11 @@ export function drawGrid(
                 context.textAlign = "left";
             }
         }
-        finalHeight = monthRows * (boxSize + gap) + 160;
+        finalHeight = (currentY - yCoordinate) + monthRows * (boxSize + gap) + 40;
 
         // Intensity Legend
         const legendX = xCoordinate;
-        const legendY = currentY + monthRows * (boxSize + gap) + 20;
+        const legendY = currentY + monthRows * (boxSize + gap) + 10;
         const legendBoxSize = 12;
         const legendGap = 8;
 
@@ -592,7 +721,7 @@ export function drawGrid(
     }
 
     // ============ REMINDER CALLOUT (EXACT MATCH TO NEW DESIGN) ============
-    if (anchorPoint && targetReminders.length > 0) {
+    if (anchorPoint && targetReminders.length > 0 && mode !== "week_strip") {
         const boxWidth = 360;
         const itemHeight = 64;
         const headerHeight = 52;
