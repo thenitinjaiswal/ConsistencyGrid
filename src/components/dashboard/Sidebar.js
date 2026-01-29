@@ -122,7 +122,7 @@ export default function Sidebar({ active = "Dashboard", onNavigate }) {
   };
 
   return (
-    <aside className="flex h-screen w-[240px] flex-col border-r border-gray-200 bg-[#fffaf1]">
+    <aside className="flex h-full w-full flex-col border-r border-gray-200 bg-[#fffaf1] sticky top-0">
       {/* 
         Logo / Brand Section
         Displays app logo and name

@@ -43,9 +43,9 @@ export default function DashboardLayout({ children, active = "Dashboard" }) {
 
             {/* 
                 Desktop Sidebar Navigation
-                Hidden on mobile, visible on lg screens and up
+                Always visible on large screens
             */}
-            <div className="hidden lg:block">
+            <div className="hidden lg:flex lg:flex-col lg:flex-shrink-0 z-40 w-[240px] sticky top-0 h-screen">
                 <Sidebar active={active} />
             </div>
 
@@ -53,20 +53,19 @@ export default function DashboardLayout({ children, active = "Dashboard" }) {
                 Main Content Area
                 Flexible column layout that grows to fill available space
             */}
-            <section className="flex-1 flex flex-col min-w-0">
+            <section className="flex-1 flex flex-col min-w-0 max-w-full">
                 {/* 
                     Mobile Header Bar
-                    Only visible on mobile (< lg breakpoint)
-                    Contains logo (hamburger removed for bottom nav)
+                    Sticky top bar with Logo
                 */}
-                <div className="flex items-center justify-center bg-[#fffaf1] p-4 border-b border-gray-200/50 lg:hidden sticky top-0 z-30">
+                <div className="flex items-center justify-center bg-[#fffaf1] px-4 py-3 border-b border-gray-200/50 lg:hidden sticky top-0 z-30 shadow-sm backdrop-blur-sm bg-opacity-95">
                     <div className="flex items-center gap-2">
                         <img
                             src="/images/logo.png"
                             alt="ConsistencyGrid Logo"
-                            className="h-6 w-6"
+                            className="h-7 w-7"
                         />
-                        <span className="text-sm font-semibold text-gray-900">
+                        <span className="text-base font-bold text-gray-900 tracking-tight">
                             ConsistencyGrid
                         </span>
                     </div>
@@ -74,16 +73,16 @@ export default function DashboardLayout({ children, active = "Dashboard" }) {
 
                 {/* 
                     Page Content Area
-                    Includes bottom padding on mobile for BottomNav
                 */}
-                <div className="flex-1 p-4 sm:p-5 lg:p-6 overflow-x-hidden pb-24 lg:pb-6">
-                    {children}
+                <div className="flex-1 overflow-x-hidden">
+                    <div className="mx-auto w-full max-w-7xl p-3 sm:p-6 lg:p-8 pb-24 lg:pb-8">
+                        {children}
+                    </div>
                 </div>
             </section>
 
             {/* 
                 Mobile Bottom Navigation
-                Visible only on mobile screens
             */}
             <BottomNav active={active} />
         </main>

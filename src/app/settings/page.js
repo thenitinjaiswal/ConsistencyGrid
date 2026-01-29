@@ -4,6 +4,8 @@ export const dynamic = 'force-dynamic';
 
 import { useEffect, useState } from "react";
 import { signOut } from "next-auth/react";
+import Link from "next/link";
+import { LogOut, HelpCircle, LifeBuoy } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -34,6 +36,13 @@ export default function SettingsPage() {
         loadUser();
     }, []);
 
+    const handleLogout = async () => {
+        if (typeof window !== "undefined" && window.Android && window.Android.clearToken) {
+            window.Android.clearToken();
+        }
+        await signOut({ callbackUrl: "/" });
+    };
+
     const tabs = [
         { id: "profile", label: "Profile" },
         { id: "preferences", label: "Preferences" },
@@ -54,16 +63,15 @@ export default function SettingsPage() {
 
                 {/* Tabs */}
                 <div className="border-b border-gray-200">
-                    <div className="flex space-x-1">
+                    <div className="flex space-x-1 overflow-x-auto no-scrollbar">
                         {tabs.map(tab => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`px-4 py-3 text-sm font-medium border-b-2 transition ${
-                                    activeTab === tab.id
+                                className={`px-4 py-3 text-sm font-medium border-b-2 transition whitespace-nowrap ${activeTab === tab.id
                                         ? "border-orange-500 text-orange-600"
                                         : "border-transparent text-gray-600 hover:text-gray-900"
-                                }`}
+                                    }`}
                             >
                                 {tab.label}
                             </button>
@@ -118,6 +126,44 @@ export default function SettingsPage() {
                                         Used for your public wallpaper URL
                                     </p>
                                 </div>
+                            </div>
+                        </Card>
+
+                        {/* Account Actions */}
+                        <Card className="p-6">
+                            <h2 className="text-lg font-bold text-gray-900">Account Actions</h2>
+                            <p className="text-sm text-gray-500 mb-6">
+                                Manage your session and support
+                            </p>
+
+                            <div className="space-y-3">
+                                <Link href="/help" className="flex items-center justify-between w-full p-4 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors group">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-100 transition-colors">
+                                            <HelpCircle className="w-5 h-5" />
+                                        </div>
+                                        <div className="text-left">
+                                            <p className="font-semibold text-gray-900">Help & Support</p>
+                                            <p className="text-xs text-gray-500">Get guidance on using the app</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-gray-400">→</span>
+                                </Link>
+
+                                <button
+                                    onClick={handleLogout}
+                                    className="flex items-center justify-between w-full p-4 rounded-xl border border-red-100 bg-red-50/50 hover:bg-red-50 hover:border-red-200 transition-colors group text-red-700"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-red-100 text-red-600 rounded-lg group-hover:bg-red-200 transition-colors">
+                                            <LogOut className="w-5 h-5" />
+                                        </div>
+                                        <div className="text-left">
+                                            <p className="font-semibold">Sign Out</p>
+                                            <p className="text-xs text-red-500/80">Log out of your account on this device</p>
+                                        </div>
+                                    </div>
+                                </button>
                             </div>
                         </Card>
                     </div>
