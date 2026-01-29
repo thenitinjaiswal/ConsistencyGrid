@@ -186,6 +186,12 @@ export default function WallpaperRenderer() {
                 const base64 = canvas.toDataURL("image/png");
                 const cleanBase64 = base64.split(',')[1];
                 window.Android.saveWallpaper(cleanBase64);
+
+                // Sync Theme Consistency
+                if (window.Android.updateAppTheme) {
+                    const isDark = !settings.theme?.includes('white');
+                    window.Android.updateAppTheme(theme.BG, isDark);
+                }
             }
 
         } catch (err) {
