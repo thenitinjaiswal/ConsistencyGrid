@@ -164,7 +164,7 @@ export default function ReminderModal({ isOpen, onClose, onSave, editReminder = 
         "#3b82f6", // Blue
         "#8b5cf6", // Purple
         "#ec4899", // Pink
-        "#6366f1", // Indigo
+        "#fb923c", // Light Orange
     ];
 
     const commonIcons = [

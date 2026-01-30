@@ -5,8 +5,8 @@ import { Flame, CheckCircle2, Target } from "lucide-react";
 const iconMap = {
   "Current Streak": { Icon: Flame, color: "text-orange-500" },
   "Best Streak": { Icon: Flame, color: "text-orange-500" },
-  "Today's Habits": { Icon: CheckCircle2, color: "text-green-500" },
-  "Active Goals": { Icon: Target, color: "text-blue-500" },
+  "Today's Habits": { Icon: CheckCircle2, color: "text-emerald-500" },
+  "Active Goals": { Icon: Target, color: "text-orange-500" },
 };
 
 export default function StatCard({ title, value, sub, loading = false }) {
