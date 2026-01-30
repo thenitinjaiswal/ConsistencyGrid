@@ -56,18 +56,16 @@ export const authOptions = {
     updateAge: 24 * 60 * 60, // 24 Hours update
   },
 
-  useSecureCookies: process.env.NODE_ENV === "production",
+  useSecureCookies: true, // Force secure for SameSite=None
 
   cookies: {
     sessionToken: {
-      name: process.env.NODE_ENV === "production"
-        ? `__Secure-next-auth.session-token`
-        : `next-auth.session-token`,
+      name: `next-auth.session-token`, // NO __Secure- prefix (more compatible with WebViews)
       options: {
         httpOnly: true,
-        sameSite: 'lax',
+        sameSite: 'none', // Critical for cross-context WebViews on some Android versions
         path: '/',
-        secure: process.env.NODE_ENV === "production",
+        secure: true,
         maxAge: 30 * 24 * 60 * 60,
       },
     },

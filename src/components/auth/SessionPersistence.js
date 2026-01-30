@@ -36,10 +36,12 @@ export default function SessionPersistence() {
 
         if (isLandingOrLogin && hasPersistenceFlag && status === 'unauthenticated') {
             console.log('🛡️ Potential session detected via flag, attempting recovery...');
-            // Instead of relying on Next.js background sync, we force a page reload 
-            // on the dashboard path. This often forces the browser to send the 
-            // HttpOnly cookie if it was just being "lazy" in a WebView.
-            window.location.href = '/dashboard';
+
+            // Safety: Only attempt recovery once per page load to avoid loops
+            if (!window.__cg_recovery_tried) {
+                window.__cg_recovery_tried = true;
+                window.location.href = '/dashboard';
+            }
         }
 
         // 3. Clear flag if user manually logged out (handled in Sidebar, but safety here)
