@@ -11,6 +11,7 @@ import DetailedInsightsModal from "@/components/goals/DetailedInsightsModal";
 import CircularProgress from "@/components/goals/CircularProgress";
 import GoalCard from "@/components/goals/GoalCard";
 import MilestoneItem from "@/components/goals/MilestoneItem";
+import GoalSkeleton from "@/components/goals/GoalSkeleton";
 import {
     Plus,
     Filter,
@@ -66,6 +67,16 @@ export default function GoalsPage() {
         }
         loadData();
     }, []);
+
+    if (loading) {
+        return (
+            <DashboardLayout active="Goals">
+                <div className="py-4 sm:py-8">
+                    <GoalSkeleton />
+                </div>
+            </DashboardLayout>
+        );
+    }
 
     // Calculate stats from real goal data
     useEffect(() => {

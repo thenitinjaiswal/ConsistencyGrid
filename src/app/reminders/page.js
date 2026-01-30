@@ -15,6 +15,7 @@ import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import ReminderModal from "@/components/reminders/ReminderModal";
 import ReminderList from "@/components/reminders/ReminderList";
+import ReminderSkeleton from "@/components/reminders/ReminderSkeleton";
 import { sendWallpaperToAndroid } from "@/utils/sendWallpaperToAndroid";
 
 export default function RemindersPage() {
@@ -198,10 +199,9 @@ export default function RemindersPage() {
                     </div>
                 </div>
 
-                {/* Content */}
                 {loading ? (
-                    <div className="flex justify-center py-20">
-                        <div className="h-12 w-12 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" />
+                    <div className="py-2">
+                        <ReminderSkeleton />
                     </div>
                 ) : (
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
