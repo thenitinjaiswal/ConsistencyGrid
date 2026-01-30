@@ -43,6 +43,10 @@ export const authOptions = {
           throw new Error("Invalid password");
         }
 
+        if (!user.emailVerified) {
+          throw new Error("unverified:Please verify your email to login");
+        }
+
         return user;
       },
     }),
@@ -75,6 +79,7 @@ export const authOptions = {
             name: user.name,
             image: user.image,
             publicToken: generatePublicToken(),
+            emailVerified: new Date(), // OAuth emails are verified
           },
         });
       }
@@ -92,12 +97,13 @@ export const authOptions = {
         // This ensures flag is synced on every token refresh
         const dbUser = await prisma.user.findUnique({
           where: { email: token.email },
-          select: { id: true, onboarded: true },
+          select: { id: true, onboarded: true, emailVerified: true },
         });
 
         if (dbUser) {
           token.id = dbUser.id;
           token.onboarded = dbUser.onboarded;
+          token.verified = !!dbUser.emailVerified;
         }
       }
 
@@ -109,6 +115,7 @@ export const authOptions = {
       if (session?.user) {
         session.user.id = token.id;
         session.user.onboarded = token.onboarded;
+        session.user.verified = token.verified;
       }
 
       return session;

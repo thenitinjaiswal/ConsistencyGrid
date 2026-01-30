@@ -28,8 +28,9 @@ export const createErrorResponse = (message, statusCode = 400, details = null) =
     },
   };
 
-  // Only include details in development
-  if (details && process.env.NODE_ENV === 'development') {
+  // Include details if it's a validation error (422) even in production,
+  // or if we are in development mode.
+  if (details && (process.env.NODE_ENV === 'development' || statusCode === 422)) {
     response.error.details = details;
   }
 

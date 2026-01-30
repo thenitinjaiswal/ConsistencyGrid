@@ -25,7 +25,18 @@ export default function SignupForm() {
             const data = await res.json();
 
             if (!res.ok) {
-                throw new Error(data.message || "Signup failed");
+                // Backend returns { success: false, error: { message: "...", details: { errors: [] } } }
+                if (data.error?.details?.errors && Array.isArray(data.error.details.errors)) {
+                    data.error.details.errors.forEach(err => toast.error(err));
+                    return; // Stop here as we've shown the specific errors
+                }
+                throw new Error(data.error?.message || data.message || "Signup failed");
+            }
+
+            if (data.data?.requiresVerification) {
+                toast.success("Account created! Please verify your email.");
+                router.push(`/verify?email=${encodeURIComponent(form.email)}`);
+                return;
             }
 
             toast.success("Account created! Starting onboarding...");
@@ -121,14 +132,14 @@ export default function SignupForm() {
                                 type="password"
                                 placeholder="••••••••"
                                 required
-                                minLength={6}
+                                minLength={8}
                                 value={form.password}
                                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                                 disabled={loading}
                                 className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all disabled:bg-gray-50 disabled:cursor-not-allowed"
                             />
-                            <p className="mt-1 text-xs text-gray-500">
-                                Must be at least 6 characters
+                            <p className="mt-1 text-xs text-gray-500 leading-relaxed">
+                                Must be 8+ characters with uppercase, lowercase, number, and special character.
                             </p>
                         </div>
 

@@ -14,7 +14,12 @@ model User {
   password    String?  // Hashed password for credentials auth
   image       String?
   publicToken String   @unique
+  emailVerified DateTime?
   onboarded   Boolean  @default(false)
+  
+  // Verification fields
+  verificationToken       String?   @unique
+  verificationTokenExpiry DateTime?
   
   // Password reset fields (for forgot password feature)
   resetToken    String?   @unique // Single-use token for password reset

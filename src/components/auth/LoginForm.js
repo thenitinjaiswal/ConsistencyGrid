@@ -24,6 +24,12 @@ export default function LoginForm() {
             });
 
             if (result?.error) {
+                if (result.error.startsWith("unverified:")) {
+                    const message = result.error.split(":")[1];
+                    toast.error(message);
+                    router.push(`/verify?email=${encodeURIComponent(form.email)}`);
+                    return;
+                }
                 throw new Error("Invalid email or password");
             }
 

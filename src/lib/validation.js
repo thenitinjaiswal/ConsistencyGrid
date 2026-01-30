@@ -7,20 +7,25 @@ export const validateEmail = (email) => {
   if (!email || typeof email !== 'string') {
     return { valid: false, error: 'Email is required' };
   }
-  
+
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  
+
   if (!emailRegex.test(email) || email.length > 255) {
     return { valid: false, error: 'Invalid email format' };
   }
-  
+
   return { valid: true };
 };
 
 export const validatePassword = (password) => {
-  // Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-  return passwordRegex.test(password);
+  if (!password || typeof password !== 'string' || password.length < 8) return false;
+
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecial = /[^A-Za-z0-9]/.test(password);
+
+  return hasUppercase && hasLowercase && hasNumber && hasSpecial;
 };
 
 // NOTE: validateUsername is unused - kept for future use
@@ -143,7 +148,7 @@ export const validateSignupData = (email, password, name) => {
   }
 
   if (!validatePassword(password)) {
-    errors.push('Password must contain: 8+ chars, 1 uppercase, 1 lowercase, 1 number, 1 special char (@$!%*?&)');
+    errors.push('Password must contain: 8+ chars, 1 uppercase, 1 lowercase, 1 number, and 1 special character');
   }
 
   if (!validateString(name, 2, 50)) {
