@@ -29,7 +29,7 @@ const API_ROUTES_TO_CACHE = [
  */
 self.addEventListener('install', (event) => {
   console.log('[Service Worker] Installing...');
-  
+
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log('[Service Worker] Caching assets');
@@ -40,7 +40,7 @@ self.addEventListener('install', (event) => {
       });
     })
   );
-  
+
   self.skipWaiting(); // Activate immediately
 });
 
@@ -49,7 +49,7 @@ self.addEventListener('install', (event) => {
  */
 self.addEventListener('activate', (event) => {
   console.log('[Service Worker] Activating...');
-  
+
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -68,7 +68,7 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
-  
+
   self.clients.claim(); // Take control immediately
 });
 
@@ -111,18 +111,18 @@ self.addEventListener('fetch', (event) => {
 async function networkFirstStrategy(request, cacheName) {
   try {
     const response = await fetch(request);
-    
+
     // Cache successful responses
     if (response.status === 200) {
       const cache = await caches.open(cacheName);
       cache.put(request, response.clone());
     }
-    
+
     return response;
   } catch (error) {
     console.log('[Service Worker] Network failed, using cache:', request.url);
     const cached = await caches.match(request);
-    
+
     if (cached) {
       return cached;
     }
@@ -145,23 +145,23 @@ async function networkFirstStrategy(request, cacheName) {
  */
 async function cacheFirstStrategy(request, cacheName) {
   const cached = await caches.match(request);
-  
+
   if (cached) {
     return cached;
   }
 
   try {
     const response = await fetch(request);
-    
+
     if (response.status === 200) {
       const cache = await caches.open(cacheName);
       cache.put(request, response.clone());
     }
-    
+
     return response;
   } catch (error) {
     console.log('[Service Worker] Network failed:', request.url);
-    
+
     // Return placeholder response for failed assets
     return new Response('Asset not available offline', {
       status: 503,
@@ -175,7 +175,7 @@ async function cacheFirstStrategy(request, cacheName) {
  */
 self.addEventListener('sync', (event) => {
   console.log('[Service Worker] Background sync:', event.tag);
-  
+
   if (event.tag === 'sync-goals') {
     event.waitUntil(syncGoals());
   } else if (event.tag === 'sync-habits') {
@@ -186,7 +186,9 @@ self.addEventListener('sync', (event) => {
 async function syncGoals() {
   try {
     const response = await fetch('/api/goals/sync', { method: 'POST' });
-    console.log('[Service Worker] Goals synced:', response.status);
+    if (response.status !== 200) {
+      console.warn('[Service Worker] Goals sync returned non-OK status:', response.status);
+    }
   } catch (error) {
     console.error('[Service Worker] Failed to sync goals:', error);
     throw error;
@@ -196,7 +198,9 @@ async function syncGoals() {
 async function syncHabits() {
   try {
     const response = await fetch('/api/habits/sync', { method: 'POST' });
-    console.log('[Service Worker] Habits synced:', response.status);
+    if (response.status !== 200) {
+      console.warn('[Service Worker] Habits sync returned non-OK status:', response.status);
+    }
   } catch (error) {
     console.error('[Service Worker] Failed to sync habits:', error);
     throw error;
@@ -208,11 +212,11 @@ async function syncHabits() {
  */
 self.addEventListener('message', (event) => {
   console.log('[Service Worker] Message received:', event.data);
-  
+
   if (event.data?.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
-  
+
   if (event.data?.type === 'CLEAR_CACHE') {
     caches.delete(RUNTIME_CACHE).then(() => {
       console.log('[Service Worker] Runtime cache cleared');

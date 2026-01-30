@@ -141,7 +141,7 @@ export function isOnline() {
  * Listen for online/offline events
  */
 export function onConnectionChange(callback) {
-  if (typeof window === 'undefined') return () => {};
+  if (typeof window === 'undefined') return () => { };
 
   const handleOnline = () => callback(true);
   const handleOffline = () => callback(false);
@@ -257,10 +257,8 @@ export async function initializePWA() {
     );
   }
 
-  // Set up sync for goals
-  if (registration) {
-    await requestBackgroundSync('sync-goals');
-  }
+  // Note: Background sync for goals is registered on-demand when user data changes
+  // rather than on every initialization to avoid redundant sync events.
 
   console.log('✓ PWA initialized');
   return registration;

@@ -23,6 +23,8 @@ export default function PWAInstallPrompt() {
     // Handle beforeinstallprompt event
     const handleBeforeInstallPrompt = (e) => {
       // Prevent the mini-infobar from appearing on mobile
+      // This causes a "Banner not shown" warning in console, which is expected
+      // because we are using a custom install UI instead of the browser's default.
       e.preventDefault();
       // Stash the event for later use
       setDeferredPrompt(e);
