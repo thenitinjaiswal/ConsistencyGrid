@@ -28,10 +28,12 @@ export async function POST(req) {
     }
 
     const userId = session.user.id;
+    const userEmail = session.user.email;
 
-    // Fetch user with password
+    // Fetch user with security data
     const user = await prisma.user.findUnique({
       where: { id: userId },
+      select: { id: true, email: true, password: true }
     });
 
     if (!user) {
@@ -41,8 +43,9 @@ export async function POST(req) {
       );
     }
 
-    // Verify password
+    // Verify authentication
     if (user.password) {
+      // Credentials user - must verify password
       const passwordValid = await compare(password, user.password);
 
       if (!passwordValid) {
@@ -51,19 +54,30 @@ export async function POST(req) {
           { status: 401 }
         );
       }
+    } else {
+      // OAuth user - must verify by typing their email
+      if (password.toLowerCase().trim() !== user.email.toLowerCase().trim()) {
+        return Response.json(
+          { success: false, error: 'Email confirmation does not match' },
+          { status: 400 }
+        );
+      }
     }
 
     // Start transaction to delete all user data
     const deleteResult = await prisma.$transaction(async tx => {
-      // Delete all user-related data
+      // Delete all user-related data in correct order
       await Promise.all([
         tx.habitLog.deleteMany({ where: { userId } }),
         tx.habit.deleteMany({ where: { userId } }),
+        tx.subGoal.deleteMany({
+          where: { goal: { userId } }
+        }),
         tx.goal.deleteMany({ where: { userId } }),
-        tx.subgoal.deleteMany({ where: { userId } }),
         tx.reminder.deleteMany({ where: { userId } }),
         tx.milestone.deleteMany({ where: { userId } }),
         tx.wallpaperSettings.deleteMany({ where: { userId } }),
+        tx.consentPreference.deleteMany({ where: { userId } }),
       ]);
 
       // Delete user account
