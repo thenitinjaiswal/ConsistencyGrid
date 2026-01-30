@@ -229,6 +229,7 @@ export function downloadDataExport(data, format = 'json') {
  */
 export async function requestAccountDeletion(password) {
   try {
+    console.log('[GDPR] Requesting account deletion...');
     const res = await fetch('/api/gdpr/delete-account', {
       method: 'POST',
       headers: {

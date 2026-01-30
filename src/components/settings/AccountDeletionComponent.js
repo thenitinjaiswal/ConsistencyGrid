@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AlertTriangle, Trash2 } from 'lucide-react';
+import { AlertTriangle, Trash2, RefreshCw } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
