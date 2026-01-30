@@ -52,12 +52,25 @@ export const authOptions = {
 
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 Days
-    updateAge: 24 * 60 * 60, // 24 Hours
+    maxAge: 30 * 24 * 60 * 60, // 30 Days persistence
+    updateAge: 24 * 60 * 60, // 24 Hours update
+  },
+
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 30 * 24 * 60 * 60, // Force 30 days persistence in browser/webview
+      },
+    },
   },
 
   jwt: {
-    maxAge: 30 * 24 * 60 * 60, // 30 Days
+    maxAge: 30 * 24 * 60 * 60,
   },
 
   callbacks: {

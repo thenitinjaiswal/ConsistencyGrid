@@ -6,13 +6,43 @@ import BottomNav from "@/components/dashboard/BottomNav";
 
 export default function DashboardLayout({ children, active = "Dashboard" }) {
     useEffect(() => {
-        // Initialize Android background updates if bridge is available
-        if (typeof window !== "undefined" && window.Android && window.Android.setAutoUpdateEnabled) {
+        // 1. Initialize Android background updates if bridge is available
+        if (typeof window !== "undefined" && window.Android) {
             try {
-                window.Android.setAutoUpdateEnabled(true);
-                console.log("📱 Android Auto-Update initialized successfully");
+                // Always ensure auto-update is ON in the native app when on dashboard
+                if (window.Android.setAutoUpdateEnabled) {
+                    window.Android.setAutoUpdateEnabled(true);
+                    console.log("📱 Android Auto-Update enabled");
+                }
+
+                // 2. Automated Token Sync (Security & Persistence)
+                // We fetch fresh data to get the latest publicToken for the native app
+                const syncBridge = async () => {
+                    try {
+                        const res = await fetch("/api/settings/me");
+                        if (res.ok) {
+                            const data = await res.json();
+                            const token = data.user?.publicToken;
+
+                            if (token && window.Android.saveWallpaperUrl) {
+                                const wallpaperUrl = `${window.location.origin}/w/${token}/image.png`;
+                                console.log("📱 Auto-Syncing token to Android Bridge:", token);
+                                window.Android.saveWallpaperUrl(wallpaperUrl);
+
+                                // Also save token individually if supported
+                                if (window.Android.saveToken) {
+                                    window.Android.saveToken(token);
+                                }
+                            }
+                        }
+                    } catch (err) {
+                        console.error("📱 Bridge sync fetch failed:", err);
+                    }
+                };
+
+                syncBridge();
             } catch (error) {
-                console.error("📱 Android bridge error:", error);
+                console.error("📱 Android bridge interaction error:", error);
             }
         }
     }, []);
