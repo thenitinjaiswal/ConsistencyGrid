@@ -43,10 +43,6 @@ export const authOptions = {
           throw new Error("Invalid password");
         }
 
-        if (!user.emailVerified) {
-          throw new Error("unverified:Please verify your email to login");
-        }
-
         return user;
       },
     }),

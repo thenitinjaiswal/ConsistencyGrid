@@ -33,11 +33,7 @@ export default function SignupForm() {
                 throw new Error(data.error?.message || data.message || "Signup failed");
             }
 
-            if (data.data?.requiresVerification) {
-                toast.success("Account created! Please verify your email.");
-                router.push(`/verify?email=${encodeURIComponent(form.email)}`);
-                return;
-            }
+
 
             toast.success("Account created! Starting onboarding...");
 

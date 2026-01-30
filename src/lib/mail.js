@@ -6,12 +6,18 @@ const resend = new Resend(process.env.RESEND_API_KEY);
  * Send a verification OTP to the user's email
  */
 export async function sendVerificationEmail(email, otp) {
-    try {
-        const { data, error } = await resend.emails.send({
-            from: 'Consistency Grid <onboarding@consistencygrid.com>',
-            to: [email],
-            subject: 'Verify your Consistency Grid account',
-            html: `
+  try {
+    // NOTE: Use 'onboarding@resend.dev' for testing until your domain is verified in Resend.
+    // When using this address, you can only send to the email you used to sign up for Resend.
+    const fromAddress = process.env.NODE_ENV === 'production'
+      ? 'Consistency Grid <onboarding@consistencygrid.com>'
+      : 'onboarding@resend.dev';
+
+    const { data, error } = await resend.emails.send({
+      from: fromAddress,
+      to: [email],
+      subject: 'Verify your Consistency Grid account',
+      html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1f2937;">
           <h1 style="color: #f97316; font-size: 24px; font-weight: bold; margin-bottom: 24px;">Verify your account</h1>
           <p style="font-size: 16px; line-height: 24px; margin-bottom: 24px;">
@@ -32,16 +38,16 @@ export async function sendVerificationEmail(email, otp) {
           </p>
         </div>
       `,
-        });
+    });
 
-        if (error) {
-            console.error('Email sending failed:', error);
-            return { success: false, error };
-        }
-
-        return { success: true, data };
-    } catch (error) {
-        console.error('Email error:', error);
-        return { success: false, error };
+    if (error) {
+      console.error('Email sending failed:', error);
+      return { success: false, error };
     }
+
+    return { success: true, data };
+  } catch (error) {
+    console.error('Email error:', error);
+    return { success: false, error };
+  }
 }

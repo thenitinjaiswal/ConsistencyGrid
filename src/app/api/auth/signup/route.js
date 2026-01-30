@@ -70,13 +70,7 @@ export async function POST(req) {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     /* ================================
-       6️⃣ GENERATE OTP
-    ================================= */
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
-
-    /* ================================
-       7️⃣ CREATE USER (UNVERIFIED)
+       6️⃣ CREATE USER
     ================================= */
     const newUser = await prisma.user.create({
       data: {
@@ -84,31 +78,17 @@ export async function POST(req) {
         email: cleanEmail,
         password: hashedPassword,
         publicToken: generatePublicToken(),
-        verificationToken: otp,
-        verificationTokenExpiry: otpExpiry,
-        emailVerified: null, // Ensure they are not verified yet
+        emailVerified: new Date(), // Auto-verify for now
       },
     });
 
     /* ================================
-       8️⃣ SEND VERIFICATION EMAIL
-    ================================= */
-    const { sendVerificationEmail } = await import("@/lib/mail");
-    const mailResult = await sendVerificationEmail(cleanEmail, otp);
-
-    if (!mailResult.success) {
-      console.error("Failed to send verification email:", mailResult.error);
-      // We still created the user, they can retry verification later or we can handle this error
-    }
-
-    /* ================================
-       9️⃣ SUCCESS RESPONSE
+       7️⃣ SUCCESS RESPONSE
     ================================= */
     return createSuccessResponse(
       {
         userId: newUser.id,
         email: newUser.email,
-        requiresVerification: true,
       },
       201
     );
@@ -116,16 +96,6 @@ export async function POST(req) {
     return handleAPIError(error, "Signup Error");
   }
 }
-
-
-
-
-
-
-
-
-
-
 
 // import { NextResponse } from "next/server";
 // import bcrypt from "bcryptjs";
