@@ -1,77 +1,73 @@
+import { PrismaClient } from '@prisma/client';
 import bcryptjs from 'bcryptjs';
-import prisma from '@/lib/prisma';
-import { verifyPasswordResetToken, markPasswordResetTokenAsUsed } from '@/lib/email';
-import { validatePassword } from '@/lib/validation';
-import { createSuccessResponse, createErrorResponse, createValidationErrorResponse } from '@/lib/apiResponse';
-import { withPOST } from '@/lib/apiSecurity';
 
-async function handler(req) {
-  const { token, password } = req.body;
+const prisma = new PrismaClient();
 
-  if (!token) {
-    return Response.json(
-      createErrorResponse('Reset token is required', 'MISSING_TOKEN'),
-      { status: 400 }
-    );
-  }
-
-  // Validate password
-  const passwordValidation = validatePassword(password);
-  if (!passwordValidation.valid) {
-    return Response.json(
-      createValidationErrorResponse({ password: passwordValidation.error }),
-      { status: 400 }
-    );
-  }
-
-  // Verify token
-  const verification = verifyPasswordResetToken(token);
-  if (!verification.valid) {
-    return Response.json(
-      createErrorResponse(verification.error, 'INVALID_TOKEN'),
-      { status: 400 }
-    );
-  }
-
+/**
+ * POST /api/auth/reset-password-new
+ * Resets user password with valid token
+ * Body: { token, password }
+ */
+export async function POST(req) {
   try {
-    // Find user by email
-    const user = await prisma.user.findUnique({
-      where: { email: verification.email },
-    });
+    const { token, password } = await req.json();
 
-    if (!user) {
+    // Validate inputs
+    if (!token || !password) {
       return Response.json(
-        createErrorResponse('User not found', 'USER_NOT_FOUND'),
-        { status: 404 }
+        { message: 'Token and password are required' },
+        { status: 400 }
       );
     }
 
-    // Hash password
-    const hashedPassword = await bcryptjs.hash(password, 12);
+    if (password.length < 8) {
+      return Response.json(
+        { message: 'Password must be at least 8 characters' },
+        { status: 400 }
+      );
+    }
 
-    // Update user password
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { password: hashedPassword },
+    // Find user with valid token
+    const user = await prisma.user.findFirst({
+      where: {
+        resetToken: token,
+        resetTokenExpiry: {
+          gt: new Date(), // Token must not be expired
+        },
+      },
     });
 
-    // Mark token as used
-    markPasswordResetTokenAsUsed(token);
+    // No user found (token invalid/expired)
+    if (!user) {
+      return Response.json(
+        { message: 'Invalid or expired reset token' },
+        { status: 400 }
+      );
+    }
+
+    // Hash new password
+    const salt = await bcryptjs.genSalt(10);
+    const hashedPassword = await bcryptjs.hash(password, salt);
+
+    // Update user: password + clear reset token
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpiry: null,
+      },
+    });
 
     return Response.json(
-      createSuccessResponse(
-        { email: user.email },
-        'Password reset successfully. You can now log in with your new password.'
-      ),
+      { message: 'Password reset successfully' },
       { status: 200 }
     );
   } catch (error) {
-    console.error('Password reset error:', error);
+    console.error('Reset password error:', error);
     return Response.json(
-      createErrorResponse('Failed to reset password', 'RESET_ERROR'),
+      { message: 'An error occurred. Please try again.' },
       { status: 500 }
     );
   }
 }
-
-export const POST = withPOST(handler);
