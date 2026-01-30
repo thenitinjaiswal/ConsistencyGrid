@@ -44,6 +44,7 @@ export async function POST(req) {
     /* ================================
        3️⃣ VALIDATION
     ================================= */
+    console.log("[SIGNUP] Validating data for:", email);
     const validation = validateSignupData(email, password, name);
     if (!validation.isValid) {
       console.log("[SIGNUP_VALIDATION_ERROR]", validation.errors);
@@ -56,22 +57,26 @@ export async function POST(req) {
     /* ================================
        4️⃣ CHECK EXISTING USER
     ================================= */
+    console.log("[SIGNUP] Checking existing user:", cleanEmail);
     const existingUser = await prisma.user.findUnique({
       where: { email: cleanEmail },
     });
 
     if (existingUser) {
+      console.log("[SIGNUP] Email already exists:", cleanEmail);
       return createErrorResponse("Email already registered", 409);
     }
 
     /* ================================
        5️⃣ HASH PASSWORD
     ================================= */
+    console.log("[SIGNUP] Hashing password...");
     const hashedPassword = await bcrypt.hash(password, 12);
 
     /* ================================
        6️⃣ CREATE USER
     ================================= */
+    console.log("[SIGNUP] Creating user in database...");
     const newUser = await prisma.user.create({
       data: {
         name: cleanName,
@@ -85,6 +90,7 @@ export async function POST(req) {
     /* ================================
        7️⃣ SUCCESS RESPONSE
     ================================= */
+    console.log("[SIGNUP] User created successfully:", newUser.id);
     return createSuccessResponse(
       {
         userId: newUser.id,
@@ -93,6 +99,7 @@ export async function POST(req) {
       201
     );
   } catch (error) {
+    console.error("[SIGNUP_CRITICAL_ERROR]", error);
     return handleAPIError(error, "Signup Error");
   }
 }
