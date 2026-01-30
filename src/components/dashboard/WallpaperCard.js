@@ -52,17 +52,17 @@ export default function WallpaperCard() {
       setLoading(true);
       loadData();
     };
-    
+
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         setLoading(true);
         loadData();
       }
     };
-    
+
     window.addEventListener("focus", handleFocus);
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    
+
     return () => {
       clearInterval(interval);
       window.removeEventListener("focus", handleFocus);
@@ -79,10 +79,16 @@ export default function WallpaperCard() {
 
   if (loading) {
     return (
-      <Card className="p-6">
-        <div className="space-y-4">
-          <div className="h-6 w-32 rounded bg-gray-200 animate-pulse" />
-          <div className="h-80 w-full rounded-xl bg-gray-200 animate-pulse" />
+      <Card className="p-6 border border-gray-100 bg-white">
+        <div className="flex items-start justify-between mb-4">
+          <div className="space-y-2">
+            <div className="h-6 w-32 rounded bg-gray-100 animate-pulse" />
+            <div className="h-4 w-48 rounded bg-gray-50 animate-pulse" />
+          </div>
+          <div className="h-6 w-16 rounded-full bg-gray-100 animate-pulse" />
+        </div>
+        <div className="flex justify-center py-4">
+          <div className="w-56 h-80 rounded-3xl border-8 border-gray-100 bg-gray-50 animate-pulse" />
         </div>
       </Card>
     );

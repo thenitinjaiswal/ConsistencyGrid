@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import toast from "react-hot-toast";
 import { Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { sendWallpaperToAndroid } from "@/utils/sendWallpaperToAndroid";
+import HabitSkeleton from "./HabitSkeleton";
 
 function getLocalDateString(date) {
   const year = date.getFullYear();
@@ -151,13 +152,7 @@ export default function HabitCard() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="space-y-3 sm:space-y-4">
-        {[1, 2, 3].map(i => (
-          <div key={i} className="h-20 sm:h-24 bg-gray-200 rounded-2xl animate-pulse" />
-        ))}
-      </div>
-    );
+    return <HabitSkeleton count={3} />;
   }
 
   if (habits.length === 0) {

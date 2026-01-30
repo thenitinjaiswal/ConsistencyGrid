@@ -20,17 +20,17 @@ export default function TodayProgressCard() {
     try {
       setLoading(true);
       const res = await fetch("/api/habits", { cache: "no-store" });
-      
+
       if (!res.ok) {
         console.error("API returned status:", res.status);
         setHabits([]);
         return;
       }
-      
+
       const habitsArray = await res.json();
       // Use local date, not UTC
       const today = getLocalDateString(new Date());
-      
+
       // Add today's completion status to each habit
       const habitsWithStatus = (Array.isArray(habitsArray) ? habitsArray : habitsArray.habits || [])
         .filter((h) => h.isActive !== false) // Include habits that are active
@@ -41,13 +41,13 @@ export default function TodayProgressCard() {
             const logDate = getLocalDateString(new Date(log.date));
             return logDate === today && log.done === true;
           });
-          
+
           return {
             ...habit,
             done: !!todayLog,
           };
         });
-      
+
       setHabits(habitsWithStatus);
     } catch (err) {
       console.error("Failed to load habits:", err);
@@ -61,22 +61,22 @@ export default function TodayProgressCard() {
     loadHabits();
     // Refresh every 5 seconds for real-time updates
     const interval = setInterval(loadHabits, 5000);
-    
+
     const handleFocus = () => {
       setLoading(true);
       loadHabits();
     };
-    
+
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         setLoading(true);
         loadHabits();
       }
     };
-    
+
     window.addEventListener("focus", handleFocus);
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    
+
     return () => {
       clearInterval(interval);
       window.removeEventListener("focus", handleFocus);
@@ -90,7 +90,7 @@ export default function TodayProgressCard() {
   const toggleHabit = async (habitId) => {
     // Store original state for rollback
     const originalHabits = habits;
-    
+
     try {
       const habit = habits.find((h) => h.id === habitId);
       // Use local date, not UTC
@@ -142,10 +142,10 @@ export default function TodayProgressCard() {
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-10 bg-gray-100 rounded-lg animate-pulse"
-            />
+            <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 animate-pulse">
+              <div className="w-5 h-5 bg-gray-200 rounded-full flex-shrink-0" />
+              <div className="h-4 bg-gray-200 rounded flex-1" />
+            </div>
           ))}
         </div>
       ) : habits.length === 0 ? (
@@ -166,9 +166,8 @@ export default function TodayProgressCard() {
                 <Circle className="w-5 h-5 text-gray-300 group-hover:text-orange-300 flex-shrink-0" />
               )}
               <span
-                className={`text-sm flex-1 text-left ${
-                  habit.done ? "text-gray-500 line-through" : "text-gray-800"
-                }`}
+                className={`text-sm flex-1 text-left ${habit.done ? "text-gray-500 line-through" : "text-gray-800"
+                  }`}
               >
                 {habit.title}
               </span>
