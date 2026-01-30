@@ -9,7 +9,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { UpcomingRemindersSkeleton } from "./DashboardSkeletons";
+import { UpcomingRemindersSkeleton } from "@/components/skeletons/DashboardSkeletons";
 
 function getLocalDateString(date) {
     const year = date.getFullYear();

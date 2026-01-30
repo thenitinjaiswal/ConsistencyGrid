@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Card from "@/components/ui/Card";
 import StreakHeatmap from "@/components/streaks/StreakHeatmap";
-import StreakSkeleton from "@/components/streaks/StreakSkeleton";
+import StreakSkeleton from "@/components/skeletons/StreakSkeleton";
 import { Flame, Trophy, BarChart3, Zap, Medal, Gem } from "lucide-react";
 
 export default function StreaksPage() {

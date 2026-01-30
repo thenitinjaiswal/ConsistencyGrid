@@ -4,7 +4,7 @@ import Card from "@/components/ui/Card";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Target, ChevronRight } from "lucide-react";
-import { GoalsProgressSkeleton } from "./DashboardSkeletons";
+import { GoalsProgressSkeleton } from "@/components/skeletons/DashboardSkeletons";
 
 export default function GoalsProgressCard() {
   const [goals, setGoals] = useState([]);

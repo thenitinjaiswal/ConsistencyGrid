@@ -3,7 +3,7 @@
 import Card from "@/components/ui/Card";
 import { useEffect, useState } from "react";
 import { Calendar } from "lucide-react";
-import { WeeklyStatsSkeleton } from "./DashboardSkeletons";
+import { WeeklyStatsSkeleton } from "@/components/skeletons/DashboardSkeletons";
 
 function getLocalDateString(date) {
   const year = date.getFullYear();

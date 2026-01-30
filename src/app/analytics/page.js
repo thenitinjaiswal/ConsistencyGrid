@@ -6,7 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Card from "@/components/ui/Card";
 import { TrendingUp, Flame, Target, RefreshCw, AlertCircle } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import AnalyticsSkeleton from "@/components/analytics/AnalyticsSkeleton";
+import AnalyticsSkeleton from "@/components/skeletons/AnalyticsSkeleton";
 
 export const dynamic = "force-dynamic";
 

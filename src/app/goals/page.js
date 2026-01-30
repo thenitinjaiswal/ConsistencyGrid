@@ -11,7 +11,7 @@ import DetailedInsightsModal from "@/components/goals/DetailedInsightsModal";
 import CircularProgress from "@/components/goals/CircularProgress";
 import GoalCard from "@/components/goals/GoalCard";
 import MilestoneItem from "@/components/goals/MilestoneItem";
-import GoalSkeleton from "@/components/goals/GoalSkeleton";
+import GoalSkeleton from "@/components/skeletons/GoalSkeleton";
 import {
     Plus,
     Filter,

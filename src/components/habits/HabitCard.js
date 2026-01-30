@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import toast from "react-hot-toast";
 import { Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { sendWallpaperToAndroid } from "@/utils/sendWallpaperToAndroid";
-import HabitSkeleton from "./HabitSkeleton";
+import HabitSkeleton from "@/components/skeletons/HabitSkeleton";
 
 function getLocalDateString(date) {
   const year = date.getFullYear();

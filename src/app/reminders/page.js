@@ -15,7 +15,7 @@ import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import ReminderModal from "@/components/reminders/ReminderModal";
 import ReminderList from "@/components/reminders/ReminderList";
-import ReminderSkeleton from "@/components/reminders/ReminderSkeleton";
+import ReminderSkeleton from "@/components/skeletons/ReminderSkeleton";
 import { sendWallpaperToAndroid } from "@/utils/sendWallpaperToAndroid";
 
 export default function RemindersPage() {

@@ -13,7 +13,7 @@ import WallpaperPreference from "@/components/settings/WallpaperPreference";
 import ExportDataNew from "@/components/settings/ExportDataNew";
 import ConsentManagement from "@/components/settings/ConsentManagement";
 import AccountDeletionComponent from "@/components/settings/AccountDeletionComponent";
-import SettingsSkeleton from "@/components/settings/SettingsSkeleton";
+import SettingsSkeleton from "@/components/skeletons/SettingsSkeleton";
 
 export default function SettingsPage() {
     const [user, setUser] = useState(null);

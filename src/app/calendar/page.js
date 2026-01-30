@@ -13,7 +13,7 @@ import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import CalendarGrid from "@/components/reminders/CalendarGrid";
 import ReminderModal from "@/components/reminders/ReminderModal";
-import CalendarSkeleton from "@/components/reminders/CalendarSkeleton";
+import CalendarSkeleton from "@/components/skeletons/CalendarSkeleton";
 
 export default function CalendarPage() {
     const [currentDate, setCurrentDate] = useState(new Date());
