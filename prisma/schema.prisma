@@ -95,6 +95,9 @@ model Habit {
 
   user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   logs HabitLog[]
+
+  @@index([userId])
+  @@index([userId, isActive])
 }
 
 model HabitLog {
@@ -110,6 +113,9 @@ model HabitLog {
 
   habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([habitId, date])
 }
 
 // ✅ Intelligent Reminder System
@@ -178,6 +184,10 @@ model Goal {
   
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   subGoals        SubGoal[]
+
+  @@index([userId])
+  @@index([userId, isCompleted])
+  @@index([userId, isPinned])
 }
 
 model SubGoal {

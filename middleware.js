@@ -1,6 +1,4 @@
-import { NextResponse } from "next/server"
-
-const ONBOARDING_ROUTE = "/onboarding"
+import { getToken } from "next-auth/jwt";
 
 const PROTECTED_ROUTES = [
   "/dashboard",
@@ -12,37 +10,42 @@ const PROTECTED_ROUTES = [
   "/calendar",
   "/settings",
   "/analytics",
-]
+];
 
-export function middleware(req) {
-  const { pathname } = req.nextUrl
+const AUTH_ROUTES = ["/login", "/signup", "/forgot-password", "/reset-password"];
 
-  // 🔥 READ COOKIE DIRECTLY
-  // ✅ Check for NextAuth session token
-  // Supporting both production and development cookie names
-  const sessionToken =
-    req.cookies.get("__Secure-next-auth.session-token")?.value ||
-    req.cookies.get("next-auth.session-token")?.value ||
-    req.cookies.get("token")?.value; // Keep legacy "token" as fallback
+export async function middleware(req) {
+  const { pathname } = req.nextUrl;
 
-  // ❌ NOT LOGGED IN → block protected routes
-  if (
-    !sessionToken &&
-    PROTECTED_ROUTES.some((route) => pathname.startsWith(route))
-  ) {
-    return NextResponse.redirect(new URL("/login", req.url))
+  // ✅ Securely get the token using the secret
+  // This verifies the JWT signature and content server-side
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET
+  });
+
+  const isProtectedRoute = PROTECTED_ROUTES.some((route) => pathname.startsWith(route));
+  const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route));
+
+  // 1. If trying to access protected route without token -> redirect to login
+  if (!token && isProtectedRoute) {
+    const loginUrl = new URL("/login", req.url);
+    // Store the attempted URL to redirect back after login
+    loginUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
-  // ✅ LOGGED IN
-  if (sessionToken) {
-    // ⚠️ onboarding check (simple version)
-    // If you store `onboarded` in JWT, decode it here later
-    if (pathname === "/login") {
-      return NextResponse.redirect(new URL("/dashboard", req.url))
-    }
+  // 2. If already logged in and trying to access auth routes (login/signup) -> dashboard
+  if (token && isAuthRoute) {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
-  return NextResponse.next()
+  // 3. Handle onboarding redirection if not completed
+  if (token && !token.onboarded && isProtectedRoute && pathname !== "/onboarding") {
+    return NextResponse.redirect(new URL("/onboarding", req.url));
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {
