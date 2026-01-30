@@ -145,6 +145,16 @@ export default function GoalsPage() {
         setStats(newStats);
     }, [goals]);
 
+    if (loading) {
+        return (
+            <DashboardLayout active="Goals">
+                <div className="py-4 sm:py-8">
+                    <GoalSkeleton />
+                </div>
+            </DashboardLayout>
+        );
+    }
+
     const handleToggleSubGoal = async (goalId, subGoalId) => {
         // Optimistic Update
         const originalGoals = [...goals];
