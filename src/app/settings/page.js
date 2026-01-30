@@ -13,6 +13,7 @@ import WallpaperPreference from "@/components/settings/WallpaperPreference";
 import ExportDataNew from "@/components/settings/ExportDataNew";
 import ConsentManagement from "@/components/settings/ConsentManagement";
 import AccountDeletionComponent from "@/components/settings/AccountDeletionComponent";
+import SettingsSkeleton from "@/components/settings/SettingsSkeleton";
 
 export default function SettingsPage() {
     const [user, setUser] = useState(null);
@@ -35,6 +36,16 @@ export default function SettingsPage() {
         }
         loadUser();
     }, []);
+
+    if (loading) {
+        return (
+            <DashboardLayout active="Settings">
+                <div className="py-2">
+                    <SettingsSkeleton />
+                </div>
+            </DashboardLayout>
+        );
+    }
 
     const handleLogout = async () => {
         // Clear all auth-related localStorage items
