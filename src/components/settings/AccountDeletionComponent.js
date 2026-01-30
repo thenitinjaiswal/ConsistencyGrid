@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AlertTriangle, Trash2 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import Card from '@/components/ui/Card';
@@ -54,6 +54,11 @@ export default function AccountDeletionComponent() {
 
         // Give user time to see message
         setTimeout(() => {
+          // Clear all auth-related localStorage
+          localStorage.removeItem('cg_auth_token');
+          localStorage.removeItem('cg_session_active');
+          localStorage.removeItem('cg_last_recovery_attempt');
+
           signOut({ redirect: true, callbackUrl: '/' });
         }, 1500);
       } else {

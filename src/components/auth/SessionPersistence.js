@@ -1,8 +1,8 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useSession, signIn } from 'next-auth/react';
 import { useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 
 /**
  * SessionPersistence Component
@@ -13,40 +13,69 @@ import { useRouter, usePathname } from 'next/navigation';
  */
 export default function SessionPersistence() {
     const { status, data: session } = useSession();
-    const router = useRouter();
     const pathname = usePathname();
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
 
-        // 1. Set persistence flag when authenticated
+        // 1. Logic for logged-in users: Save the recovery data
         if (status === 'authenticated' && session?.user) {
             if (localStorage.getItem('cg_session_active') !== 'true') {
-                console.log('🛡️ Session authenticated, setting persistence flag');
+                console.log('🛡️ Session authenticated, setting persistence flags');
                 localStorage.setItem('cg_session_active', 'true');
-                localStorage.setItem('cg_last_user', session.user.email);
             }
+
+            // Sync publicToken from API if not already stored
+            const syncToken = async () => {
+                if (!localStorage.getItem('cg_auth_token')) {
+                    try {
+                        const res = await fetch('/api/auth/get-token', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                        });
+
+                        if (res.ok) {
+                            const data = await res.json();
+                            if (data.success && data.data?.publicToken) {
+                                localStorage.setItem('cg_auth_token', data.data.publicToken);
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Token sync error:', e);
+                    }
+                }
+            };
+            syncToken();
         }
 
-        // 2. Handle Login Persistence (Redirection)
-        // If user lands on Home (/) or Login (/login) but has an active session flag
-        // we force a check/redirect to dashboard
+        // 2. When user is unauthenticated: Attempt recovery
         const isLandingOrLogin = pathname === '/' || pathname === '/login';
-        const hasPersistenceFlag = localStorage.getItem('cg_session_active') === 'true';
+        const hasActiveFlag = localStorage.getItem('cg_session_active') === 'true';
+        const recoveryToken = localStorage.getItem('cg_auth_token');
 
-        if (isLandingOrLogin && hasPersistenceFlag && status === 'unauthenticated') {
-            console.log('🛡️ Potential session detected via flag, attempting recovery...');
+        if (isLandingOrLogin && hasActiveFlag && status === 'unauthenticated' && recoveryToken) {
+            // Prevent infinite loops - only try once per minute
+            const now = Date.now();
+            const lastAttempt = parseInt(localStorage.getItem('cg_last_recovery_attempt') || '0');
 
-            // Safety: Only attempt recovery once per page load to avoid loops
-            if (!window.__cg_recovery_tried) {
-                window.__cg_recovery_tried = true;
-                window.location.href = '/dashboard';
+            if (now - lastAttempt > 60000) {
+                localStorage.setItem('cg_last_recovery_attempt', now.toString());
+
+                // Attempt auto-login with stored token
+                signIn('token-login', {
+                    token: recoveryToken,
+                    callbackUrl: '/dashboard',
+                    redirect: true
+                }).then(result => {
+                    if (result?.error) {
+                        console.error('Auto-recovery failed:', result.error);
+                        // Clear invalid token and session flag
+                        localStorage.removeItem('cg_auth_token');
+                        localStorage.removeItem('cg_session_active');
+                    }
+                });
             }
         }
-
-        // 3. Clear flag if user manually logged out (handled in Sidebar, but safety here)
-        // Note: We don't clear purely on 'unauthenticated' because that could be a temporary loading state
-        // We only clear if they were logged in and now they are definitely NOT.
     }, [status, session, pathname]);
 
     return null;

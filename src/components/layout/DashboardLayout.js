@@ -33,6 +33,10 @@ export default function DashboardLayout({ children, active = "Dashboard" }) {
                                 if (window.Android.saveToken) {
                                     window.Android.saveToken(token);
                                 }
+
+                                // 🛡️ SAVE FOR WEBVIEW RECOVERY
+                                localStorage.setItem('cg_recovery_token', token);
+                                localStorage.setItem('cg_session_active', 'true');
                             }
                         }
                     } catch (err) {

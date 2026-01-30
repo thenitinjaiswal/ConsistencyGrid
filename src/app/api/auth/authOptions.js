@@ -16,6 +16,22 @@ export const authOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
     CredentialsProvider({
+      id: "token-login", // Special provider for WebView recovery
+      name: "Token",
+      credentials: {
+        token: { label: "Token", type: "text" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.token) return null;
+
+        const user = await prisma.user.findFirst({
+          where: { publicToken: credentials.token },
+        });
+
+        return user || null;
+      },
+    }),
+    CredentialsProvider({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
@@ -56,16 +72,16 @@ export const authOptions = {
     updateAge: 24 * 60 * 60, // 24 Hours update
   },
 
-  useSecureCookies: true, // Force secure for SameSite=None
-
+  // Let NextAuth manage cookie names based on environment
+  // but ensure 30 days persistence is enforced in the options
   cookies: {
     sessionToken: {
-      name: `next-auth.session-token`, // NO __Secure- prefix (more compatible with WebViews)
+      name: process.env.NODE_ENV === "production" ? `__Secure-next-auth.session-token` : `next-auth.session-token`,
       options: {
         httpOnly: true,
-        sameSite: 'none', // Critical for cross-context WebViews on some Android versions
+        sameSite: 'lax',
         path: '/',
-        secure: true,
+        secure: process.env.NODE_ENV === "production",
         maxAge: 30 * 24 * 60 * 60,
       },
     },

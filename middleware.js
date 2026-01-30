@@ -1,7 +1,5 @@
-import { withAuth } from "next-auth/middleware"
 import { NextResponse } from "next/server"
 
-// Routes
 const ONBOARDING_ROUTE = "/onboarding"
 
 const PROTECTED_ROUTES = [
@@ -16,41 +14,32 @@ const PROTECTED_ROUTES = [
   "/analytics",
 ]
 
-export default withAuth(
-  function middleware(req) {
-    const { pathname } = req.nextUrl
-    const token = req.nextauth.token
+export function middleware(req) {
+  const { pathname } = req.nextUrl
 
-    // ✅ If user is authenticated
-    if (token) {
-      const isOnboarded = token.onboarded
+  // 🔥 READ COOKIE DIRECTLY
+  const token = req.cookies.get("token")?.value
 
-      // If onboarded user tries onboarding → redirect
-      if (isOnboarded && pathname === ONBOARDING_ROUTE) {
-        return NextResponse.redirect(new URL("/dashboard", req.url))
-      }
-
-      // If NOT onboarded → force onboarding
-      if (
-        !isOnboarded &&
-        PROTECTED_ROUTES.some((route) => pathname.startsWith(route))
-      ) {
-        return NextResponse.redirect(new URL(ONBOARDING_ROUTE, req.url))
-      }
-    }
-
-    return NextResponse.next()
-  },
-  {
-    callbacks: {
-      // 🔥 IMPORTANT: Always return true
-      // Let matcher control access, not this
-      authorized: () => true,
-    },
+  // ❌ NOT LOGGED IN → block protected routes
+  if (
+    !token &&
+    PROTECTED_ROUTES.some((route) => pathname.startsWith(route))
+  ) {
+    return NextResponse.redirect(new URL("/login", req.url))
   }
-)
 
-// 🔥 PUBLIC ROUTES EXCLUDED HERE (MOST IMPORTANT PART)
+  // ✅ LOGGED IN
+  if (token) {
+    // ⚠️ onboarding check (simple version)
+    // If you store `onboarded` in JWT, decode it here later
+    if (pathname === "/login") {
+      return NextResponse.redirect(new URL("/dashboard", req.url))
+    }
+  }
+
+  return NextResponse.next()
+}
+
 export const config = {
   matcher: [
     "/dashboard/:path*",
@@ -62,6 +51,7 @@ export const config = {
     "/calendar/:path*",
     "/settings/:path*",
     "/analytics/:path*",
+    "/login",
     "/onboarding",
   ],
 }

@@ -27,12 +27,36 @@ export default function LoginForm() {
                 throw new Error("Invalid email or password");
             }
 
+            // Store publicToken in localStorage for session recovery
+            // This enables persistent auth even if WebView cookies are cleared
+            await storeAuthToken();
+
             toast.success("Welcome back!");
             router.push("/dashboard");
         } catch (error) {
             toast.error(error.message);
         } finally {
             setLoading(false);
+        }
+    }
+
+    // Store authentication token for WebView session recovery
+    async function storeAuthToken() {
+        try {
+            const res = await fetch('/api/auth/get-token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success && data.data?.publicToken) {
+                    localStorage.setItem('cg_auth_token', data.data.publicToken);
+                }
+            }
+        } catch (error) {
+            // Silent fail - token storage is optional enhancement
+            console.error('Failed to store auth token:', error);
         }
     }
 

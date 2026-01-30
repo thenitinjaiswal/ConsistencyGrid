@@ -1,10 +1,22 @@
 "use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import Navbar from "@/components/layout/Navbar";
-import { useEffect } from "react";
 
 export default function LandingPage() {
+    const [isRecovering, setIsRecovering] = useState(false);
+
+    // Initial check for potential session
+    useEffect(() => {
+        if (typeof window !== "undefined" && localStorage.getItem("cg_session_active") === "true") {
+            setIsRecovering(true);
+            // Limit recovery timeout - if it takes more than 5s, show landing anyway
+            const timer = setTimeout(() => setIsRecovering(false), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, []);
+
     // Add structured data for SEO
     useEffect(() => {
         const structuredData = {
@@ -28,9 +40,32 @@ export default function LandingPage() {
         document.head.appendChild(script);
 
         return () => {
-            document.head.removeChild(script);
+            if (document.head.contains(script)) {
+                document.head.removeChild(script);
+            }
         };
     }, []);
+
+    if (isRecovering) {
+        return (
+            <div className="min-h-screen bg-[#fffaf1] flex flex-col items-center justify-center p-4">
+                <div className="text-center animate-fade-in">
+                    <div className="flex justify-center mb-6">
+                        <div className="h-12 w-12 rounded-2xl bg-orange-500 shadow-lg animate-bounce flex items-center justify-center">
+                            <span className="text-white font-bold text-2xl">G</span>
+                        </div>
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-900 mb-2">Restoring your session</h2>
+                    <p className="text-gray-500 text-sm">One moment while we prepare your grid...</p>
+                    <div className="mt-8 flex justify-center gap-1">
+                        <div className="h-1.5 w-1.5 rounded-full bg-orange-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <div className="h-1.5 w-1.5 rounded-full bg-orange-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <div className="h-1.5 w-1.5 rounded-full bg-orange-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     const handleGoogleSignIn = () => {
         signIn("google", { callbackUrl: "/dashboard" });

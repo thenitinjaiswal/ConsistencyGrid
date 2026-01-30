@@ -83,18 +83,21 @@ export default function Sidebar({ active = "Dashboard", onNavigate }) {
    * Signs out of NextAuth session and redirects to homepage
    */
   async function handleLogout() {
-    // 1. Sync logout with Native Android App (if applicable)
+    // 1. Clear all auth-related localStorage items
     if (typeof window !== "undefined") {
+      localStorage.removeItem('cg_auth_token');
       localStorage.removeItem('cg_session_active');
+      localStorage.removeItem('cg_last_recovery_attempt');
       localStorage.removeItem('cg_last_user');
 
+      // 2. Sync logout with Native Android App (if applicable)
       if (window.Android && window.Android.clearToken) {
         console.log("📱 Syncing logout with Android Native...");
         window.Android.clearToken();
       }
     }
 
-    // 2. Sign out of NextAuth session
+    // 3. Sign out of NextAuth session
     await signOut({ callbackUrl: "/" });
   }
 
