@@ -33,7 +33,7 @@ const nextConfig = {
           // Content Security Policy
           {
             key: "Content-Security-Policy",
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://www.google-analytics.com https://browser.sentry-cdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data: https://lh3.googleusercontent.com https://www.google-analytics.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://accounts.google.com https://www.google-analytics.com *.sentry.io; frame-src 'self' https://accounts.google.com; object-src 'none';"
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://accounts.google.com https://www.google-analytics.com https://browser.sentry-cdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data: https://lh3.googleusercontent.com https://www.google-analytics.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://accounts.google.com https://www.google-analytics.com *.sentry.io; frame-src 'self' https://accounts.google.com; object-src 'none'; worker-src 'self' blob:;"
           },
         ],
       },
