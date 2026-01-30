@@ -9,12 +9,13 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { UpcomingRemindersSkeleton } from "./DashboardSkeletons";
 
 function getLocalDateString(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 export default function UpcomingReminders() {
@@ -50,22 +51,22 @@ export default function UpcomingReminders() {
         loadReminders();
         // Refresh every 10 seconds for real-time updates
         const interval = setInterval(loadReminders, 10000);
-        
+
         const handleFocus = () => {
             setLoading(true);
             loadReminders();
         };
-        
+
         const handleVisibilityChange = () => {
             if (!document.hidden) {
                 setLoading(true);
                 loadReminders();
             }
         };
-        
+
         window.addEventListener("focus", handleFocus);
         document.addEventListener("visibilitychange", handleVisibilityChange);
-        
+
         return () => {
             clearInterval(interval);
             window.removeEventListener("focus", handleFocus);
@@ -102,16 +103,7 @@ export default function UpcomingReminders() {
     };
 
     if (loading) {
-        return (
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-gray-900">Upcoming Reminders</h3>
-                </div>
-                <div className="flex justify-center py-8">
-                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" />
-                </div>
-            </div>
-        );
+        return <UpcomingRemindersSkeleton />;
     }
 
     return (
@@ -170,10 +162,10 @@ export default function UpcomingReminders() {
                                     <div className="flex items-center gap-2 text-xs text-gray-500">
                                         <span
                                             className={`${isToday
-                                                    ? "text-orange-600 font-medium"
-                                                    : isTomorrow
-                                                        ? "text-blue-600 font-medium"
-                                                        : ""
+                                                ? "text-orange-600 font-medium"
+                                                : isTomorrow
+                                                    ? "text-blue-600 font-medium"
+                                                    : ""
                                                 }`}
                                         >
                                             {formatDate(reminder.startDate)}
@@ -205,8 +197,8 @@ export default function UpcomingReminders() {
                                 {reminder.priority >= 3 && (
                                     <div
                                         className={`flex-shrink-0 w-2 h-2 rounded-full ${reminder.priority === 4
-                                                ? "bg-red-500"
-                                                : "bg-amber-500"
+                                            ? "bg-red-500"
+                                            : "bg-amber-500"
                                             }`}
                                         title={reminder.priority === 4 ? "Critical" : "High"}
                                     />

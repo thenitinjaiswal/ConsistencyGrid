@@ -3,6 +3,7 @@
 import Card from "@/components/ui/Card";
 import { useEffect, useState } from "react";
 import { Calendar } from "lucide-react";
+import { WeeklyStatsSkeleton } from "./DashboardSkeletons";
 
 function getLocalDateString(date) {
   const year = date.getFullYear();
@@ -20,10 +21,10 @@ export default function WeeklyStatsCard() {
       // Fetch all habits
       const habitsRes = await fetch("/api/habits", { cache: "no-store" });
       const habits = habitsRes.ok ? await habitsRes.json() : [];
-      
+
       // Filter only active habits
       const activeHabits = Array.isArray(habits) ? habits.filter((h) => h.isActive !== false) : [];
-      
+
       const today = new Date();
       const last7Days = [];
 
@@ -61,22 +62,22 @@ export default function WeeklyStatsCard() {
     loadWeeklyData();
     // Refresh every 10 seconds for real-time updates
     const interval = setInterval(loadWeeklyData, 10000);
-    
+
     const handleFocus = () => {
       setLoading(true);
       loadWeeklyData();
     };
-    
+
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         setLoading(true);
         loadWeeklyData();
       }
     };
-    
+
     window.addEventListener("focus", handleFocus);
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    
+
     return () => {
       clearInterval(interval);
       window.removeEventListener("focus", handleFocus);
@@ -94,11 +95,7 @@ export default function WeeklyStatsCard() {
       </div>
 
       {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-12 bg-gradient-to-r from-gray-200 to-gray-100 rounded-lg animate-pulse" />
-          ))}
-        </div>
+        <WeeklyStatsSkeleton />
       ) : (
         <div className="space-y-2">
           {weekData.map((day, idx) => (

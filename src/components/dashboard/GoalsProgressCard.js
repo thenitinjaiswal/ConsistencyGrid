@@ -4,6 +4,7 @@ import Card from "@/components/ui/Card";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Target, ChevronRight } from "lucide-react";
+import { GoalsProgressSkeleton } from "./DashboardSkeletons";
 
 export default function GoalsProgressCard() {
   const [goals, setGoals] = useState([]);
@@ -58,15 +59,7 @@ export default function GoalsProgressCard() {
   }, []);
 
   if (loading) {
-    return (
-      <Card className="p-6 border border-gray-100/50">
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-12 bg-gradient-to-r from-gray-200 to-gray-100 rounded-lg animate-pulse" />
-          ))}
-        </div>
-      </Card>
-    );
+    return <GoalsProgressSkeleton />;
   }
 
   if (goals.length === 0) {
