@@ -68,16 +68,6 @@ export default function GoalsPage() {
         loadData();
     }, []);
 
-    if (loading) {
-        return (
-            <DashboardLayout active="Goals">
-                <div className="py-4 sm:py-8">
-                    <GoalSkeleton />
-                </div>
-            </DashboardLayout>
-        );
-    }
-
     // Calculate stats from real goal data
     useEffect(() => {
         if (goals.length === 0) {
