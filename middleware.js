@@ -18,18 +18,23 @@ export function middleware(req) {
   const { pathname } = req.nextUrl
 
   // 🔥 READ COOKIE DIRECTLY
-  const token = req.cookies.get("token")?.value
+  // ✅ Check for NextAuth session token
+  // Supporting both production and development cookie names
+  const sessionToken =
+    req.cookies.get("__Secure-next-auth.session-token")?.value ||
+    req.cookies.get("next-auth.session-token")?.value ||
+    req.cookies.get("token")?.value; // Keep legacy "token" as fallback
 
   // ❌ NOT LOGGED IN → block protected routes
   if (
-    !token &&
+    !sessionToken &&
     PROTECTED_ROUTES.some((route) => pathname.startsWith(route))
   ) {
     return NextResponse.redirect(new URL("/login", req.url))
   }
 
   // ✅ LOGGED IN
-  if (token) {
+  if (sessionToken) {
     // ⚠️ onboarding check (simple version)
     // If you store `onboarded` in JWT, decode it here later
     if (pathname === "/login") {
