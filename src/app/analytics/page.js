@@ -6,6 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Card from "@/components/ui/Card";
 import { TrendingUp, Flame, Target, RefreshCw, AlertCircle } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import AnalyticsSkeleton from "@/components/analytics/AnalyticsSkeleton";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ function AnalyticsContent() {
         try {
             setRefreshing(true);
             setError(null);
-            
+
             // Fetch habits and goals with cache busting
             const [habitsRes, goalsRes] = await Promise.all([
                 fetch("/api/habits?_t=" + Date.now()),
@@ -45,12 +46,12 @@ function AnalyticsContent() {
             const goalsData = await goalsRes.json();
 
             // Safely extract arrays - handle both direct arrays and wrapped responses
-            const habits = Array.isArray(habitsData) 
-                ? habitsData 
+            const habits = Array.isArray(habitsData)
+                ? habitsData
                 : (habitsData?.data || habitsData?.habits || []);
-            
-            const goals = Array.isArray(goalsData) 
-                ? goalsData 
+
+            const goals = Array.isArray(goalsData)
+                ? goalsData
                 : (goalsData?.data || goalsData?.goals || []);
 
             // If no data, set empty state
@@ -98,7 +99,7 @@ function AnalyticsContent() {
             let longestStreak = 0;
             habits.forEach(habit => {
                 if (!habit.logs || habit.logs.length === 0) return;
-                
+
                 const sortedLogs = [...habit.logs].sort((a, b) => new Date(a.date) - new Date(b.date));
                 let currentStreak = 0;
                 let lastDate = null;
@@ -130,11 +131,11 @@ function AnalyticsContent() {
                 }
                 return false;
             }).length;
-            
+
             if (goals.length > 0) {
                 totalProgress = goals.reduce((sum, g) => sum + (g.progress || 0), 0) / goals.length;
             }
-            
+
             const lifeCompletion = goals.length > 0 ? Math.max(
                 Math.round((completedGoals / goals.length) * 100),
                 Math.round(totalProgress)
@@ -151,7 +152,7 @@ function AnalyticsContent() {
                 let dayScore = 0;
                 habits.forEach(habit => {
                     if (habit.logs && Array.isArray(habit.logs)) {
-                        const isDone = habit.logs.some(log => 
+                        const isDone = habit.logs.some(log =>
                             new Date(log.date).toISOString().split("T")[0] === dateStr && log.done
                         );
                         if (isDone) dayScore += 100 / Math.max(habits.length, 1);
@@ -167,7 +168,7 @@ function AnalyticsContent() {
             // Generate heatmap data (last 12 weeks x 7 days)
             const heatmap = [];
             const dayNames = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
-            
+
             for (let week = 11; week >= 0; week--) {
                 const weekData = [];
                 for (let day = 0; day < 7; day++) {
@@ -177,7 +178,7 @@ function AnalyticsContent() {
 
                     let intensity = 0;
                     habits.forEach(habit => {
-                        if (habit.logs && Array.isArray(habit.logs) && habit.logs.some(log => 
+                        if (habit.logs && Array.isArray(habit.logs) && habit.logs.some(log =>
                             new Date(log.date).toISOString().split("T")[0] === dateStr && log.done
                         )) {
                             intensity += 1;
@@ -235,11 +236,8 @@ function AnalyticsContent() {
     if (loading) {
         return (
             <DashboardLayout active="Analytics">
-                <div className="flex items-center justify-center h-screen">
-                    <div className="text-center">
-                        <div className="animate-spin h-12 w-12 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-4" />
-                        <p className="text-gray-500">Loading analytics...</p>
-                    </div>
+                <div className="py-4 sm:py-8">
+                    <AnalyticsSkeleton />
                 </div>
             </DashboardLayout>
         );
@@ -344,21 +342,21 @@ function AnalyticsContent() {
                 <Card className="p-8">
                     <h2 className="text-lg font-bold text-gray-900 mb-2">Consistency Over Time</h2>
                     <p className="text-sm text-gray-500 mb-6">Daily performance metrics across all categories</p>
-                    
+
                     {consistencyData.length > 0 ? (
                         <ResponsiveContainer width="100%" height={300}>
                             <LineChart data={consistencyData}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                <XAxis 
-                                    dataKey="date" 
+                                <XAxis
+                                    dataKey="date"
                                     stroke="#9ca3af"
                                     style={{ fontSize: "12px" }}
                                 />
-                                <YAxis 
+                                <YAxis
                                     stroke="#9ca3af"
                                     style={{ fontSize: "12px" }}
                                 />
-                                <Tooltip 
+                                <Tooltip
                                     contentStyle={{
                                         backgroundColor: "#fff",
                                         border: "1px solid #e5e7eb",
@@ -366,10 +364,10 @@ function AnalyticsContent() {
                                     }}
                                 />
                                 <Legend />
-                                <Line 
-                                    type="monotone" 
-                                    dataKey="consistency" 
-                                    stroke="#fb923c" 
+                                <Line
+                                    type="monotone"
+                                    dataKey="consistency"
+                                    stroke="#fb923c"
                                     strokeWidth={2}
                                     dot={false}
                                     name="Consistency"
@@ -389,7 +387,7 @@ function AnalyticsContent() {
                     <div className="lg:col-span-2">
                         <Card className="p-8">
                             <h2 className="text-lg font-bold text-gray-900 mb-6">Habit Heatmap</h2>
-                            
+
                             <div className="overflow-x-auto">
                                 <div className="flex flex-col gap-1 min-w-max">
                                     {heatmapData.map((week, weekIdx) => (
@@ -403,7 +401,7 @@ function AnalyticsContent() {
                                                     "bg-orange-600"
                                                 ];
                                                 const color = intensityColors[Math.min(day.intensity, 4)];
-                                                
+
                                                 return (
                                                     <div
                                                         key={dayIdx}
@@ -423,9 +421,8 @@ function AnalyticsContent() {
                                     {[0, 1, 2, 3, 4].map(i => (
                                         <div
                                             key={i}
-                                            className={`w-3 h-3 rounded ${
-                                                ["bg-gray-50", "bg-orange-100", "bg-orange-300", "bg-orange-500", "bg-orange-600"][i]
-                                            }`}
+                                            className={`w-3 h-3 rounded ${["bg-gray-50", "bg-orange-100", "bg-orange-300", "bg-orange-500", "bg-orange-600"][i]
+                                                }`}
                                         />
                                     ))}
                                 </div>
@@ -437,7 +434,7 @@ function AnalyticsContent() {
                     {/* Category Distribution */}
                     <Card className="p-8">
                         <h2 className="text-lg font-bold text-gray-900 mb-6">Category Distribution</h2>
-                        
+
                         {categoryData.length > 0 ? (
                             <>
                                 <ResponsiveContainer width="100%" height={250}>
@@ -463,7 +460,7 @@ function AnalyticsContent() {
                                     {categoryData.map((cat, idx) => (
                                         <div key={cat.name} className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
-                                                <div 
+                                                <div
                                                     className="w-3 h-3 rounded-full"
                                                     style={{ backgroundColor: COLORS[idx % COLORS.length] }}
                                                 />
@@ -490,11 +487,8 @@ export default function AnalyticsPage() {
     return (
         <Suspense fallback={
             <DashboardLayout active="Analytics">
-                <div className="flex items-center justify-center h-screen">
-                    <div className="text-center">
-                        <div className="animate-spin h-12 w-12 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-4" />
-                        <p className="text-gray-500">Loading analytics...</p>
-                    </div>
+                <div className="py-4 sm:py-8">
+                    <AnalyticsSkeleton />
                 </div>
             </DashboardLayout>
         }>
