@@ -6,9 +6,12 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "theme_color": "#6366f1",
+  "theme_color": "#f97316",
   "background_color": "#ffffff",
-  "categories": ["productivity", "lifestyle"],
+  "categories": [
+    "productivity",
+    "lifestyle"
+  ],
   "screenshots": [
     {
       "src": "/images/logo.png",

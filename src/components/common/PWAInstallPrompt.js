@@ -77,7 +77,7 @@ export default function PWAInstallPrompt() {
     <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-sm z-50 animate-in fade-in slide-in-from-bottom">
       <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-3 flex items-center justify-between">
           <h3 className="text-white font-semibold text-sm flex items-center gap-2">
             <Download size={18} />
             Install Consistency Grid
@@ -106,7 +106,7 @@ export default function PWAInstallPrompt() {
             </button>
             <button
               onClick={handleInstall}
-              className="flex-1 px-3 py-2 text-sm text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded font-medium transition"
+              className="flex-1 px-3 py-2 text-sm text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 rounded font-medium transition"
             >
               Install
             </button>
