@@ -84,9 +84,14 @@ export default function Sidebar({ active = "Dashboard", onNavigate }) {
    */
   async function handleLogout() {
     // 1. Sync logout with Native Android App (if applicable)
-    if (typeof window !== "undefined" && window.Android && window.Android.clearToken) {
-      console.log("📱 Syncing logout with Android Native...");
-      window.Android.clearToken();
+    if (typeof window !== "undefined") {
+      localStorage.removeItem('cg_session_active');
+      localStorage.removeItem('cg_last_user');
+
+      if (window.Android && window.Android.clearToken) {
+        console.log("📱 Syncing logout with Android Native...");
+        window.Android.clearToken();
+      }
     }
 
     // 2. Sign out of NextAuth session

@@ -6,14 +6,16 @@ import ErrorBoundary from "@/components/common/ErrorBoundary";
 import { AnalyticsProvider } from "./analytics-provider";
 import PWAInitializer from "@/components/common/PWAInitializer";
 import PWAInstallPrompt from "@/components/common/PWAInstallPrompt";
+import SessionPersistence from "@/components/auth/SessionPersistence";
 
 export default function Providers({ children }) {
   return (
     <ErrorBoundary>
-      <SessionProvider 
+      <SessionProvider
         refetchInterval={24 * 60 * 60}
         refetchOnWindowFocus={true}
       >
+        <SessionPersistence />
         <Suspense fallback={null}>
           <AnalyticsProvider>
             <PWAInitializer />
