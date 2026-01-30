@@ -10,6 +10,7 @@ import { sendWallpaperToAndroid } from "@/utils/sendWallpaperToAndroid";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import GeneratorForm from "@/components/generator/GeneratorForm";
 import GeneratorPreview from "@/components/generator/GeneratorPreview";
+import GeneratorSkeleton from "@/components/generator/GeneratorSkeleton";
 
 // Metadata for SEO (Note: In Next.js App Router, client components can't export metadata directly)
 // This is handled via the layout.js file
@@ -144,8 +145,8 @@ export default function GeneratorPage() {
   if (loading) {
     return (
       <DashboardLayout active="Generator">
-        <div className="flex justify-center py-20">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" />
+        <div className="py-4 sm:py-8">
+          <GeneratorSkeleton />
         </div>
       </DashboardLayout>
     );
