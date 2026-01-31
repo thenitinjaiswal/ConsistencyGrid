@@ -47,12 +47,12 @@ function getLocalDateString(date) {
     if (typeof date === 'string') {
         return date.split('T')[0]; // Extract YYYY-MM-DD from ISO string
     }
-    
+
     // Handle Date objects
     if (!(date instanceof Date)) {
         date = new Date(date);
     }
-    
+
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
@@ -371,17 +371,20 @@ async function getStreakData(userId) {
  * @returns {Promise<Object>} Today's progress and streak data
  */
 async function getDashboardStats(userId) {
-    const [habits, logs] = await Promise.all([
+    const [habits, logs, goals] = await Promise.all([
         getCachedHabits(userId),
         getCachedHabitLogs(userId),
+        getCachedGoals(userId),
     ]);
 
     const todayProgress = calculateTodayProgress(logs, habits);
     const streakMetrics = calculateStreakMetrics(habits, logs);
+    const activeGoals = goals.filter(g => !g.isCompleted).length;
 
     return {
         todayProgress,
         streaks: streakMetrics,
+        activeGoals,
     };
 }
 

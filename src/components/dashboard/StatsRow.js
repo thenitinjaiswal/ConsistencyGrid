@@ -22,44 +22,18 @@ export default function StatsRow() {
 
   const loadStats = async () => {
     try {
-      // Load streaks data
-      const streaksRes = await fetch("/api/streaks", { cache: "no-store" });
-      const streaksData = streaksRes.ok ? await streaksRes.json() : {};
+      // ✅ Optimized: Single API call to fetch aggregated stats
+      const res = await fetch("/api/dashboard/stats", { cache: "no-store" });
+      if (!res.ok) throw new Error("Failed to fetch stats");
 
-      // Load habits for today
-      const habitsRes = await fetch("/api/habits", { cache: "no-store" });
-      const habitsArray = habitsRes.ok ? await habitsRes.json() : [];
-      
-      // Load goals
-      const goalsRes = await fetch("/api/goals", { cache: "no-store" });
-      const goalsArray = goalsRes.ok ? await goalsRes.json() : [];
-
-      // Calculate today's habits using local date
-      const today = getLocalDateString(new Date());
-      let todayCompleted = 0;
-      let totalActiveHabits = 0;
-      
-      habitsArray.forEach((habit) => {
-        if (habit.isActive) {
-          totalActiveHabits++;
-          const todayLog = habit.logs?.find(
-            (log) => getLocalDateString(new Date(log.date)) === today && log.done
-          );
-          if (todayLog) todayCompleted++;
-        }
-      });
-
-      // Count active goals (not completed)
-      const activeGoalsCount = goalsArray.filter(
-        (g) => !g.isCompleted || g.isCompleted === false
-      ).length;
+      const data = await res.json();
 
       setStats({
-        currentStreak: streaksData.currentStreak || 0,
-        bestStreak: streaksData.bestStreak || 0,
-        todayHabitsCompleted: todayCompleted,
-        todayHabitsTotal: totalActiveHabits,
-        activeGoals: activeGoalsCount,
+        currentStreak: data.streaks?.currentStreak || 0,
+        bestStreak: data.streaks?.bestStreak || 0,
+        todayHabitsCompleted: data.todayProgress?.todayCompleted || 0,
+        todayHabitsTotal: data.todayProgress?.totalHabits || 0,
+        activeGoals: data.activeGoals || 0,
       });
     } catch (err) {
       console.error("Failed to load stats:", err);
@@ -72,13 +46,13 @@ export default function StatsRow() {
     loadStats();
     // Refresh every 10 seconds for real-time updates
     const interval = setInterval(loadStats, 10000);
-    
+
     // Refresh immediately when window gains focus
     const handleFocus = () => {
       setLoading(true);
       loadStats();
     };
-    
+
     // Also listen for visibility change (tab comes back into view)
     const handleVisibilityChange = () => {
       if (!document.hidden) {
@@ -86,10 +60,10 @@ export default function StatsRow() {
         loadStats();
       }
     };
-    
+
     window.addEventListener("focus", handleFocus);
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    
+
     return () => {
       clearInterval(interval);
       window.removeEventListener("focus", handleFocus);

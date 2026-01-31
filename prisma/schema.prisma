@@ -27,6 +27,7 @@ model User {
   
   // Subscription fields
   plan        String   @default("free") // "free", "pro_monthly", "pro_yearly", "lifetime"
+  paymentProvider String? // "razorpay", "stripe"
   stripeCustomerId String?
   stripeSubscriptionId String?
   subscriptionStatus String? // "active", "canceled", "past_due"
@@ -44,6 +45,7 @@ model User {
   reminders        Reminder[]
   goals            Goal[]
   milestones       Milestone[]
+  paymentTransactions PaymentTransaction[]
 }
 
 model WallpaperSettings {
@@ -214,6 +216,35 @@ model Milestone {
   updatedAt   DateTime @updatedAt
   
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ✅ Payment Transaction Tracking
+model PaymentTransaction {
+  id                String   @id @default(cuid())
+  userId            String
+  
+  // Provider details
+  provider          String   // "razorpay" or "stripe"
+  providerOrderId   String   @unique
+  providerPaymentId String?  @unique
+  
+  // Transaction details
+  amount            Int      // Amount in smallest currency unit (paise/cents)
+  currency          String   @default("INR")
+  plan              String   // Plan purchased: "free", "pro_monthly", "pro_yearly", "lifetime"
+  status            String   // "created", "success", "failed", "refunded"
+  
+  // Metadata
+  metadata          Json?    // Additional provider-specific data
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([providerOrderId])
+  @@index([status])
 }
 
 // ✅ GDPR Compliance - User Consent Preferences

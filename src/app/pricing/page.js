@@ -1,20 +1,34 @@
 "use client";
 
 import Link from "next/link";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import Navbar from "@/components/layout/Navbar";
+import PaymentCheckout from "@/components/payment/PaymentCheckout";
 import { Check, Zap, Crown, Building2, ArrowRight } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function PricingPage() {
+  const { data: session } = useSession();
   const [billingCycle, setBillingCycle] = useState("monthly");
+  const [currentPlan, setCurrentPlan] = useState("free");
+  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
 
-  const handleGetStarted = () => {
-    signIn("google", { callbackUrl: "/dashboard" });
-  };
+  // Fetch user's current subscription
+  useEffect(() => {
+    if (session) {
+      fetch('/api/payment/subscription')
+        .then(res => res.json())
+        .then(data => {
+          setCurrentPlan(data.subscription.plan || 'free');
+          setSubscriptionStatus(data.subscription.status);
+        })
+        .catch(err => console.error('Failed to fetch subscription:', err));
+    }
+  }, [session]);
 
   const pricingPlans = [
     {
+      planId: "free",
       name: "Free",
       icon: Zap,
       price: "₹0",
@@ -41,6 +55,7 @@ export default function PricingPage() {
       ctaVariant: "secondary",
     },
     {
+      planId: "pro_monthly",
       name: "Pro Monthly",
       icon: Crown,
       price: "₹99",
@@ -67,6 +82,7 @@ export default function PricingPage() {
       badge: "14-day free trial",
     },
     {
+      planId: "pro_yearly",
       name: "Pro Yearly",
       icon: Crown,
       price: "₹499",
@@ -100,6 +116,7 @@ export default function PricingPage() {
       }
     },
     {
+      planId: "lifetime",
       name: "Lifetime",
       icon: Building2,
       price: "₹1,299",
@@ -136,14 +153,14 @@ export default function PricingPage() {
               <span className="sm:hidden">Flexible Plans</span>
             </span>
           </div>
-          
+
           <h1 className="text-4xl xs:text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight text-gray-900 leading-tight px-0 xs:px-2">
             Transparent{" "}
             <span className="bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
               Pricing
             </span>
           </h1>
-          
+
           <p className="mx-auto mt-4 sm:mt-6 max-w-3xl text-base sm:text-lg md:text-xl text-gray-600 leading-relaxed px-2 sm:px-0">
             Choose the perfect plan to track your life and build unstoppable consistency. Start free, upgrade anytime.
           </p>
@@ -160,20 +177,18 @@ export default function PricingPage() {
             return (
               <div
                 key={plan.name}
-                className={`group relative rounded-2xl transition-all duration-300 ${
-                  isPopular
-                    ? "lg:col-span-1 lg:row-span-1 bg-gradient-to-br from-orange-50 via-white to-orange-50/30 border-2 border-orange-300 shadow-2xl hover:shadow-2xl lg:scale-105 lg:z-10"
-                    : "bg-white border border-gray-200 shadow-lg hover:shadow-xl hover:border-gray-300"
-                }`}
+                className={`group relative rounded-2xl transition-all duration-300 ${isPopular
+                  ? "lg:col-span-1 lg:row-span-1 bg-gradient-to-br from-orange-50 via-white to-orange-50/30 border-2 border-orange-300 shadow-2xl hover:shadow-2xl lg:scale-105 lg:z-10"
+                  : "bg-white border border-gray-200 shadow-lg hover:shadow-xl hover:border-gray-300"
+                  }`}
               >
                 {/* Badge */}
                 {(isPopular || plan.badge) && (
                   <div className={`absolute -top-3 left-1/2 -translate-x-1/2 z-20 ${isPopular ? "" : ""}`}>
-                    <div className={`flex items-center gap-1 rounded-full px-4 py-1.5 shadow-lg ${
-                      isPopular
-                        ? "bg-gradient-to-r from-orange-500 to-orange-600"
-                        : "bg-gradient-to-r from-blue-500 to-blue-600"
-                    }`}>
+                    <div className={`flex items-center gap-1 rounded-full px-4 py-1.5 shadow-lg ${isPopular
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600"
+                      : "bg-gradient-to-r from-blue-500 to-blue-600"
+                      }`}>
                       <Zap className="w-4 h-4 text-white fill-white" />
                       <span className="text-xs font-bold text-white uppercase tracking-wide">{plan.badge || plan.name}</span>
                     </div>
@@ -193,11 +208,10 @@ export default function PricingPage() {
                   {/* Icon & Header */}
                   <div className="mb-6">
                     <div
-                      className={`inline-flex items-center justify-center p-3 rounded-xl mb-4 ${
-                        isPopular
-                          ? "bg-gradient-to-br from-orange-400 to-orange-500 text-white shadow-lg"
-                          : "bg-gradient-to-br from-gray-100 to-gray-50 text-gray-700 group-hover:from-orange-100 group-hover:to-orange-50 group-hover:text-orange-600 transition-colors"
-                      }`}
+                      className={`inline-flex items-center justify-center p-3 rounded-xl mb-4 ${isPopular
+                        ? "bg-gradient-to-br from-orange-400 to-orange-500 text-white shadow-lg"
+                        : "bg-gradient-to-br from-gray-100 to-gray-50 text-gray-700 group-hover:from-orange-100 group-hover:to-orange-50 group-hover:text-orange-600 transition-colors"
+                        }`}
                     >
                       <Icon className="w-6 h-6" />
                     </div>
@@ -231,13 +245,29 @@ export default function PricingPage() {
 
                   {/* CTA Button */}
                   <div className="mb-8">
-                    <button
-                      onClick={handleGetStarted}
-                      className={`w-full rounded-xl px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 group/btn whitespace-nowrap min-h-12 ${isPopular ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95" : "border-2 border-gray-200 bg-white text-gray-800 hover:bg-gray-50 hover:border-orange-300 active:bg-gray-100" }`}
-                    >
-                      {plan.cta}
-                      <ArrowRight className="w-4 h-4 flex-shrink-0 group-hover/btn:translate-x-1 transition-transform" />
-                    </button>
+                    {plan.planId === 'free' ? (
+                      <button
+                        onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+                        className="w-full rounded-xl px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 group/btn whitespace-nowrap min-h-12 border-2 border-gray-200 bg-white text-gray-800 hover:bg-gray-50 hover:border-orange-300 active:bg-gray-100"
+                      >
+                        {plan.cta}
+                        <ArrowRight className="w-4 h-4 flex-shrink-0 group-hover/btn:translate-x-1 transition-transform" />
+                      </button>
+                    ) : currentPlan === plan.planId ? (
+                      <button
+                        disabled
+                        className="w-full rounded-xl px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap min-h-12 bg-gray-100 text-gray-500 cursor-not-allowed"
+                      >
+                        <Check className="w-4 h-4" />
+                        Current Plan
+                      </button>
+                    ) : (
+                      <PaymentCheckout
+                        planId={plan.planId}
+                        planName={plan.name}
+                        amount={plan.launchOffer?.enabled ? parseInt(plan.launchOffer.price.replace('₹', '')) : parseInt(plan.price.replace('₹', '').replace(',', ''))}
+                      />
+                    )}
                   </div>
 
                   {/* Features List */}
@@ -368,7 +398,7 @@ export default function PricingPage() {
           {/* Decorative elements */}
           <div className="absolute top-0 right-0 w-80 sm:w-96 h-80 sm:h-96 bg-white/10 rounded-full -mr-40 sm:-mr-48 -mt-40 sm:-mt-48 blur-3xl" />
           <div className="absolute bottom-0 left-0 w-80 sm:w-96 h-80 sm:h-96 bg-white/10 rounded-full -ml-40 sm:-ml-48 -mb-40 sm:-mb-48 blur-3xl" />
-          
+
           <div className="relative z-10 text-center">
             <h2 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-3 sm:mb-4 leading-tight px-2 xs:px-4">
               Ready to Build Unstoppable Consistency?
@@ -376,7 +406,7 @@ export default function PricingPage() {
             <p className="mx-auto max-w-2xl text-lg sm:text-xl text-orange-50 mb-8 leading-relaxed">
               Join thousands of users tracking their progress and making every week count. Start free today, no credit card required.
             </p>
-            
+
             <div className="flex flex-col xs:flex-col sm:flex-row items-stretch xs:items-center sm:items-center justify-center gap-3 sm:gap-6">
               <button
                 onClick={handleGetStarted}
