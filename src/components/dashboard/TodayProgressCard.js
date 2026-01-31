@@ -16,29 +16,36 @@ export default function TodayProgressCard() {
   const [habits, setHabits] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const loadHabits = async (isInitial = false) => {
+  const loadHabits = async () => {
     try {
-      if (isInitial) setLoading(true);
+      setLoading(true);
       const res = await fetch("/api/habits", { cache: "no-store" });
 
       if (!res.ok) {
+        console.error("API returned status:", res.status);
         setHabits([]);
         return;
       }
 
       const habitsArray = await res.json();
+      // Use local date, not UTC
       const today = getLocalDateString(new Date());
 
+      // Add today's completion status to each habit
       const habitsWithStatus = (Array.isArray(habitsArray) ? habitsArray : habitsArray.habits || [])
-        .filter((h) => h.isActive !== false)
+        .filter((h) => h.isActive !== false) // Include habits that are active
         .slice(0, 6)
         .map((habit) => {
+          // Properly parse log dates
           const todayLog = habit.logs?.find((log) => {
             const logDate = getLocalDateString(new Date(log.date));
             return logDate === today && log.done === true;
           });
 
-          return { ...habit, done: !!todayLog };
+          return {
+            ...habit,
+            done: !!todayLog,
+          };
         });
 
       setHabits(habitsWithStatus);
@@ -46,21 +53,29 @@ export default function TodayProgressCard() {
       console.error("Failed to load habits:", err);
       setHabits([]);
     } finally {
-      if (isInitial) setLoading(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadHabits(true);
-    // Refresh every 15 seconds (less aggressive)
-    const interval = setInterval(() => loadHabits(false), 15000);
+    loadHabits();
+    // Refresh every 5 seconds for real-time updates
+    const interval = setInterval(loadHabits, 5000);
 
-    const handleFocusOrVisibility = () => {
-      if (!document.hidden) loadHabits(false);
+    const handleFocus = () => {
+      setLoading(true);
+      loadHabits();
     };
 
-    window.addEventListener("focus", handleFocusOrVisibility);
-    document.addEventListener("visibilitychange", handleFocusOrVisibility);
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        setLoading(true);
+        loadHabits();
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       clearInterval(interval);

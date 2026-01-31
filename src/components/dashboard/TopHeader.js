@@ -4,31 +4,17 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
 import CopyButton from "@/components/ui/CopyButton";
-import { LocalCache } from "@/lib/performance";
 
 export default function TopHeader() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const loadUser = async () => {
-    // Try cache first
-    const cached = LocalCache.get("cg_user_profile");
-    if (cached) {
-      setUser({ name: cached.name, publicToken: cached.publicToken });
-      setLoading(false);
-    }
-
     try {
       const res = await fetch("/api/settings/me", { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
         setUser(data.user);
-        // Sync with shared cache
-        LocalCache.set("cg_user_profile", {
-          ...cached, // Keep existing stats if any
-          name: data.user?.name,
-          publicToken: data.user?.publicToken
-        }, 60);
       }
     } catch (err) {
       console.error("Failed to load user:", err);
@@ -39,18 +25,12 @@ export default function TopHeader() {
 
   useEffect(() => {
     loadUser();
-    // Refresh every 3 minutes in background
-    const interval = setInterval(loadUser, 180000);
-    const handleFocus = () => {
-      // Background refresh only
-      if (!document.hidden) loadUser();
-    };
+    const interval = setInterval(loadUser, 90000);
+    const handleFocus = () => loadUser();
     window.addEventListener("focus", handleFocus);
-    document.addEventListener("visibilitychange", handleFocus);
     return () => {
       clearInterval(interval);
       window.removeEventListener("focus", handleFocus);
-      document.removeEventListener("visibilitychange", handleFocus);
     };
   }, []);
 

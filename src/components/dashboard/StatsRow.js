@@ -22,18 +22,44 @@ export default function StatsRow() {
 
   const loadStats = async () => {
     try {
-      // ✅ Optimized: Single API call to fetch aggregated stats
-      const res = await fetch("/api/dashboard/stats", { cache: "no-store" });
-      if (!res.ok) throw new Error("Failed to fetch stats");
+      // Load streaks data
+      const streaksRes = await fetch("/api/streaks", { cache: "no-store" });
+      const streaksData = streaksRes.ok ? await streaksRes.json() : {};
 
-      const data = await res.json();
+      // Load habits for today
+      const habitsRes = await fetch("/api/habits", { cache: "no-store" });
+      const habitsArray = habitsRes.ok ? await habitsRes.json() : [];
+
+      // Load goals
+      const goalsRes = await fetch("/api/goals", { cache: "no-store" });
+      const goalsArray = goalsRes.ok ? await goalsRes.json() : [];
+
+      // Calculate today's habits using local date
+      const today = getLocalDateString(new Date());
+      let todayCompleted = 0;
+      let totalActiveHabits = 0;
+
+      habitsArray.forEach((habit) => {
+        if (habit.isActive) {
+          totalActiveHabits++;
+          const todayLog = habit.logs?.find(
+            (log) => getLocalDateString(new Date(log.date)) === today && log.done
+          );
+          if (todayLog) todayCompleted++;
+        }
+      });
+
+      // Count active goals (not completed)
+      const activeGoalsCount = goalsArray.filter(
+        (g) => !g.isCompleted || g.isCompleted === false
+      ).length;
 
       setStats({
-        currentStreak: data.streaks?.currentStreak || 0,
-        bestStreak: data.streaks?.bestStreak || 0,
-        todayHabitsCompleted: data.todayProgress?.todayCompleted || 0,
-        todayHabitsTotal: data.todayProgress?.totalHabits || 0,
-        activeGoals: data.activeGoals || 0,
+        currentStreak: streaksData.currentStreak || 0,
+        bestStreak: streaksData.bestStreak || 0,
+        todayHabitsCompleted: todayCompleted,
+        todayHabitsTotal: totalActiveHabits,
+        activeGoals: activeGoalsCount,
       });
     } catch (err) {
       console.error("Failed to load stats:", err);

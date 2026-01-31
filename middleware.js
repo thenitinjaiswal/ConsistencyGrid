@@ -36,8 +36,8 @@ export async function middleware(req) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // 2. If already logged in and trying to access auth routes (login/signup) or landing page -> dashboard
-  if (token && (isAuthRoute || pathname === "/")) {
+  // 2. If already logged in and trying to access auth routes (login/signup) -> dashboard
+  if (token && isAuthRoute) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
@@ -51,7 +51,6 @@ export async function middleware(req) {
 
 export const config = {
   matcher: [
-    "/",
     "/dashboard/:path*",
     "/generator/:path*",
     "/habits/:path*",

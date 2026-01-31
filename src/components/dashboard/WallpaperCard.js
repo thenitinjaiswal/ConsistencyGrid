@@ -6,7 +6,6 @@ import Button from "@/components/ui/Button";
 import Link from "next/link";
 import CopyButton from "@/components/ui/CopyButton";
 import { Download, Share2, Sparkles, RefreshCw } from "lucide-react";
-import { LocalCache } from "@/lib/performance";
 
 export default function WallpaperCard() {
   const [publicToken, setPublicToken] = useState("");
@@ -17,38 +16,27 @@ export default function WallpaperCard() {
     weeksLived: 0,
   });
 
-  const loadData = async (isManual = false) => {
-    // Try to load from cache first for instant UI (Amazon style)
-    if (!isManual) {
-      const cached = LocalCache.get("cg_user_profile");
-      if (cached) {
-        setPublicToken(cached.publicToken);
-        setWallpaperStats(cached.stats);
-        setLoading(false);
-      }
-    }
-
+  const loadData = async () => {
     try {
       const res = await fetch("/api/settings/me", { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
-        const newToken = data.user?.publicToken || "";
-        const name = data.user?.name || "";
-
-        let stats = { percentComplete: 0, weeksLived: 0 };
+        setPublicToken(data.user?.publicToken || "");
+        // Force wallpaper image refresh with cache-bust timestamp
+        setRefreshKey(Date.now());
+        // Calculate wallpaper stats
         if (data.user?.createdAt) {
           const created = new Date(data.user.createdAt);
           const now = new Date();
-          const weeksLived = Math.floor((now - created) / (7 * 24 * 60 * 60 * 1000));
-          const percentComplete = Math.min((weeksLived / 1111) * 100, 100).toFixed(1);
-          stats = { percentComplete, weeksLived };
+          const weeksLived = Math.floor(
+            (now - created) / (7 * 24 * 60 * 60 * 1000)
+          );
+          const percentComplete = Math.min(
+            (weeksLived / 1111) * 100,
+            100
+          ).toFixed(1);
+          setWallpaperStats({ percentComplete, weeksLived });
         }
-
-        setPublicToken(newToken);
-        setWallpaperStats(stats);
-
-        // Update cache for next time - shared across dashboard components
-        LocalCache.set("cg_user_profile", { publicToken: newToken, stats, name }, 60);
       }
     } catch (err) {
       console.error("Failed to load:", err);
@@ -59,21 +47,26 @@ export default function WallpaperCard() {
 
   useEffect(() => {
     loadData();
-    // Only refresh every 2 minutes in background (performance)
-    const interval = setInterval(() => loadData(), 120000);
-
-    const handleFocusOrVisibility = () => {
-      // Refresh in background without setting loading=true (SWR style)
-      if (!document.hidden) loadData();
+    const interval = setInterval(loadData, 30000); // Refresh every 30 seconds
+    const handleFocus = () => {
+      setLoading(true);
+      loadData();
     };
 
-    window.addEventListener("focus", handleFocusOrVisibility);
-    document.addEventListener("visibilitychange", handleFocusOrVisibility);
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        setLoading(true);
+        loadData();
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       clearInterval(interval);
-      window.removeEventListener("focus", handleFocusOrVisibility);
-      document.removeEventListener("visibilitychange", handleFocusOrVisibility);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 

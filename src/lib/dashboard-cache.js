@@ -371,20 +371,17 @@ async function getStreakData(userId) {
  * @returns {Promise<Object>} Today's progress and streak data
  */
 async function getDashboardStats(userId) {
-    const [habits, logs, goals] = await Promise.all([
+    const [habits, logs] = await Promise.all([
         getCachedHabits(userId),
         getCachedHabitLogs(userId),
-        getCachedGoals(userId),
     ]);
 
     const todayProgress = calculateTodayProgress(logs, habits);
     const streakMetrics = calculateStreakMetrics(habits, logs);
-    const activeGoals = goals.filter(g => !g.isCompleted).length;
 
     return {
         todayProgress,
         streaks: streakMetrics,
-        activeGoals,
     };
 }
 

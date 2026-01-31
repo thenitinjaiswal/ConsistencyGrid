@@ -7,12 +7,12 @@ import Navbar from "@/components/layout/Navbar";
 export default function LandingPage() {
     const [isRecovering, setIsRecovering] = useState(false);
 
-    // Initial check for potential session (Optimized for performance)
+    // Initial check for potential session
     useEffect(() => {
         if (typeof window !== "undefined" && localStorage.getItem("cg_session_active") === "true") {
             setIsRecovering(true);
-            // Limit recovery timeout - if middleware hasn't redirected in 800ms, show landing
-            const timer = setTimeout(() => setIsRecovering(false), 800);
+            // Limit recovery timeout - if it takes more than 5s, show landing anyway
+            const timer = setTimeout(() => setIsRecovering(false), 5000);
             return () => clearTimeout(timer);
         }
     }, []);
