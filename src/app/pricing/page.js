@@ -4,14 +4,21 @@ import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
 import Navbar from "@/components/layout/Navbar";
 import PaymentCheckout from "@/components/payment/PaymentCheckout";
-import { Check, Zap, Crown, Building2, ArrowRight } from "lucide-react";
+import { Check, Zap, Crown, Building2, ArrowRight, ExternalLink } from "lucide-react";
 import { useState, useEffect } from "react";
+import { shouldShowPaymentUI, getPlatformMessages, getUpgradeUrl } from "@/lib/platform-utils";
 
 export default function PricingPage() {
   const { data: session } = useSession();
   const [billingCycle, setBillingCycle] = useState("monthly");
   const [currentPlan, setCurrentPlan] = useState("free");
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
+  const [showPaymentUI, setShowPaymentUI] = useState(true); // Default to true for SSR
+
+  // Detect platform on client side
+  useEffect(() => {
+    setShowPaymentUI(shouldShowPaymentUI());
+  }, []);
 
   // Fetch user's current subscription
   useEffect(() => {
@@ -139,6 +146,113 @@ export default function PricingPage() {
     },
   ];
 
+  // Helper function for Get Started button
+  const handleGetStarted = () => {
+    if (session) {
+      window.location.href = '/dashboard';
+    } else {
+      signIn("google", { callbackUrl: "/dashboard" });
+    }
+  };
+
+  // Android App: Show different UI without pricing
+  if (!showPaymentUI) {
+    const messages = getPlatformMessages();
+    const upgradeUrl = getUpgradeUrl();
+
+    return (
+      <main className="min-h-screen bg-gradient-to-b from-white via-orange-50/20 to-white">
+        <Navbar rightLinkText={session ? "Dashboard" : "Log in"} rightLinkHref={session ? "/dashboard" : "/login"} />
+
+        {/* Hero Section */}
+        <section className="mx-auto max-w-4xl px-4 sm:px-6 pt-20 pb-16 text-center">
+          <div className="space-y-8">
+            <div className="inline-block">
+              <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-100 to-orange-50 px-4 py-2 text-sm font-semibold text-orange-700">
+                <Zap className="w-4 h-4" />
+                Upgrade to Pro
+              </span>
+            </div>
+
+            <h1 className="text-5xl sm:text-6xl font-bold tracking-tight text-gray-900 leading-tight">
+              Unlock{" "}
+              <span className="bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
+                Premium Features
+              </span>
+            </h1>
+
+            <p className="mx-auto max-w-2xl text-lg sm:text-xl text-gray-600 leading-relaxed">
+              To subscribe to ConsistencyGrid Pro, please visit our website.
+            </p>
+
+            {/* Upgrade Button */}
+            <div className="flex flex-col items-center gap-4 mt-8">
+              <button
+                onClick={() => window.open(upgradeUrl, '_blank', 'noopener,noreferrer')}
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-4 text-lg font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+              >
+                {messages.upgradeButton}
+                <ExternalLink className="w-5 h-5" />
+              </button>
+
+              <p className="text-sm text-gray-500">
+                Opens in your browser
+              </p>
+            </div>
+
+            {/* Already Subscribed Info */}
+            <div className="mt-12 p-6 bg-blue-50 rounded-2xl border border-blue-200 max-w-md mx-auto">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 mt-1">
+                  <Check className="w-5 h-5 text-blue-600" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-bold text-gray-900 mb-1">Already subscribed?</h3>
+                  <p className="text-sm text-gray-600">
+                    {messages.alreadySubscribed}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Pro Features List */}
+            <div className="mt-16 p-8 bg-white rounded-2xl border border-gray-200 shadow-lg max-w-2xl mx-auto">
+              <h3 className="text-2xl font-bold text-gray-900 mb-6">Pro Features Include:</h3>
+              <ul className="space-y-3 text-left">
+                {[
+                  "Unlimited habits & goals",
+                  "Full history access",
+                  "Advanced analytics & insights",
+                  "AI-powered suggestions",
+                  "All premium themes",
+                  "Custom wallpaper resolutions",
+                  "Reminder system",
+                  "Export data (JSON, CSV)",
+                  "Priority support"
+                ].map((feature, idx) => (
+                  <li key={idx} className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-700">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="border-t border-gray-200 bg-gradient-to-br from-gray-50 to-white py-12">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 text-center">
+            <p className="text-sm text-gray-600">
+              © {new Date().getFullYear()} ConsistencyGrid. All rights reserved.
+            </p>
+          </div>
+        </footer>
+      </main>
+    );
+  }
+
+  // Web Platform: Full pricing page with payment options
   return (
     <main className="min-h-screen bg-gradient-to-b from-white via-orange-50/20 to-white">
       <Navbar rightLinkText="Log in" rightLinkHref="/login" />

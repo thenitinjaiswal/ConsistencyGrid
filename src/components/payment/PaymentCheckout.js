@@ -1,20 +1,30 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { shouldShowPaymentUI, getPlatformMessages, getUpgradeUrl } from '@/lib/platform-utils';
+import { ExternalLink } from 'lucide-react';
 
 /**
  * Payment Checkout Component
  * 
  * Handles payment flow for both Razorpay and Stripe.
  * Automatically detects provider and loads appropriate SDK.
+ * 
+ * Platform-aware: Hides payment UI in Android app, shows "Upgrade via Website" instead.
  */
 export default function PaymentCheckout({ planId, planName, amount, onSuccess, onError }) {
     const { data: session } = useSession();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [showPaymentUI, setShowPaymentUI] = useState(true); // Default to true for SSR
+
+    // Detect platform on client side
+    useEffect(() => {
+        setShowPaymentUI(shouldShowPaymentUI());
+    }, []);
 
     /**
      * Load payment provider SDK dynamically
@@ -192,6 +202,37 @@ export default function PaymentCheckout({ planId, planName, amount, onSuccess, o
         }
     };
 
+    // Platform-specific UI: Android app shows "Upgrade via Website"
+    if (!showPaymentUI) {
+        const messages = getPlatformMessages();
+        const upgradeUrl = getUpgradeUrl();
+
+        return (
+            <div className="payment-checkout">
+                <button
+                    onClick={() => window.open(upgradeUrl, '_blank', 'noopener,noreferrer')}
+                    className="w-full rounded-xl px-6 py-4 text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+                >
+                    {messages.upgradeButton}
+                    <ExternalLink className="w-5 h-5" />
+                </button>
+
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xs text-gray-600 text-center">
+                        {messages.upgradeDescription}
+                    </p>
+                </div>
+
+                {messages.alreadySubscribed && (
+                    <p className="mt-2 text-xs text-gray-500 text-center">
+                        {messages.alreadySubscribed}
+                    </p>
+                )}
+            </div>
+        );
+    }
+
+    // Web platform: Full payment functionality
     return (
         <div className="payment-checkout">
             <button

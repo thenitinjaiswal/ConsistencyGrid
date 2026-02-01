@@ -1,7 +1,11 @@
 /**
  * Subscription Utilities
  * Centralized logic for handling feature access, limits, and subscription status
+ * 
+ * Platform-aware: Provides different upgrade URLs for web vs Android app
  */
+
+import { getUpgradeUrl, openUpgradePage } from './platform-utils';
 
 /**
  * Check if user can add a new habit
@@ -323,6 +327,12 @@ export function getUpgradeRecommendation(user) {
   return null;
 }
 
+/**
+ * Get platform-appropriate upgrade URL
+ * Re-exported from platform-utils for convenience
+ */
+export { getUpgradeUrl, openUpgradePage };
+
 export default {
   canAddHabit,
   canAddGoal,
@@ -335,4 +345,6 @@ export default {
   getSubscriptionRenewalDate,
   formatLimitMessage,
   getUpgradeRecommendation,
+  getUpgradeUrl,
+  openUpgradePage,
 };
