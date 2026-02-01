@@ -33,7 +33,7 @@ const nextConfig = {
           // Content Security Policy
           {
             key: "Content-Security-Policy",
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://accounts.google.com https://www.google-analytics.com https://browser.sentry-cdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data: https://lh3.googleusercontent.com https://www.google-analytics.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://accounts.google.com https://www.google-analytics.com *.sentry.io; frame-src 'self' https://accounts.google.com; object-src 'none'; worker-src 'self' blob:;"
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://accounts.google.com https://www.google-analytics.com https://browser.sentry-cdn.com https://checkout.razorpay.com https://api.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data: https://lh3.googleusercontent.com https://www.google-analytics.com https://cdn.razorpay.com; font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com; connect-src 'self' https://accounts.google.com https://www.google-analytics.com https://fonts.googleapis.com https://fonts.gstatic.com *.sentry.io https://api.razorpay.com https://lumberjack.razorpay.com https://lumberjack-cx.razorpay.com https://checkout.razorpay.com; frame-src 'self' https://accounts.google.com https://api.razorpay.com; object-src 'none'; worker-src 'self' blob:;"
           },
         ],
       },

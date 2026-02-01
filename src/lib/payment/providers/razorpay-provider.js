@@ -11,6 +11,9 @@ export class RazorpayProvider extends PaymentProvider {
     constructor() {
         super();
 
+        // Debug logging (masked)
+        console.log('Initializing RazorpayProvider with Key ID:', process.env.RAZORPAY_KEY_ID ? '...' + process.env.RAZORPAY_KEY_ID.slice(-4) : 'MISSING');
+
         // Validate required environment variables
         if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
             throw new Error('Razorpay credentials not configured. Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET');
@@ -45,8 +48,13 @@ export class RazorpayProvider extends PaymentProvider {
         try {
             const razorpay = await this.getRazorpay();
 
-            // Generate unique receipt ID
-            const receipt = `rcpt_${Date.now()}_${metadata.userId || 'guest'}`;
+            // Generate unique receipt ID (Max 40 chars)
+            // Format: rcpt_<timestamp>_<short_user_id>
+            // rcpt_ (5) + timestamp (13) + _ (1) + short_uid (8) = 27 chars
+            const shortUserId = (metadata.userId || 'guest').slice(-8);
+            const receipt = `rcpt_${Date.now()}_${shortUserId}`;
+
+            console.log('Creating Razorpay order:', { amount, currency, receipt });
 
             const order = await razorpay.orders.create({
                 amount: Math.round(amount), // Amount in paise (already converted)
@@ -67,8 +75,10 @@ export class RazorpayProvider extends PaymentProvider {
                 createdAt: order.created_at,
             };
         } catch (error) {
-            console.error('Razorpay order creation failed:', error);
-            throw new Error(`Failed to create Razorpay order: ${error.message}`);
+            console.error('Razorpay order creation failed FULL ERROR:', JSON.stringify(error, null, 2));
+            // Razorpay SDK errors often have a "description" field or nested error object
+            const errorMessage = error.error?.description || error.description || error.message || 'Unknown Razorpay error';
+            throw new Error(`Failed to create Razorpay order: ${errorMessage}`);
         }
     }
 

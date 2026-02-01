@@ -9,20 +9,14 @@ const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 const API_CACHE = `api-${CACHE_VERSION}`;
 
 // Assets to cache on install
+// Keep this minimal - only cache files that are guaranteed to exist
 const ASSETS_TO_CACHE = [
   '/',
   '/offline.html',
-  '/globals.css',
-  '/images/icon-192.png',
-  '/images/icon-512.png',
 ];
 
-// API routes to cache
-const API_ROUTES_TO_CACHE = [
-  '/api/goals',
-  '/api/habits',
-  '/api/reminders',
-];
+// API routes to cache (disabled during install - cache on first use)
+const API_ROUTES_TO_CACHE = [];
 
 /**
  * Install event - cache assets
@@ -33,10 +27,23 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log('[Service Worker] Caching assets');
-      return cache.addAll(ASSETS_TO_CACHE).catch((err) => {
-        console.warn('[Service Worker] Failed to cache some assets:', err);
-        // Don't fail installation if some assets fail to cache
-        return Promise.resolve();
+      // Cache assets individually to avoid addAll failure blocking entire install
+      return Promise.all(
+        ASSETS_TO_CACHE.map((asset) =>
+          fetch(asset)
+            .then((response) => {
+              if (response.ok) {
+                return cache.put(asset, response);
+              }
+            })
+            .catch((err) => {
+              console.warn(`[Service Worker] Failed to cache ${asset}:`, err.message);
+              // Continue with other assets if one fails
+            })
+        )
+      ).catch((err) => {
+        console.warn('[Service Worker] Asset caching error:', err);
+        // Don't fail installation if caching fails
       });
     })
   );
@@ -98,6 +105,12 @@ self.addEventListener('fetch', (event) => {
   // HTML pages - network-first for fresh content
   if (request.headers.get('accept')?.includes('text/html')) {
     event.respondWith(networkFirstStrategy(request, RUNTIME_CACHE));
+    return;
+  }
+
+  // External fonts (Google Fonts) - network-first to get latest
+  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+    event.respondWith(networkFirstStrategy(request, CACHE_NAME));
     return;
   }
 

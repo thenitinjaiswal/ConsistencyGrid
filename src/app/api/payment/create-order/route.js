@@ -132,11 +132,16 @@ export async function POST(req) {
         });
 
     } catch (error) {
-        console.error('Order creation error:', error);
+        console.error('Order creation error:', {
+            message: error.message,
+            stack: error.stack,
+            type: error.constructor.name,
+        });
         return NextResponse.json(
             {
                 error: 'Failed to create order',
-                message: error.message
+                message: error.message,
+                details: process.env.NODE_ENV === 'development' ? error.stack : undefined,
             },
             { status: 500 }
         );

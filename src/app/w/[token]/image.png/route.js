@@ -121,13 +121,14 @@ export async function GET(request, { params }) {
 
     const activeHabits = await prisma.habit.findMany({
         where: { userId: currentUser.id, isActive: true },
-        include: {
+        select: {
+            id: true,
+            title: true,
             logs: {
                 where: { date: { gte: thirtyDaysAgo } }, // Only last 30 days
                 select: { date: true, done: true } // Select only needed fields
             }
-        },
-        select: { id: true, name: true, logs: true } // Select only needed fields
+        }
     });
 
     // 3.5. Fetch Pinned Active Goals - OPTIMIZED (parallel with habits)
