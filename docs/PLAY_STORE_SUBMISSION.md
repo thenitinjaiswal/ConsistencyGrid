@@ -89,6 +89,8 @@ This is similar to how many apps direct users to their websites for account mana
 - [x] Opens external browser (not in-app)
 - [x] No Google Play Billing integration
 - [x] Description focuses on free features
+- [x] Preemptive limit checks (prevents form rejection)
+- [x] Locked premium themes with safe prompts
 
 ### ❌ Avoid These
 

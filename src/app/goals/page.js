@@ -12,17 +12,12 @@ import CircularProgress from "@/components/goals/CircularProgress";
 import GoalCard from "@/components/goals/GoalCard";
 import MilestoneItem from "@/components/goals/MilestoneItem";
 import GoalSkeleton from "@/components/skeletons/GoalSkeleton";
-import {
-    Plus,
-    Filter,
-    ChevronRight,
-    Zap,
-    Target
-} from "lucide-react";
+import { Plus, Target, CheckSquare, Calendar, Filter, Zap, Lock } from "lucide-react";
 import { sendWallpaperToAndroid } from "@/utils/sendWallpaperToAndroid";
 import Card from "@/components/ui/Card";
 
 import UpgradePrompt from "@/components/payment/UpgradePrompt";
+import { PRICING_PLANS } from "@/lib/payment/payment-config";
 
 export default function GoalsPage() {
     // State for data
@@ -313,9 +308,9 @@ export default function GoalsPage() {
                     isOpen={showUpgradePrompt}
                     onClose={() => setShowUpgradePrompt(false)}
                     title="Goal Limit Reached"
-                    message="You've reached the limit of 3 goals on the Free plan."
+                    message={`You've reached the limit of ${PRICING_PLANS.free.features.goals} goals on the Free plan.`}
                     feature="goals"
-                    limit={3}
+                    limit={PRICING_PLANS.free.features.goals}
                     currentCount={goals.length}
                 />
 
