@@ -29,7 +29,7 @@ export default function GeneratorPreview({ publicToken, loading, form, onReset }
     const [copied, setCopied] = useState(false);
     const [previewUrl, setPreviewUrl] = useState("");
     const [time, setTime] = useState(new Date());
-    const [debugMode] = useState(false); // Toggle for debugging
+    const [isUpdating, setIsUpdating] = useState(false); // Local updating state for smoother UX
 
     // ============================================================================================
     // EFFECTS: CLOCK & TIMER
@@ -51,7 +51,7 @@ export default function GeneratorPreview({ publicToken, loading, form, onReset }
     /**
      * Generate live preview URL with current form settings
      * Debounced to avoid excessive API calls during rapid form changes
-     * Updates every 600ms when form changes
+     * Updates every 250ms when form changes (Reduced from 600ms for snappiness)
      */
     useEffect(() => {
         if (!publicToken) return;
@@ -60,6 +60,9 @@ export default function GeneratorPreview({ publicToken, loading, form, onReset }
         if (!previewUrl) {
             setPreviewUrl(`/w/${publicToken}/image.png?t=${Date.now()}`);
         }
+
+        // Indicate update started immediately
+        if (form) setIsUpdating(true);
 
         const timer = setTimeout(() => {
             const params = new URLSearchParams();
@@ -78,7 +81,8 @@ export default function GeneratorPreview({ publicToken, loading, form, onReset }
             }
 
             setPreviewUrl(`/w/${publicToken}/image.png?${params.toString()}`);
-        }, 600);
+            // Note: isUpdating remains true until image physically loads or timeouts
+        }, 250); // Faster debounce
 
         return () => {
             clearTimeout(timer);
@@ -100,10 +104,6 @@ export default function GeneratorPreview({ publicToken, loading, form, onReset }
         // ✅ Android App Bridge Support
         if (typeof window !== 'undefined' && window.Android && window.Android.downloadFile) {
             try {
-                // For images, we can fetch it and convert to base64, 
-                // or just try to trigger the native download listener.
-                // Triggering native download listener is easier for direct URLs.
-                // But for perfect reliability with auth/sessions, we can fetch it here.
                 const response = await fetch(url);
                 const blob = await response.blob();
                 const reader = new FileReader();
@@ -188,9 +188,9 @@ export default function GeneratorPreview({ publicToken, loading, form, onReset }
                         <span>Download</span>
                     </button>
                 </div>
-                {loading && (
-                    <p className="text-xs text-gray-500 text-center">
-                        ⏳ Generating preview...
+                {(loading || isUpdating) && (
+                    <p className="text-xs text-orange-600 text-center animate-pulse font-medium">
+                        ⏳ Updating live preview...
                     </p>
                 )}
             </div>
@@ -211,13 +211,20 @@ export default function GeneratorPreview({ publicToken, loading, form, onReset }
                 {/* Screen Content Container */}
                 <div className="h-full w-full bg-gray-900 text-white flex items-center justify-center relative overflow-hidden">
 
-                    {/* Loading Overlay */}
+                    {/* Loading Overlay (Initial Load) */}
                     {loading && (
                         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-30 flex items-center justify-center">
                             <div className="text-center">
                                 <div className="animate-spin text-4xl mb-2">⏳</div>
                                 <p className="text-xs text-white/80">Generating...</p>
                             </div>
+                        </div>
+                    )}
+
+                    {/* Update Spinner (Subtle) */}
+                    {isUpdating && !loading && (
+                        <div className="absolute top-12 right-4 z-30">
+                            <div className="h-5 w-5 border-2 border-white/50 border-t-white rounded-full animate-spin shadow-lg"></div>
                         </div>
                     )}
 
@@ -231,16 +238,13 @@ export default function GeneratorPreview({ publicToken, loading, form, onReset }
                         </p>
                     </div>
 
-                    {loading ? (
-                        <div className="text-center p-4">
-                            <div className="animate-spin h-8 w-8 border-2 border-orange-500 border-t-transparent rounded-full mx-auto mb-2" />
-                            <p className="text-sm text-gray-400">Updating preview...</p>
-                        </div>
-                    ) : publicToken ? (
+                    {publicToken ? (
                         <img
                             src={previewUrl || `/w/${publicToken}/image.png?t=${Date.now()}`}
                             alt="Wallpaper Preview"
-                            className="w-full h-full object-cover transition-opacity duration-300"
+                            className={`w-full h-full object-cover transition-all duration-500 ${isUpdating ? 'scale-[1.02] blur-[2px]' : 'scale-100 blur-0'}`}
+                            onLoad={() => setIsUpdating(false)}
+                            onError={() => setIsUpdating(false)}
                         />
                     ) : (
                         <p className="text-sm text-gray-500 text-center px-4">
