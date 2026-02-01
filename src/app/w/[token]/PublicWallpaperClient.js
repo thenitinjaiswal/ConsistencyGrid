@@ -1,28 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import CopyLinkButton from "@/components/common/CopyLinkButton";
 import { RefreshCw } from "lucide-react";
 
 export default function PublicWallpaperClient({ token, settings: s, ageYears, lifeProgress }) {
-  const [refreshKey, setRefreshKey] = useState(Date.now());
   const [imageLoading, setImageLoading] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // Auto-refresh wallpaper every 10 seconds to show latest data
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setRefreshKey(Date.now());
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, []);
-
+  // Manual refresh only - no auto-refresh to prevent 100k requests/sec
   const handleManualRefresh = () => {
     setImageLoading(true);
-    setRefreshKey(Date.now());
+    setRefreshTrigger(prev => prev + 1);
   };
 
-  const wallpaperUrl = `/w/${token}/image.png?t=${refreshKey}`;
+  // Cache-friendly URL: only changes when user manually refreshes
+  const wallpaperUrl = `/w/${token}/image.png${refreshTrigger > 0 ? `?v=${refreshTrigger}` : ''}`;
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black text-white flex items-center justify-center p-4 md:p-8">
@@ -52,13 +45,17 @@ export default function PublicWallpaperClient({ token, settings: s, ageYears, li
           {/* Wallpaper Preview with Refresh */}
           <div className="relative group">
             <img
-              key={refreshKey}
               src={wallpaperUrl}
               alt="Wallpaper Preview"
               className="w-full rounded-2xl border border-white/20 shadow-2xl transition-transform duration-300 group-hover:scale-[1.02]"
               loading="lazy"
               onLoad={() => setImageLoading(false)}
             />
+            {imageLoading && (
+              <div className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-orange-400 border-t-transparent"></div>
+              </div>
+            )}
 
             {/* Overlay with Actions */}
             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl flex items-center justify-center gap-3">
@@ -197,7 +194,7 @@ export default function PublicWallpaperClient({ token, settings: s, ageYears, li
         {/* Footer */}
         <div className="px-6 py-4 border-t border-white/10 bg-white/5">
           <p className="text-xs text-center text-gray-500">
-            🔄 Auto-refreshes every 10 seconds • Last updated: {new Date(refreshKey).toLocaleTimeString()}
+            🔄 Manual refresh • Cached for 5 min for scalability
           </p>
         </div>
 

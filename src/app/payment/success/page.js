@@ -3,9 +3,12 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { CheckCircle, ArrowRight, Sparkles } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 
 export default function PaymentSuccessPage() {
     const [subscription, setSubscription] = useState(null);
+    const searchParams = useSearchParams();
+    const source = searchParams.get('source'); // 'app' if coming from React Native
 
     useEffect(() => {
         // Fetch subscription details
@@ -13,7 +16,25 @@ export default function PaymentSuccessPage() {
             .then(res => res.json())
             .then(data => setSubscription(data.subscription))
             .catch(err => console.error('Failed to fetch subscription:', err));
-    }, []);
+
+        // If coming from app, redirect back to app via deep link
+        if (source === 'app') {
+            const timer = setTimeout(() => {
+                try {
+                    // Generate JWT token for app
+                    const token = sessionStorage.getItem('subscription_token');
+                    if (token) {
+                        const deepLink = `consistencygrid://payment-success?token=${token}&plan=${subscription?.plan || 'pro_yearly'}&expiryDate=${subscription?.endDate || ''}`;
+                        window.location.href = deepLink;
+                    }
+                } catch (error) {
+                    console.error('Failed to redirect to app:', error);
+                }
+            }, 3000); // 3 second delay so user sees success message
+
+            return () => clearTimeout(timer);
+        }
+    }, [source, subscription]);
 
     return (
         <main className="min-h-screen bg-gradient-to-b from-green-50 via-white to-orange-50 flex items-center justify-center p-4">
@@ -31,6 +52,12 @@ export default function PaymentSuccessPage() {
                     <p className="text-lg text-gray-600">
                         Welcome to ConsistencyGrid Pro! Your subscription is now active.
                     </p>
+
+                    {source === 'app' && (
+                        <p className="text-sm text-orange-600 mt-3 font-semibold">
+                            ⏳ Redirecting you back to the app in a few seconds...
+                        </p>
+                    )}
                 </div>
 
                 {/* Subscription Details */}

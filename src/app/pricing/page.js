@@ -361,16 +361,10 @@ export default function PricingPage() {
                   <div className="mb-8">
                     {plan.planId === 'free' ? (
                       <button
-                        onClick={() => {
-                          if (session) {
-                            window.location.href = "/dashboard";
-                          } else {
-                            signIn("google", { callbackUrl: "/dashboard" });
-                          }
-                        }}
+                        onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
                         className="w-full rounded-xl px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 group/btn whitespace-nowrap min-h-12 border-2 border-gray-200 bg-white text-gray-800 hover:bg-gray-50 hover:border-orange-300 active:bg-gray-100"
                       >
-                        {session ? "Go to Dashboard" : plan.cta}
+                        {plan.cta}
                         <ArrowRight className="w-4 h-4 flex-shrink-0 group-hover/btn:translate-x-1 transition-transform" />
                       </button>
                     ) : currentPlan === plan.planId ? (
@@ -380,15 +374,6 @@ export default function PricingPage() {
                       >
                         <Check className="w-4 h-4" />
                         Current Plan
-                      </button>
-                    ) : !session ? (
-                      // GUEST USER: Explicit Login CTA
-                      <button
-                        onClick={() => signIn("google", { callbackUrl: "/pricing" })}
-                        className="w-full rounded-xl px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap min-h-12 bg-gray-900 text-white hover:bg-gray-800 shadow-lg hover:shadow-xl"
-                      >
-                        Log in to Upgrade
-                        <ArrowRight className="w-4 h-4" />
                       </button>
                     ) : (
                       <PaymentCheckout

@@ -46,7 +46,34 @@ export async function middleware(req) {
     return NextResponse.redirect(new URL("/onboarding", req.url));
   }
 
-  return NextResponse.next();
+  // 4. Add security headers
+  const response = NextResponse.next();
+  
+  // Prevent clickjacking attacks
+  response.headers.set("X-Frame-Options", "SAMEORIGIN");
+  
+  // Prevent MIME type sniffing
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  
+  // Enable XSS protection in older browsers
+  response.headers.set("X-XSS-Protection", "1; mode=block");
+  
+  // Content Security Policy (prevent XSS, injection attacks)
+  response.headers.set(
+    "Content-Security-Policy",
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-src 'self' https://checkout.razorpay.com https://js.stripe.com;"
+  );
+  
+  // Referrer policy for privacy
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  
+  // Permissions policy (Feature-Policy)
+  response.headers.set(
+    "Permissions-Policy",
+    "geolocation=(), microphone=(), camera=()"
+  );
+  
+  return response;
 }
 
 export const config = {

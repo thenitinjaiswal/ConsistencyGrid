@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import UpgradePrompt from "@/components/payment/UpgradePrompt";
-import { PRICING_PLANS } from "@/lib/payment/payment-config";
 
 export default function HabitHeader({ onHabitAdded, isFreeUser, habitCount }) {
   const router = useRouter();
@@ -21,10 +20,8 @@ export default function HabitHeader({ onHabitAdded, isFreeUser, habitCount }) {
   };
 
   const handleAddClick = () => {
-    // Habits limit for free plan
-    const habitLimit = PRICING_PLANS.free.features.habits;
-
-    if (isFreeUser && habitCount >= habitLimit) {
+    // Habits limit for free plan is 3
+    if (isFreeUser && habitCount >= 3) {
       setShowUpgradePrompt(true);
     } else {
       setOpen(true);
@@ -55,9 +52,9 @@ export default function HabitHeader({ onHabitAdded, isFreeUser, habitCount }) {
         isOpen={showUpgradePrompt}
         onClose={() => setShowUpgradePrompt(false)}
         title="Habit Limit Reached"
-        message={`You've reached the limit of ${PRICING_PLANS.free.features.habits} habits on the Free plan.`}
+        message="You've reached the limit of 3 habits on the Free plan."
         feature="habits"
-        limit={PRICING_PLANS.free.features.habits}
+        limit={3}
         currentCount={habitCount}
       />
     </>
