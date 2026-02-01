@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import UpgradePrompt from "@/components/payment/UpgradePrompt";
+import AddHabitModal from "./AddHabitModal";
 
 export default function HabitHeader({ onHabitAdded, isFreeUser, habitCount }) {
   const router = useRouter();
