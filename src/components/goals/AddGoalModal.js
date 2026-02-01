@@ -125,7 +125,7 @@ export default function AddGoalModal({ isOpen, onClose, onAdd }) {
       const newGoal = await response.json();
       toast.success("Goal created successfully!");
       onAdd(newGoal);
-      
+
       // Reset form
       setFormData({
         title: "",
@@ -163,6 +163,42 @@ export default function AddGoalModal({ isOpen, onClose, onAdd }) {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Error Display */}
+          {error && (
+            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600 border border-red-200">
+              <p className="mb-2">{error}</p>
+
+              {/* Show upgrade button if limit reached */}
+              {(error.includes("limit") || error.includes("plan")) && (
+                <div className="mt-2">
+                  <p className="text-xs text-red-500 mb-2">
+                    Unlock unlimited goals with our Pro plan.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const isAndroid = typeof window !== 'undefined' &&
+                        (localStorage.getItem('consistencygrid_platform') === 'android' ||
+                          /webview|wv|android/i.test(navigator.userAgent));
+
+                      if (isAndroid) {
+                        window.open('https://consistencygrid.com/pricing', '_blank');
+                      } else {
+                        window.location.href = '/pricing';
+                      }
+                    }}
+                    className="text-xs bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-3 py-1.5 rounded-md transition-colors flex items-center gap-1 w-fit"
+                  >
+                    {typeof window !== 'undefined' && localStorage.getItem('consistencygrid_platform') === 'android'
+                      ? "Continue on Website"
+                      : "View Upgrade Options"}
+                    <span className="text-xs">→</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Goal Name */}
           <div>
             <label className="block text-sm font-bold text-gray-900 mb-2">
@@ -191,11 +227,10 @@ export default function AddGoalModal({ isOpen, onClose, onAdd }) {
                   type="button"
                   onClick={() => setFormData(prev => ({ ...prev, category: category.id }))}
                   disabled={loading}
-                  className={`p-3 rounded-lg border-2 transition-all ${
-                    formData.category === category.id
+                  className={`p-3 rounded-lg border-2 transition-all ${formData.category === category.id
                       ? "border-orange-500 bg-orange-50"
                       : "border-gray-200 hover:border-orange-300 bg-gray-50"
-                  }`}
+                    }`}
                 >
                   <div className="text-2xl mb-1">{category.icon}</div>
                   <div className="text-xs font-bold text-gray-900">{category.name}</div>
