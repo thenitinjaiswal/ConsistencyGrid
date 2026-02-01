@@ -3,7 +3,6 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/authOptions';
 import prisma from '@/lib/prisma';
 import { getProviderInstance, getPlan, getPlanAmount, canUpgradeToPlan } from '@/lib/payment/payment-config';
-import { isRateLimited } from '@/lib/api-rate-limit';
 
 /**
  * Create Payment Order
@@ -11,7 +10,6 @@ import { isRateLimited } from '@/lib/api-rate-limit';
  * 
  * Creates a payment order with the configured payment provider.
  * Validates user authentication, plan validity, and eligibility.
- * Rate limited to 10 requests per minute per user (prevent abuse)
  */
 export async function POST(req) {
     try {
@@ -24,15 +22,7 @@ export async function POST(req) {
             );
         }
 
-        // 2. Rate limiting - 10 orders per minute per user
-        if (isRateLimited(`order:${session.user.email}`, 10, 60000)) {
-            return NextResponse.json(
-                { error: 'Too many order requests. Please try again later.' },
-                { status: 429, headers: { 'Retry-After': '60' } }
-            );
-        }
-
-        // 3. Get user from database
+        // 2. Get user from database
         const user = await prisma.user.findUnique({
             where: { email: session.user.email },
             select: {
@@ -50,11 +40,11 @@ export async function POST(req) {
             );
         }
 
-        // 4. Parse request body
+        // 3. Parse request body
         const body = await req.json();
         const { planId, useLaunchPrice = true } = body;
 
-        // 5. Validate plan
+        // 4. Validate plan
         const plan = getPlan(planId);
         if (!plan) {
             return NextResponse.json(
@@ -63,7 +53,7 @@ export async function POST(req) {
             );
         }
 
-        // 6. Check if user can upgrade to this plan
+        // 5. Check if user can upgrade to this plan
         const currentPlan = user.plan || 'free';
         if (!canUpgradeToPlan(currentPlan, planId)) {
             return NextResponse.json(
@@ -72,7 +62,7 @@ export async function POST(req) {
             );
         }
 
-        // 7. Calculate amount
+        // 6. Calculate amount
         const amount = getPlanAmount(planId, useLaunchPrice);
         if (amount === 0) {
             return NextResponse.json(
@@ -81,7 +71,7 @@ export async function POST(req) {
             );
         }
 
-        // 8. Create order with payment provider
+        // 7. Create order with payment provider
         const provider = getProviderInstance();
         const order = await provider.createOrder({
             amount,
@@ -95,7 +85,7 @@ export async function POST(req) {
             },
         });
 
-        // 9. Store order in database for tracking
+        // 8. Store order in database for tracking
         await prisma.paymentTransaction.create({
             data: {
                 userId: user.id,
@@ -112,7 +102,7 @@ export async function POST(req) {
             },
         });
 
-        // 10. Return order details
+        // 9. Return order details
         return NextResponse.json({
             success: true,
             order: {
@@ -132,16 +122,11 @@ export async function POST(req) {
         });
 
     } catch (error) {
-        console.error('Order creation error:', {
-            message: error.message,
-            stack: error.stack,
-            type: error.constructor.name,
-        });
+        console.error('Order creation error:', error);
         return NextResponse.json(
             {
                 error: 'Failed to create order',
-                message: error.message,
-                details: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+                message: error.message
             },
             { status: 500 }
         );

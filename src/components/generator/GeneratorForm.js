@@ -25,11 +25,11 @@ import GridModeSelector from "./GridModeSelector";
  * @param {Function} onSave - Callback function when saving
  * @param {string} publicToken - Public token for sharing wallpaper
  */
-export default function GeneratorForm({ form, setForm, onSave, publicToken, userPlan = "free" }) {
+export default function GeneratorForm({ form, setForm, onSave, publicToken }) {
     // ============================================================================
     // STATE MANAGEMENT
     // ============================================================================
-
+    
     const [saving, setSaving] = useState(false);
     const [saveStatus, setSaveStatus] = useState(null); // 'success' or 'error'
 
@@ -72,7 +72,7 @@ export default function GeneratorForm({ form, setForm, onSave, publicToken, user
      */
     async function handleSaveClick() {
         if (!isDobValid) return; // Prevent save if DOB is invalid
-
+        
         setSaving(true);
         setSaveStatus(null);
         try {
@@ -115,7 +115,7 @@ export default function GeneratorForm({ form, setForm, onSave, publicToken, user
 
     return (
         <div className="space-y-3 sm:space-y-4 pb-6 sm:pb-12 md:pb-8">
-
+            
             {/* ╔═══════════════════════════════════════════════════════════════════════════╗ */}
             {/* ║ SECTION 1: BASIC INFORMATION                                              ║ */}
             {/* ║ - Date of Birth input with validation                                     ║ */}
@@ -228,11 +228,7 @@ export default function GeneratorForm({ form, setForm, onSave, publicToken, user
                     <span className="text-lg">🎨</span>
                     Visual Theme
                 </h2>
-                <ThemeSelector
-                    activeTheme={form.theme}
-                    onChange={handleThemeChange}
-                    isFreeUser={userPlan === "free" || !userPlan}
-                />
+                <ThemeSelector activeTheme={form.theme} onChange={handleThemeChange} />
             </div>
 
             {/* ╔═══════════════════════════════════════════════════════════════════════════╗ */}
@@ -251,7 +247,7 @@ export default function GeneratorForm({ form, setForm, onSave, publicToken, user
                 </summary>
 
                 <div className="space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-
+                    
                     {/* ─────────────────────────────────────────────────────────────────── */}
                     {/* SUBSECTION 3.1: Resolution Settings                                 */}
                     {/* ─────────────────────────────────────────────────────────────────── */}
@@ -414,10 +410,11 @@ export default function GeneratorForm({ form, setForm, onSave, publicToken, user
             <div className="mt-8 sm:mt-10 space-y-4">
                 {/* Status Message */}
                 {saveStatus && (
-                    <div className={`text-xs sm:text-sm font-semibold py-3 sm:py-4 px-4 sm:px-5 rounded-xl sm:rounded-2xl flex items-center gap-2 transition-all animate-in fade-in ${saveStatus === 'success'
-                        ? 'bg-gradient-to-r from-green-100 to-green-50 text-green-700 border border-green-200'
-                        : 'bg-gradient-to-r from-red-100 to-red-50 text-red-700 border border-red-200'
-                        }`}>
+                    <div className={`text-xs sm:text-sm font-semibold py-3 sm:py-4 px-4 sm:px-5 rounded-xl sm:rounded-2xl flex items-center gap-2 transition-all animate-in fade-in ${
+                        saveStatus === 'success' 
+                            ? 'bg-gradient-to-r from-green-100 to-green-50 text-green-700 border border-green-200' 
+                            : 'bg-gradient-to-r from-red-100 to-red-50 text-red-700 border border-red-200'
+                    }`}>
                         {saveStatus === 'success' ? (
                             <>
                                 <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
@@ -481,8 +478,8 @@ export default function GeneratorForm({ form, setForm, onSave, publicToken, user
                             shadow-md hover:shadow-lg
                             active:scale-95 active:shadow-sm
                             focus:outline-none focus:ring-2 focus:ring-offset-2
-                            ${isDobValid && !saving
-                                ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 cursor-pointer focus:ring-orange-300'
+                            ${isDobValid && !saving 
+                                ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 cursor-pointer focus:ring-orange-300' 
                                 : 'bg-gray-200 text-gray-500 cursor-not-allowed opacity-60 focus:ring-gray-300'
                             }
                         `}

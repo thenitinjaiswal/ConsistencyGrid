@@ -165,18 +165,16 @@ async function handlePaymentCaptured(payload, provider) {
             },
         });
 
-        // Calculate subscription dates (FIX: proper date math)
+        // Calculate subscription dates
         const now = new Date();
         let subscriptionEndDate;
 
         if (transaction.plan === 'lifetime') {
             subscriptionEndDate = new Date(now.getFullYear() + 100, now.getMonth(), now.getDate());
         } else if (transaction.plan === 'pro_yearly') {
-            subscriptionEndDate = new Date(now);
-            subscriptionEndDate.setFullYear(subscriptionEndDate.getFullYear() + 1);
+            subscriptionEndDate = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
         } else if (transaction.plan === 'pro_monthly') {
-            subscriptionEndDate = new Date(now);
-            subscriptionEndDate.setMonth(subscriptionEndDate.getMonth() + 1);
+            subscriptionEndDate = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
         }
 
         // Update user subscription

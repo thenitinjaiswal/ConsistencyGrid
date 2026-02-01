@@ -19,8 +19,6 @@ export default function GeneratorPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [publicToken, setPublicToken] = useState("");
-  const [plan, setPlan] = useState("free");
-  const [userData, setUserData] = useState(null); // Cached data for client-side rendering
 
   const [form, setForm] = useState({
     dob: "",
@@ -50,17 +48,11 @@ export default function GeneratorPage() {
     goalUnit: "day",
   });
 
-  // Load settings and user data for client-side rendering
+  // Load settings
   const fetchSettings = useCallback(async () => {
     try {
-      // Fetch both settings and rendering data in parallel
-      const [settingsRes, dataRes] = await Promise.all([
-        fetch("/api/settings/me"),
-        fetch("/api/generator/data")
-      ]);
-
-      const data = await settingsRes.json();
-      const generatorData = await dataRes.json();
+      const res = await fetch("/api/settings/me");
+      const data = await res.json();
 
       if (data?.user?.publicToken) {
         setPublicToken(data.user.publicToken);
@@ -68,10 +60,6 @@ export default function GeneratorPage() {
         if (window.Android && window.Android.saveToken) {
           window.Android.saveToken(data.user.publicToken);
         }
-      }
-
-      if (data?.user?.plan) {
-        setPlan(data.user.plan);
       }
 
       if (data?.settings) {
@@ -107,13 +95,8 @@ export default function GeneratorPage() {
           goalUnit: s.goalUnit ?? "day",
         }));
       }
-
-      // Cache user data for instant client-side rendering
-      if (generatorData && !generatorData.error) {
-        setUserData(generatorData);
-      }
     } catch (err) {
-      console.error("Load settings error:", err);
+      // console.log("Load settings error:", err);
     } finally {
       setLoading(false);
     }
@@ -142,13 +125,6 @@ export default function GeneratorPage() {
       }
 
       toast.success("Settings saved! Wallpaper updated.");
-
-      // Refetch user data to update client-side renderer
-      const dataRes = await fetch("/api/generator/data");
-      const generatorData = await dataRes.json();
-      if (generatorData && !generatorData.error) {
-        setUserData(generatorData);
-      }
 
       // Android Bridge: Send new wallpaper URL to native app
       if (publicToken) {
@@ -197,8 +173,6 @@ export default function GeneratorPage() {
               form={form}
               setForm={setForm}
               onSave={handleSave}
-              publicToken={publicToken}
-              userPlan={plan}
             />
           </div>
 
@@ -209,7 +183,6 @@ export default function GeneratorPage() {
               loading={loading}
               form={form}
               onReset={fetchSettings}
-              userData={userData}
             />
           </div>
         </div>

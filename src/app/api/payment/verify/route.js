@@ -3,7 +3,6 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/authOptions';
 import prisma from '@/lib/prisma';
 import { getProviderInstance } from '@/lib/payment/payment-config';
-import { isRateLimited } from '@/lib/api-rate-limit';
 
 /**
  * Verify Payment
@@ -11,7 +10,6 @@ import { isRateLimited } from '@/lib/api-rate-limit';
  * 
  * Verifies payment signature and updates user subscription.
  * This is CRITICAL for security - always verify server-side.
- * Rate limited to prevent abuse (5 attempts per minute)
  */
 export async function POST(req) {
     try {
@@ -24,15 +22,7 @@ export async function POST(req) {
             );
         }
 
-        // 2. Rate limiting - 5 verifications per minute per user
-        if (isRateLimited(`verify:${session.user.email}`, 5, 60000)) {
-            return NextResponse.json(
-                { error: 'Too many verification attempts. Please try again later.' },
-                { status: 429, headers: { 'Retry-After': '60' } }
-            );
-        }
-
-        // 3. Get user from database
+        // 2. Get user from database
         const user = await prisma.user.findUnique({
             where: { email: session.user.email },
         });
@@ -44,13 +34,13 @@ export async function POST(req) {
             );
         }
 
-        // 4. Parse payment data
+        // 3. Parse payment data
         const paymentData = await req.json();
 
-        // 5. Get payment provider
+        // 4. Get payment provider
         const provider = getProviderInstance();
 
-        // 6. Verify payment signature (CRITICAL SECURITY STEP)
+        // 5. Verify payment signature (CRITICAL SECURITY STEP)
         const isValid = await provider.verifyPayment(paymentData);
 
         if (!isValid) {
@@ -61,7 +51,7 @@ export async function POST(req) {
             );
         }
 
-        // 7. Extract order/payment IDs based on provider
+        // 6. Extract order/payment IDs based on provider
         let orderId, paymentId;
         if (provider.getProviderName() === 'razorpay') {
             orderId = paymentData.razorpay_order_id;
@@ -71,7 +61,7 @@ export async function POST(req) {
             paymentId = paymentData.payment_intent_id;
         }
 
-        // 8. Find transaction in database
+        // 7. Find transaction in database
         const transaction = await prisma.paymentTransaction.findUnique({
             where: { providerOrderId: orderId },
         });
@@ -83,7 +73,7 @@ export async function POST(req) {
             );
         }
 
-        // 9. Check if already processed (idempotency)
+        // 8. Check if already processed (idempotency)
         if (transaction.status === 'success') {
             return NextResponse.json({
                 success: true,
@@ -92,7 +82,7 @@ export async function POST(req) {
             });
         }
 
-        // 10. Update transaction status
+        // 9. Update transaction status
         await prisma.paymentTransaction.update({
             where: { id: transaction.id },
             data: {
@@ -105,7 +95,7 @@ export async function POST(req) {
             },
         });
 
-        // 11. Calculate subscription dates
+        // 10. Calculate subscription dates
         const now = new Date();
         let subscriptionEndDate;
 
@@ -114,15 +104,13 @@ export async function POST(req) {
             subscriptionEndDate = new Date(now.getFullYear() + 100, now.getMonth(), now.getDate());
         } else if (transaction.plan === 'pro_yearly') {
             // Yearly plan - 1 year from now
-            subscriptionEndDate = new Date(now);
-            subscriptionEndDate.setFullYear(subscriptionEndDate.getFullYear() + 1);
+            subscriptionEndDate = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
         } else if (transaction.plan === 'pro_monthly') {
             // Monthly plan - 1 month from now
-            subscriptionEndDate = new Date(now);
-            subscriptionEndDate.setMonth(subscriptionEndDate.getMonth() + 1);
+            subscriptionEndDate = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
         }
 
-        // 12. Update user subscription
+        // 11. Update user subscription
         await prisma.user.update({
             where: { id: user.id },
             data: {
@@ -134,12 +122,12 @@ export async function POST(req) {
             },
         });
 
-        // 13. TODO: Send confirmation email
+        // 12. TODO: Send confirmation email
         // You can integrate with your email service here
 
         console.log(`Payment verified successfully for user ${user.id}, plan: ${transaction.plan}`);
 
-        // 14. Return success response
+        // 13. Return success response
         return NextResponse.json({
             success: true,
             message: 'Payment verified successfully',

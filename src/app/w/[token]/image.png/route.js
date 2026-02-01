@@ -43,10 +43,10 @@ try {
     console.error('Stack:', error.stack);
 }
 
-// 🔥 CACHE STRATEGY - Balance real-time data with scalability for 100k users
-// Cache for 5 minutes to reduce database/canvas load by 99%
-export const revalidate = 300; // 5 minutes
+// 🔥 FORCE DYNAMIC RENDERING - Prevent static generation on Vercel
+// This ensures wallpaper always shows real-time data
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 function calculateWeeksBetween(startDate, endDate) {
     const millisecondsDiff = endDate.getTime() - startDate.getTime();
@@ -114,49 +114,37 @@ export async function GET(request, { params }) {
 
     const { canvasWidth, canvasHeight } = settings;
 
-    // 3. Fetch Habits for Calculations - OPTIMIZED
-    // Only fetch last 30 days of logs instead of all logs
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
+    // 3. Fetch Habits for Calculations
     const activeHabits = await prisma.habit.findMany({
         where: { userId: currentUser.id, isActive: true },
-        select: {
-            id: true,
-            title: true,
-            logs: {
-                where: { date: { gte: thirtyDaysAgo } }, // Only last 30 days
-                select: { date: true, done: true } // Select only needed fields
-            }
-        }
+        include: { logs: true },
     });
 
-    // 3.5. Fetch Pinned Active Goals - OPTIMIZED (parallel with habits)
-    const [pinnedGoals, defaultGoals] = await Promise.all([
-        prisma.goal.findMany({
+    // 3.5. Fetch Pinned Active Goals (not completed and not life milestones)
+    const pinnedGoals = await prisma.goal.findMany({
+        where: {
+            userId: currentUser.id,
+            isCompleted: false,
+            isPinned: true,
+            category: { not: "LifeMilestone" }
+        },
+        include: { subGoals: true },
+        take: 1
+    });
+
+    // If no pinned goals, fetch recent active goals as fallback
+    const activeGoals = pinnedGoals.length > 0
+        ? pinnedGoals
+        : await prisma.goal.findMany({
             where: {
                 userId: currentUser.id,
                 isCompleted: false,
-                isPinned: true,
                 category: { not: "LifeMilestone" }
             },
-            select: { id: true, title: true, category: true, createdAt: true }, // Only needed fields
-            take: 1
-        }),
-        prisma.goal.findMany({
-            where: {
-                userId: currentUser.id,
-                isCompleted: false,
-                category: { not: "LifeMilestone" }
-            },
-            select: { id: true, title: true, category: true, createdAt: true }, // Only needed fields
+            include: { subGoals: true },
             orderBy: { createdAt: 'desc' },
             take: 1
-        })
-    ]);
-
-    // If no pinned goals, use default
-    const activeGoals = pinnedGoals.length > 0 ? pinnedGoals : defaultGoals;
+        });
 
     const activityMap = {};
     activeHabits.forEach(habit => {
@@ -175,18 +163,16 @@ export async function GET(request, { params }) {
     const currentDate = new Date();
     const currentDayKey = formatDateToDayString(currentDate);
 
-    // 4. Fetch Active Reminders - OPTIMIZED
+    // 4. Fetch Active Reminders
     const activeReminders = await prisma.reminder.findMany({
         where: {
             userId: currentUser.id,
             isActive: true
         },
-        select: { id: true, title: true, priority: true, startDate: true }, // Only needed fields
         orderBy: [
             { priority: 'desc' },
             { startDate: 'asc' }
-        ],
-        take: 10 // Limit to top 10 to prevent massive data fetches
+        ]
     });
 
     // Growth History (Last 7 days)
@@ -511,10 +497,10 @@ export async function GET(request, { params }) {
     return new Response(canvas.toBuffer("image/png"), {
         headers: {
             "Content-Type": "image/png",
-            "Cache-Control": "public, max-age=300, s-maxage=300, stale-while-revalidate=3600", // 5min cache + 1hr stale
-            "CDN-Cache-Control": "max-age=3600", // Extra CDN layer caching
-            "ETag": `"wallpaper-${token}-${Math.floor(Date.now() / 300000)}"`, // Change every 5 min
-            "Vary": "Accept-Encoding"
+            // NO CACHE: Wallpaper must always show current data
+            "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0"
         }
     });
 }

@@ -167,37 +167,19 @@ export default function PaymentCheckout({ planId, planName, amount, onSuccess, o
             }
 
             // Create order on backend
-            let response;
-            try {
-                response = await fetch('/api/payment/create-order', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        planId,
-                        useLaunchPrice: true,
-                    }),
-                });
-            } catch (fetchError) {
-                console.error('Fetch error:', fetchError);
-                throw new Error(`Network error: ${fetchError.message}`);
-            }
+            const response = await fetch('/api/payment/create-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    planId,
+                    useLaunchPrice: true,
+                }),
+            });
 
-            if (!response) {
-                throw new Error('No response from server');
-            }
-
-            let orderData;
-            try {
-                orderData = await response.json();
-            } catch (parseError) {
-                console.error('JSON parse error:', parseError);
-                throw new Error(`Invalid response from server: ${parseError.message}`);
-            }
+            const orderData = await response.json();
 
             if (!response.ok) {
-                console.error('Server error details:', orderData); // Log full details
-                const errorMessage = orderData.message || orderData.error || `Server error: ${response.status}`;
-                throw new Error(errorMessage);
+                throw new Error(orderData.error || 'Failed to create order');
             }
 
             // Handle checkout based on provider

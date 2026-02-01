@@ -72,7 +72,7 @@ export default function RootLayout({ children }) {
   const gaId = process.env.NEXT_PUBLIC_GA_ID;
 
   return (
-    <html lang="en" data-scroll-behavior="smooth">
+    <html lang="en">
       <head />
       <body className={inter.className}>
         <Providers>{children}</Providers>

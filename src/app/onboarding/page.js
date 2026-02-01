@@ -145,13 +145,14 @@ export default function OnboardingPage() {
         throw new Error(error.message || "Failed to complete onboarding");
       }
 
-      // Update session to reflect the new onboarded status
-      await update({ onboarded: true });
-
       toast.success("Welcome! Redirecting to your dashboard...");
 
-      // Use window.location.href to force a full recharge ensuring middleware sees new cookies
-      window.location.href = "/dashboard";
+      // Using window.location.href instead of router.push for a hard redirect.
+      // Removed update() call which was causing the process to hang in some environments.
+      // Hard redirect will ensure NextAuth server-side logic picks up the latest DB state.
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 1500);
     } catch (error) {
       console.error("Onboarding error:", error);
       toast.error(error.message || "An error occurred. Please try again.");
