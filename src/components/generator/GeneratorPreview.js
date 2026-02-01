@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Download, Copy, CheckCircle2, Clock } from "lucide-react";
-import Button from "@/components/ui/Button";
+import { Download, Copy, CheckCircle2 } from "lucide-react";
+import ClientWallpaperRenderer from "./ClientWallpaperRenderer";
 
 /**
  * GeneratorPreview Component - Enhanced Version
@@ -20,88 +20,37 @@ import Button from "@/components/ui/Button";
  * @param {boolean} loading - Loading state indicator
  * @param {Object} form - Current form settings
  */
-export default function GeneratorPreview({ publicToken, loading, form, onReset }) {
-    const router = useRouter(); // Initialize router
-    // ============================================================================================
-    // STATE MANAGEMENT
-    // ============================================================================================
+export default function GeneratorPreview({ publicToken, loading, form, onReset, userData }) {
+    const router = useRouter();
 
     const [copied, setCopied] = useState(false);
-    const [previewUrl, setPreviewUrl] = useState("");
     const [time, setTime] = useState(new Date());
-    const [isUpdating, setIsUpdating] = useState(false); // Local updating state for smoother UX
+    const [isRendering, setIsRendering] = useState(false);
 
-    // ============================================================================================
-    // EFFECTS: CLOCK & TIMER
-    // ============================================================================================
-
-    /**
-     * Update clock display every second
-     * Shows real-time preview of what the wallpaper will look like
-     */
+    // Update clock display every second
     useEffect(() => {
         const timer = setInterval(() => setTime(new Date()), 1000);
         return () => clearInterval(timer);
     }, []);
 
-    // ============================================================================================
-    // EFFECTS: LIVE PREVIEW GENERATOR
-    // ============================================================================================
 
-    /**
-     * Generate live preview URL with current form settings
-     * Debounced to avoid excessive API calls during rapid form changes
-     * Updates every 250ms when form changes (Reduced from 600ms for snappiness)
-     */
-    useEffect(() => {
-        if (!publicToken) return;
-
-        // Set initial URL if empty
-        if (!previewUrl) {
-            setPreviewUrl(`/w/${publicToken}/image.png?t=${Date.now()}`);
-        }
-
-        // Indicate update started immediately
-        if (form) setIsUpdating(true);
-
-        const timer = setTimeout(() => {
-            const params = new URLSearchParams();
-            params.set("t", Date.now());
-
-            // Add settings from form (live overrides)
-            if (form) {
-                Object.entries(form).forEach(([k, v]) => {
-                    if (v !== undefined && v !== null && v !== "") {
-                        // Only send simple types
-                        if (typeof v !== 'object') {
-                            params.set(k, v.toString());
-                        }
-                    }
-                });
-            }
-
-            setPreviewUrl(`/w/${publicToken}/image.png?${params.toString()}`);
-            // Note: isUpdating remains true until image physically loads or timeouts
-        }, 250); // Faster debounce
-
-        return () => {
-            clearTimeout(timer);
-        };
-    }, [form, publicToken]);
-
-    // ============================================================================================
-    // EVENT HANDLERS: DOWNLOAD & COPY
-    // ============================================================================================
-
-    /**
-     * Download the current wallpaper as PNG
-     * Uses the current preview URL with all active settings
-     */
+    // Download handler - uses server-rendered image for final export
     async function handleDownload() {
         if (!publicToken) return;
-        const url = previewUrl || `/w/${publicToken}/image.png`;
 
-        // ✅ Android App Bridge Support
+        // Build server URL with all current settings
+        const params = new URLSearchParams();
+        Object.entries(form).forEach(([k, v]) => {
+            if (v !== undefined && v !== null && v !== "") {
+                if (typeof v !== 'object') {
+                    params.set(k, v.toString());
+                }
+            }
+        });
+
+        const url = `/w/${publicToken}/image.png?${params.toString()}`;
+
+        // Android App Bridge Support
         if (typeof window !== 'undefined' && window.Android && window.Android.downloadFile) {
             try {
                 const response = await fetch(url);
@@ -126,10 +75,7 @@ export default function GeneratorPreview({ publicToken, loading, form, onReset }
         document.body.removeChild(link);
     }
 
-    /**
-     * Copy the wallpaper sharing URL to clipboard
-     * Shows success feedback for 2 seconds
-     */
+    // Copy URL handler
     async function handleCopy() {
         if (!publicToken) return;
         const url = `${window.location.origin}/w/${publicToken}/image.png`;
@@ -138,19 +84,9 @@ export default function GeneratorPreview({ publicToken, loading, form, onReset }
         setTimeout(() => setCopied(false), 2000);
     }
 
-    // ============================================================================================
-    // RENDER
-    // ============================================================================================
-
     return (
         <div className="sticky top-6 space-y-4">
-
-            {/* ┌─────────────────────────────────────────────────────────────────────────────────┐ */}
-            {/* │ ACTION BUTTONS BAR - Download, Copy, Reset                                      │ */}
-            {/* │ - Responsive spacing and sizing                                                 │ */}
-            {/* │ - Feedback states (success, disabled, hover)                                    │ */}
-            {/* └─────────────────────────────────────────────────────────────────────────────────┘ */}
-
+            {/* Action Buttons */}
             <div className="space-y-2 mb-4">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                     <button
@@ -188,43 +124,27 @@ export default function GeneratorPreview({ publicToken, loading, form, onReset }
                         <span>Download</span>
                     </button>
                 </div>
-                {(loading || isUpdating) && (
+                {(loading || isRendering) && (
                     <p className="text-xs text-orange-600 text-center animate-pulse font-medium">
-                        ⏳ Updating live preview...
+                        ⚡ Rendering preview...
                     </p>
                 )}
             </div>
 
-            {/* ┌─────────────────────────────────────────────────────────────────────────────────┐ */}
-            {/* │ PHONE MOCKUP - Responsive Container                                            │ */}
-            {/* │ - Realistic iPhone-style design                                                │ */}
-            {/* │ - Dynamic Island notch simulation                                              │ */}
-            {/* │ - Live preview of wallpaper                                                    │ */}
-            {/* │ - Real-time clock display                                                      │ */}
-            {/* └─────────────────────────────────────────────────────────────────────────────────┘ */}
-
+            {/* Phone Mockup with Client-Side Canvas */}
             <div className="relative mx-auto h-[580px] sm:h-[600px] w-[290px] sm:w-[300px] overflow-hidden rounded-[38px] sm:rounded-[40px] border-8 border-gray-900 bg-black shadow-2xl hover:shadow-3xl transition-shadow">
-
-                {/* Dynamic Island / Notch - iPhone Style */}
+                {/* Dynamic Island / Notch */}
                 <div className="absolute top-0 left-1/2 h-6 sm:h-7 w-32 sm:w-40 -translate-x-1/2 rounded-b-3xl bg-black z-20 shadow-lg" />
 
-                {/* Screen Content Container */}
+                {/* Screen Content */}
                 <div className="h-full w-full bg-gray-900 text-white flex items-center justify-center relative overflow-hidden">
-
-                    {/* Loading Overlay (Initial Load) */}
+                    {/* Loading Overlay */}
                     {loading && (
                         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-30 flex items-center justify-center">
                             <div className="text-center">
                                 <div className="animate-spin text-4xl mb-2">⏳</div>
-                                <p className="text-xs text-white/80">Generating...</p>
+                                <p className="text-xs text-white/80">Loading...</p>
                             </div>
-                        </div>
-                    )}
-
-                    {/* Update Spinner (Subtle) */}
-                    {isUpdating && !loading && (
-                        <div className="absolute top-12 right-4 z-30">
-                            <div className="h-5 w-5 border-2 border-white/50 border-t-white rounded-full animate-spin shadow-lg"></div>
                         </div>
                     )}
 
@@ -238,17 +158,17 @@ export default function GeneratorPreview({ publicToken, loading, form, onReset }
                         </p>
                     </div>
 
-                    {publicToken ? (
-                        <img
-                            src={previewUrl || `/w/${publicToken}/image.png?t=${Date.now()}`}
-                            alt="Wallpaper Preview"
-                            className={`w-full h-full object-cover transition-all duration-500 ${isUpdating ? 'scale-[1.02] blur-[2px]' : 'scale-100 blur-0'}`}
-                            onLoad={() => setIsUpdating(false)}
-                            onError={() => setIsUpdating(false)}
+                    {/* Client-Side Canvas Renderer (Instant Updates!) */}
+                    {publicToken && userData ? (
+                        <ClientWallpaperRenderer
+                            settings={form}
+                            userData={userData}
+                            onRenderComplete={() => setIsRendering(false)}
+                            className="absolute inset-0"
                         />
                     ) : (
                         <p className="text-sm text-gray-500 text-center px-4">
-                            Save settings to generate preview
+                            {!publicToken ? "Save settings to generate preview" : "Loading data..."}
                         </p>
                     )}
                 </div>

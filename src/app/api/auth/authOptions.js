@@ -114,7 +114,12 @@ export const authOptions = {
       return true;
     },
 
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
+      // ✅ Handle client-side session updates (e.g. completing onboarding)
+      if (trigger === "update" && session?.onboarded) {
+        token.onboarded = session.onboarded;
+      }
+
       // ✅ attach DB userId to token
       if (user) {
         token.id = user.id;

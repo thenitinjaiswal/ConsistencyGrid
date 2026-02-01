@@ -145,15 +145,13 @@ export default function OnboardingPage() {
         throw new Error(error.message || "Failed to complete onboarding");
       }
 
-      toast.success("Welcome! Redirecting to your dashboard...");
-
-      // Update session to reflect the new onboarded status (fetches from DB via jwt callback)
-      await update();
+      // Update session to reflect the new onboarded status
+      await update({ onboarded: true });
 
       toast.success("Welcome! Redirecting to your dashboard...");
 
-      // Use router.push for smoother transition, session is now fresh
-      router.push("/dashboard");
+      // Use window.location.href to force a full recharge ensuring middleware sees new cookies
+      window.location.href = "/dashboard";
     } catch (error) {
       console.error("Onboarding error:", error);
       toast.error(error.message || "An error occurred. Please try again.");
