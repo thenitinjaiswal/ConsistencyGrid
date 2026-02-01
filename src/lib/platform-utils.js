@@ -138,10 +138,10 @@ export function openUpgradePage() {
 export function getPlatformMessages() {
     if (isAndroidApp()) {
         return {
-            upgradeButton: 'Upgrade via Website',
-            upgradeDescription: 'Visit our website to manage your subscription',
-            pricingHidden: 'Pricing available on our website',
-            alreadySubscribed: 'Already subscribed? Your subscription will sync automatically.',
+            upgradeButton: 'Continue on Website',
+            upgradeDescription: 'Access additional features through our website using your browser.',
+            pricingHidden: 'Additional services available on our website',
+            alreadySubscribed: 'Already a member? Your account will sync automatically when you sign in.',
         };
     }
 

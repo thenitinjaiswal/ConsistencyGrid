@@ -46,7 +46,9 @@ export default function UpgradeBanner({
                             <Crown className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <h3 className="text-white font-bold text-sm">Upgrade to Pro</h3>
+                            <h3 className="text-white font-bold text-sm">
+                                {showPaymentUI ? "Access Pro Features" : "Members Area"}
+                            </h3>
                             <p className="text-orange-50 text-xs">Unlock unlimited features</p>
                         </div>
                     </div>
@@ -54,7 +56,7 @@ export default function UpgradeBanner({
                         onClick={handleUpgrade}
                         className="px-4 py-2 bg-white text-orange-600 rounded-lg font-bold text-sm hover:bg-orange-50 transition-colors flex items-center gap-2 whitespace-nowrap"
                     >
-                        Upgrade
+                        {showPaymentUI ? "View Plans" : "Continue"}
                         {showPaymentUI ? (
                             <ArrowRight className="w-4 h-4" />
                         ) : (
@@ -83,7 +85,9 @@ export default function UpgradeBanner({
                             <Sparkles className="w-5 h-5 text-white" />
                         </div>
                         <div className="flex-1">
-                            <h3 className="font-bold text-gray-900 mb-1">Unlock Pro Features</h3>
+                            <h3 className="font-bold text-gray-900 mb-1">
+                                {showPaymentUI ? "Unlock Pro Features" : "Members Area"}
+                            </h3>
                             <p className="text-sm text-gray-600 mb-3">
                                 Get unlimited habits, goals, and advanced analytics
                             </p>
@@ -91,7 +95,7 @@ export default function UpgradeBanner({
                                 onClick={handleUpgrade}
                                 className="w-full px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-bold text-sm hover:shadow-lg transition-all flex items-center justify-center gap-2"
                             >
-                                {showPaymentUI ? "View Plans" : messages.upgradeButton}
+                                {showPaymentUI ? "View Plans" : "Continue"}
                                 {showPaymentUI ? (
                                     <ArrowRight className="w-4 h-4" />
                                 ) : (
