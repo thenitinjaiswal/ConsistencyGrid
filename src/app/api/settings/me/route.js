@@ -21,6 +21,7 @@ export async function GET() {
         email: dbUser?.email,
         name: dbUser?.name,
         publicToken: dbUser?.publicToken,
+        plan: dbUser?.plan,
       },
       settings: dbUser?.settings || null,
     },

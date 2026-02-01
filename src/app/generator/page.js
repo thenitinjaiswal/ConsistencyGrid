@@ -19,6 +19,7 @@ export default function GeneratorPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [publicToken, setPublicToken] = useState("");
+  const [plan, setPlan] = useState("free");
 
   const [form, setForm] = useState({
     dob: "",
@@ -60,6 +61,10 @@ export default function GeneratorPage() {
         if (window.Android && window.Android.saveToken) {
           window.Android.saveToken(data.user.publicToken);
         }
+      }
+
+      if (data?.user?.plan) {
+        setPlan(data.user.plan);
       }
 
       if (data?.settings) {
@@ -173,6 +178,8 @@ export default function GeneratorPage() {
               form={form}
               setForm={setForm}
               onSave={handleSave}
+              publicToken={publicToken}
+              userPlan={plan}
             />
           </div>
 

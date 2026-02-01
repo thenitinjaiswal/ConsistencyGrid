@@ -22,6 +22,8 @@ import {
 import { sendWallpaperToAndroid } from "@/utils/sendWallpaperToAndroid";
 import Card from "@/components/ui/Card";
 
+import UpgradePrompt from "@/components/payment/UpgradePrompt";
+
 export default function GoalsPage() {
     // State for data
     const [stats, setStats] = useState({
@@ -38,7 +40,9 @@ export default function GoalsPage() {
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
     const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
     const [isInsightsModalOpen, setIsInsightsModalOpen] = useState(false);
+    const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
     const [publicToken, setPublicToken] = useState("");
+    const [plan, setPlan] = useState("free");
 
     useEffect(() => {
         async function loadData() {
@@ -56,6 +60,9 @@ export default function GoalsPage() {
                     const settingsData = await settingsRes.json();
                     if (settingsData?.user?.publicToken) {
                         setPublicToken(settingsData.user.publicToken);
+                    }
+                    if (settingsData?.user?.plan) {
+                        setPlan(settingsData.user.plan);
                     }
                 }
             } catch (error) {
@@ -302,6 +309,16 @@ export default function GoalsPage() {
                     goals={goals}
                 />
 
+                <UpgradePrompt
+                    isOpen={showUpgradePrompt}
+                    onClose={() => setShowUpgradePrompt(false)}
+                    title="Goal Limit Reached"
+                    message="You've reached the limit of 3 goals on the Free plan."
+                    feature="goals"
+                    limit={3}
+                    currentCount={goals.length}
+                />
+
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
@@ -314,7 +331,14 @@ export default function GoalsPage() {
                             Filter
                         </button>
                         <button
-                            onClick={() => setIsModalOpen(true)}
+                            onClick={() => {
+                                const isFreeUser = plan === "free" || !plan;
+                                if (isFreeUser && goals.length >= 3) {
+                                    setShowUpgradePrompt(true);
+                                } else {
+                                    setIsModalOpen(true);
+                                }
+                            }}
                             className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors shadow-sm"
                         >
                             <Plus className="w-4 h-4" />
@@ -413,7 +437,14 @@ export default function GoalsPage() {
 
                             {/* Add New Placeholder */}
                             <button
-                                onClick={() => setIsModalOpen(true)}
+                                onClick={() => {
+                                    const isFreeUser = plan === "free" || !plan;
+                                    if (isFreeUser && goals.length >= 3) {
+                                        setShowUpgradePrompt(true);
+                                    } else {
+                                        setIsModalOpen(true);
+                                    }
+                                }}
                                 className="w-full border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center justify-center text-gray-400 hover:border-orange-500 hover:text-orange-500 hover:bg-orange-50/50 transition-all group cursor-pointer"
                             >
                                 <div className="w-10 h-10 rounded-full bg-gray-100 group-hover:bg-orange-100 flex items-center justify-center mb-3 transition-colors">
