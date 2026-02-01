@@ -7,9 +7,11 @@ import QuickTips from "@/components/dashboard/QuickTips";
 import UpcomingReminders from "@/components/dashboard/UpcomingReminders";
 import WeeklyStatsCard from "@/components/dashboard/WeeklyStatsCard";
 import GoalsProgressCard from "@/components/dashboard/GoalsProgressCard";
+import UpgradeBanner from "@/components/payment/UpgradeBanner";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/authOptions";
 import { redirect } from "next/navigation";
+import prisma from "@/lib/prisma";
 
 export const metadata = {
   title: "Dashboard - Consistency Grid",
@@ -19,17 +21,32 @@ export const metadata = {
 export default async function DashboardPage() {
   // Check if user has completed onboarding
   const session = await getServerSession(authOptions);
-  
+
   if (!session?.user?.onboarded) {
     redirect("/onboarding");
   }
 
+  // Fetch user plan
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { plan: true }
+  });
+
+  const isFreeUser = !user || user.plan === "free" || !user.plan;
+
   return (
     <DashboardLayout active="Dashboard">
       <TopHeader />
-      
+
       {/* Stats Row - 4 columns */}
       <StatsRow />
+
+      {/* Upgrade Banner for Free Users */}
+      {isFreeUser && (
+        <div className="mt-6">
+          <UpgradeBanner variant="compact" showFeatures={false} />
+        </div>
+      )}
 
       {/* Main Content Grid: Wallpaper (left) + Today's Progress (right) */}
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
