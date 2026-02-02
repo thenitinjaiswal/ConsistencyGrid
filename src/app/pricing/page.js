@@ -8,12 +8,43 @@ import { Check, Zap, Crown, Building2, ArrowRight, ExternalLink } from "lucide-r
 import { useState, useEffect } from "react";
 import { shouldShowPaymentUI, getPlatformMessages, getUpgradeUrl } from "@/lib/platform-utils";
 
+import { useSearchParams, useRouter } from "next/navigation";
+
 export default function PricingPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
   const [billingCycle, setBillingCycle] = useState("monthly");
   const [currentPlan, setCurrentPlan] = useState("free");
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
   const [showPaymentUI, setShowPaymentUI] = useState(true); // Default to true for SSR
+  const [isAutoLoggingIn, setIsAutoLoggingIn] = useState(false);
+
+  // Handle Auto-Login from Android App
+  useEffect(() => {
+    const token = searchParams.get('token');
+
+    if (token && status === 'unauthenticated' && !isAutoLoggingIn) {
+      console.log('Auto-logging in with token...');
+      setIsAutoLoggingIn(true);
+
+      signIn('token-login', {
+        token,
+        redirect: false,
+        callbackUrl: '/pricing'
+      }).then((result) => {
+        if (result?.error) {
+          console.error('Auto-login failed:', result.error);
+          setIsAutoLoggingIn(false);
+        } else {
+          console.log('Auto-login successful!');
+          // Refresh page state to update session
+          window.location.reload();
+        }
+      });
+    }
+  }, [searchParams, status, isAutoLoggingIn]);
 
   // Detect platform on client side
   useEffect(() => {

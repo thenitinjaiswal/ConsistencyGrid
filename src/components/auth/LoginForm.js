@@ -11,6 +11,43 @@ export default function LoginForm() {
     const [loading, setLoading] = useState(false);
     const [form, setForm] = useState({ email: "", password: "" });
 
+    // Auto-login logic for Android App
+    useEffect(() => {
+        // We handle this manually because useSearchParams might not be available
+        // in all contexts or might cause hydration mismatches if not suspended
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');
+
+            if (token) {
+                // If token exists, attempt auto-login
+                // This prevents the user from seeing the login form if they have a valid token
+                console.log('[LoginForm] Token detected, attempting auto-login...');
+                setLoading(true);
+
+                signIn("token-login", {
+                    token,
+                    redirect: false,
+                    callbackUrl: "/dashboard",
+                }).then((result) => {
+                    if (result?.error) {
+                        toast.error("Auto-login failed. Please sign in manually.");
+                        setLoading(false);
+                        // Clean URL
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    } else {
+                        toast.success("Welcome back!");
+                        // Re-fetch token to store in localStorage (handled by storeAuthToken inside success flow?)
+                        // No, storeAuthToken is called in manual login. We should call it here too.
+                        storeAuthToken().then(() => {
+                            router.push("/dashboard");
+                        });
+                    }
+                });
+            }
+        }
+    }, [router]);
+
     async function handleLogin(e) {
         e.preventDefault();
         setLoading(true);

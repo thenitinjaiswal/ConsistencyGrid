@@ -45,8 +45,16 @@ export class RazorpayProvider extends PaymentProvider {
         try {
             const razorpay = await this.getRazorpay();
 
-            // Generate unique receipt ID
-            const receipt = `rcpt_${Date.now()}_${metadata.userId || 'guest'}`;
+            // Generate unique receipt ID (Must be <= 40 chars)
+            // Format: rcpt_timestamp_shortUid
+            // timestamp: 13 chars
+            // rcpt_: 5 chars
+            // remaining: 22 chars
+            const uid = (metadata.userId || 'guest').toString();
+            // Take last 10 chars of UID to ensure uniqueness but keep it short
+            const shortUid = uid.length > 10 ? uid.slice(-10) : uid;
+
+            const receipt = `rcpt_${Date.now()}_${shortUid}`;
 
             const order = await razorpay.orders.create({
                 amount: Math.round(amount), // Amount in paise (already converted)
@@ -67,8 +75,17 @@ export class RazorpayProvider extends PaymentProvider {
                 createdAt: order.created_at,
             };
         } catch (error) {
-            console.error('Razorpay order creation failed:', error);
-            throw new Error(`Failed to create Razorpay order: ${error.message}`);
+            console.error('Razorpay order creation failed. Full Error:', JSON.stringify(error, null, 2));
+
+            // Extract meaningful error message
+            let message = error.message;
+            if (error.error && error.error.description) {
+                message = error.error.description;
+            } else if (error.description) {
+                message = error.description;
+            }
+
+            throw new Error(message || 'Failed to create Razorpay order');
         }
     }
 

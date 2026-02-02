@@ -179,7 +179,9 @@ export default function PaymentCheckout({ planId, planName, amount, onSuccess, o
             const orderData = await response.json();
 
             if (!response.ok) {
-                throw new Error(orderData.error || 'Failed to create order');
+                // Use the specific message if available, otherwise fallback
+                const errorMessage = orderData.message || orderData.error || 'Failed to create order';
+                throw new Error(errorMessage);
             }
 
             // Handle checkout based on provider
