@@ -41,12 +41,12 @@ export default async function DashboardPage() {
       {/* Stats Row - 4 columns */}
       <StatsRow />
 
-      {/* Upgrade Banner for Free Users */}
-      {isFreeUser && (
-        <div className="mt-6">
-          <UpgradeBanner variant="compact" showFeatures={false} />
-        </div>
-      )}
+      {/* Upgrade Banner - FORCED VISIBLE FOR TESTING */}
+      {/* {isFreeUser && ( */}
+      <div className="mt-6">
+        <UpgradeBanner variant="compact" showFeatures={false} />
+      </div>
+      {/* )} */}
 
       {/* Main Content Grid: Wallpaper (left) + Today's Progress (right) */}
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
