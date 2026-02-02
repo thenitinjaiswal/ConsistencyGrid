@@ -48,44 +48,46 @@ export default function LoginForm() {
         }
     }, [router]);
 
-    // Google One-Tap Sign-In
+
+    // Native Android Account Picker (for WebView)
     useEffect(() => {
-        const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+        // Check if running in Android WebView
+        const isAndroid = typeof window !== 'undefined' && window.Android;
 
-        if (!clientId || typeof window === 'undefined') return;
+        if (!isAndroid) return;
 
-        // Load Google One-Tap library
-        const script = document.createElement('script');
-        script.src = 'https://accounts.google.com/gsi/client';
-        script.async = true;
-        script.defer = true;
+        // Define callback for when user selects an account
+        window.handleGoogleAccountSelected = async (email) => {
+            try {
+                setLoading(true);
+                console.log('[Android Account Picker] User selected:', email);
 
-        script.onload = () => {
-            // Initialize One-Tap
-            window.google?.accounts.id.initialize({
-                client_id: clientId,
-                callback: handleGoogleOneTapResponse,
-                auto_select: true, // Auto-select if only one account
-                cancel_on_tap_outside: false,
-            });
+                // Sign in with Google using the selected account
+                const result = await signIn("google", {
+                    login_hint: email, // Pre-fill the email
+                    redirect: false,
+                    callbackUrl: "/dashboard",
+                });
 
-            // Show the One-Tap prompt
-            window.google?.accounts.id.prompt((notification) => {
-                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                    console.log('[One-Tap] Not shown:', notification.getNotDisplayedReason());
+                if (result?.error) {
+                    throw new Error("Google sign-in failed");
                 }
-            });
-        };
 
-        document.body.appendChild(script);
-
-        return () => {
-            // Cleanup
-            if (script.parentNode) {
-                script.parentNode.removeChild(script);
+                await storeAuthToken();
+                toast.success(`Welcome, ${email.split('@')[0]}!`);
+                router.push("/dashboard");
+            } catch (error) {
+                toast.error(error.message || "Sign-in failed");
+                setLoading(false);
             }
         };
-    }, []);
+
+        // Cleanup
+        return () => {
+            delete window.handleGoogleAccountSelected;
+        };
+    }, [router]);
+
 
     // Handle Google One-Tap response
     const handleGoogleOneTapResponse = async (response) => {
@@ -162,7 +164,14 @@ export default function LoginForm() {
     }
 
     const handleGoogleSignIn = () => {
-        signIn("google", { callbackUrl: "/dashboard" });
+        // Check if running in Android WebView
+        if (typeof window !== 'undefined' && window.Android && window.Android.showGoogleAccountPicker) {
+            // Use native Android account picker
+            window.Android.showGoogleAccountPicker();
+        } else {
+            // Use regular Google OAuth for web
+            signIn("google", { callbackUrl: "/dashboard" });
+        }
     };
 
     return (
