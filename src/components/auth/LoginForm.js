@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -47,6 +47,70 @@ export default function LoginForm() {
             }
         }
     }, [router]);
+
+    // Google One-Tap Sign-In
+    useEffect(() => {
+        const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+        if (!clientId || typeof window === 'undefined') return;
+
+        // Load Google One-Tap library
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+
+        script.onload = () => {
+            // Initialize One-Tap
+            window.google?.accounts.id.initialize({
+                client_id: clientId,
+                callback: handleGoogleOneTapResponse,
+                auto_select: true, // Auto-select if only one account
+                cancel_on_tap_outside: false,
+            });
+
+            // Show the One-Tap prompt
+            window.google?.accounts.id.prompt((notification) => {
+                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                    console.log('[One-Tap] Not shown:', notification.getNotDisplayedReason());
+                }
+            });
+        };
+
+        document.body.appendChild(script);
+
+        return () => {
+            // Cleanup
+            if (script.parentNode) {
+                script.parentNode.removeChild(script);
+            }
+        };
+    }, []);
+
+    // Handle Google One-Tap response
+    const handleGoogleOneTapResponse = async (response) => {
+        try {
+            setLoading(true);
+
+            const result = await signIn("google", {
+                credential: response.credential,
+                redirect: false,
+                callbackUrl: "/dashboard",
+            });
+
+            if (result?.error) {
+                throw new Error("Google sign-in failed");
+            }
+
+            await storeAuthToken();
+            toast.success("Welcome!");
+            router.push("/dashboard");
+        } catch (error) {
+            toast.error(error.message || "Sign-in failed");
+            setLoading(false);
+        }
+    };
+
 
     async function handleLogin(e) {
         e.preventDefault();
