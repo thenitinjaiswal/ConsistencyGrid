@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -47,72 +47,6 @@ export default function LoginForm() {
             }
         }
     }, [router]);
-
-
-    // Native Android Account Picker (for WebView)
-    useEffect(() => {
-        // Check if running in Android WebView
-        const isAndroid = typeof window !== 'undefined' && window.Android;
-
-        if (!isAndroid) return;
-
-        // Define callback for when user selects an account
-        window.handleGoogleAccountSelected = async (email) => {
-            try {
-                setLoading(true);
-                console.log('[Android Account Picker] User selected:', email);
-
-                // Sign in with Google using the selected account
-                const result = await signIn("google", {
-                    login_hint: email, // Pre-fill the email
-                    redirect: false,
-                    callbackUrl: "/dashboard",
-                });
-
-                if (result?.error) {
-                    throw new Error("Google sign-in failed");
-                }
-
-                await storeAuthToken();
-                toast.success(`Welcome, ${email.split('@')[0]}!`);
-                router.push("/dashboard");
-            } catch (error) {
-                toast.error(error.message || "Sign-in failed");
-                setLoading(false);
-            }
-        };
-
-        // Cleanup
-        return () => {
-            delete window.handleGoogleAccountSelected;
-        };
-    }, [router]);
-
-
-    // Handle Google One-Tap response
-    const handleGoogleOneTapResponse = async (response) => {
-        try {
-            setLoading(true);
-
-            const result = await signIn("google", {
-                credential: response.credential,
-                redirect: false,
-                callbackUrl: "/dashboard",
-            });
-
-            if (result?.error) {
-                throw new Error("Google sign-in failed");
-            }
-
-            await storeAuthToken();
-            toast.success("Welcome!");
-            router.push("/dashboard");
-        } catch (error) {
-            toast.error(error.message || "Sign-in failed");
-            setLoading(false);
-        }
-    };
-
 
     async function handleLogin(e) {
         e.preventDefault();
@@ -165,11 +99,15 @@ export default function LoginForm() {
 
     const handleGoogleSignIn = () => {
         // Check if running in Android WebView
-        if (typeof window !== 'undefined' && window.Android && window.Android.showGoogleAccountPicker) {
-            // Use native Android account picker
-            window.Android.showGoogleAccountPicker();
+        const isAndroid = typeof window !== 'undefined' && window.Android;
+
+        if (isAndroid) {
+            // Use special callback for Android to trigger Deep Link
+            signIn("google", {
+                callbackUrl: "/auth/android-success"
+            });
         } else {
-            // Use regular Google OAuth for web
+            // Regular web flow
             signIn("google", { callbackUrl: "/dashboard" });
         }
     };
