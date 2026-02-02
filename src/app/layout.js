@@ -75,7 +75,23 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head />
       <body className={inter.className}>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          {/* Debug Marker - To verify deployment */}
+          <div style={{
+            position: 'fixed',
+            bottom: 0,
+            right: 0,
+            padding: '4px 8px',
+            background: '#ff7a00',
+            color: 'white',
+            fontSize: '10px',
+            zIndex: 9999,
+            opacity: 0.8
+          }}>
+            v1.1 (Razorpay Fixed)
+          </div>
+        </Providers>
       </body>
     </html>
   );
