@@ -119,9 +119,11 @@ export const authOptions = {
       if (user) {
         token.id = user.id;
         token.onboarded = user.onboarded;
+        if (user.publicToken) {
+          token.publicToken = user.publicToken;
+        }
       } else {
         // Always fetch the latest onboarded status from DB
-        // This ensures flag is synced on every token refresh
         const dbUser = await prisma.user.findUnique({
           where: { email: token.email },
           select: { id: true, onboarded: true, emailVerified: true },
@@ -131,6 +133,13 @@ export const authOptions = {
           token.id = dbUser.id;
           token.onboarded = dbUser.onboarded;
           token.verified = !!dbUser.emailVerified;
+
+          // Need publicToken for mobile auth handoff
+          const fullUser = await prisma.user.findUnique({
+            where: { id: dbUser.id },
+            select: { publicToken: true }
+          });
+          if (fullUser) token.publicToken = fullUser.publicToken;
         }
       }
 
@@ -143,6 +152,7 @@ export const authOptions = {
         session.user.id = token.id;
         session.user.onboarded = token.onboarded;
         session.user.verified = token.verified;
+        session.user.publicToken = token.publicToken;
       }
 
       return session;

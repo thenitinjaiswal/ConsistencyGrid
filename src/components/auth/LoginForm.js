@@ -98,16 +98,16 @@ export default function LoginForm() {
     }
 
     const handleGoogleSignIn = () => {
-        // Check if running in Android WebView
-        const isAndroid = typeof window !== 'undefined' && window.Android;
+        // Detect if running in Android app (via injected global or user agent)
+        const isAndroidApp =
+            typeof window !== 'undefined' &&
+            (window.consistencyGridPlatform === 'android' ||
+                navigator.userAgent.includes('ConsistencyGridApp'));
 
-        if (isAndroid) {
-            // Use special callback for Android to trigger Deep Link
-            signIn("google", {
-                callbackUrl: "/auth/android-success"
-            });
+        if (isAndroidApp) {
+            console.log("Android environment detected: Redirecting to mobile callback");
+            signIn("google", { callbackUrl: "/mobile-auth-callback" });
         } else {
-            // Regular web flow
             signIn("google", { callbackUrl: "/dashboard" });
         }
     };
