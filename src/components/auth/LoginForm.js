@@ -105,8 +105,8 @@ export default function LoginForm() {
                 navigator.userAgent.includes('ConsistencyGridApp'));
 
         if (isAndroidApp) {
-            console.log("Android environment detected: Redirecting to mobile callback");
-            signIn("google", { callbackUrl: "/mobile-auth-callback" });
+            console.log("Android environment detected: Adding OAuth flag");
+            signIn("google", { callbackUrl: "/dashboard?from_oauth=true" });
         } else {
             signIn("google", { callbackUrl: "/dashboard" });
         }

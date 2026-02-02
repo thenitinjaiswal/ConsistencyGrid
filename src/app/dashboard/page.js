@@ -12,6 +12,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/authOptions";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
+import AndroidOAuthRedirect from "@/components/auth/AndroidOAuthRedirect";
 
 export const metadata = {
   title: "Dashboard - Consistency Grid",
@@ -36,6 +37,7 @@ export default async function DashboardPage() {
 
   return (
     <DashboardLayout active="Dashboard">
+      <AndroidOAuthRedirect />
       <TopHeader />
 
       {/* Stats Row - 4 columns */}
