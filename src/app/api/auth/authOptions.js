@@ -160,7 +160,7 @@ export const authOptions = {
   },
 
   pages: {
-    signIn: "/login",
-    error: "/api/auth/error",
-  },
+  signIn: "/login",
+  error: "/login", // redirect errors to UI page
+},
 };
