@@ -7,9 +7,13 @@ import { useSession } from "next-auth/react";
  * MobileAuthCallback
  * --------------------------------------------------
  * PURPOSE:
- * - HTTPS → Android App Link bridge
- * - Supports both Auto-Redirect and Manual Tap
- * - Target: https://consistencygrid.netlify.app/app-login (Intercepted by App)
+ * - HTTPS → Android deep-link bridge
+ * - Must be 100% stable in Chrome Custom Tabs
+ *
+ * IMPORTANT RULES:
+ * - NO router redirects from here
+ * - Deep link must fire ONLY ONCE
+ * - Fallback UI must always exist
  */
 export default function MobileAuthCallbackPage() {
     const { data: session, status } = useSession();
@@ -31,16 +35,15 @@ export default function MobileAuthCallbackPage() {
 
         hasRedirected.current = true;
 
-        // ✅ APP LINK (Interpreted by Android OS to open the app)
-        const appLink = `https://consistencygrid.netlify.app/app-login?token=${token}`;
+        const deepLink = `consistencygrid://login-success?token=${token}`;
 
-        // Attempt auto-redirect
-        window.location.href = appLink;
+        // 🔥 SINGLE, GUARDED deep-link fire
+        window.location.href = deepLink;
 
-        // Fallback in case App Link isn't intercepted immediately
+        // Fallback in case Chrome blocks auto-open
         const timer = setTimeout(() => {
             setShowFallback(true);
-        }, 1000); // Shorter timeout for better UX
+        }, 2500);
 
         return () => clearTimeout(timer);
     }, [status, session]);
@@ -56,12 +59,12 @@ export default function MobileAuthCallbackPage() {
                 </p>
 
                 {/* Fallback button */}
-                {session?.user?.publicToken && (
+                {showFallback && session?.user?.publicToken && (
                     <a
-                        href={`https://consistencygrid.netlify.app/app-login?token=${session.user.publicToken}`}
+                        href={`consistencygrid://login-success?token=${session.user.publicToken}`}
                         style={styles.button}
                     >
-                        Return to App
+                        Open App Manually
                     </a>
                 )}
 
@@ -80,7 +83,6 @@ const styles = {
         alignItems: "center",
         justifyContent: "center",
         background: "linear-gradient(135deg, #fffaf1 0%, #ffffff 100%)",
-        fontFamily: "system-ui, -apple-system, sans-serif",
     },
     container: {
         textAlign: "center",
@@ -101,7 +103,6 @@ const styles = {
         fontSize: 22,
         fontWeight: 700,
         marginBottom: 10,
-        color: "#111",
     },
     text: {
         color: "#666",
@@ -118,13 +119,11 @@ const styles = {
     },
     button: {
         display: "inline-block",
-        padding: "14px 28px",
+        padding: "12px 24px",
         background: "#f97316",
         color: "#fff",
-        borderRadius: 12,
+        borderRadius: 8,
         fontWeight: 600,
         textDecoration: "none",
-        marginTop: 10,
-        boxShadow: "0 4px 6px -1px rgba(249, 115, 22, 0.2)",
     },
 };

@@ -70,8 +70,8 @@ export default function LoginForm() {
 
         signIn("google", {
             callbackUrl: isAndroid
-                ? "https://consistencygrid.netlify.app/mobile-auth-callback"
-                : "https://consistencygrid.netlify.app/dashboard",
+                ? "/mobile-auth-callback"
+                : "/dashboard",
         });
     }
 
