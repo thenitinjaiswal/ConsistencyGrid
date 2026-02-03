@@ -107,8 +107,8 @@ export default function LoginForm() {
 
         if (isAndroidApp) {
             console.log("🤖 Android detected: Using mobile OAuth flow");
-            // alert("Android Detected!"); // Debug
-            signIn("google", { callbackUrl: "/auth/mobile-success" });
+            // callbackUrl must point to the mobile-auth-callback page handler
+            signIn("google", { callbackUrl: "/mobile-auth-callback" });
         } else {
             console.log("🌐 Web detected: Using standard OAuth flow");
             signIn("google", { callbackUrl: "/dashboard" });
