@@ -89,10 +89,17 @@ export default function LoginForm() {
      * Google OAuth Trigger
      * ------------------------------------------ */
     function handleGoogleSignIn() {
+        const searchParams = new URLSearchParams(window.location.search);
         const isAndroid =
             typeof window !== "undefined" &&
-            (localStorage.getItem("consistencygrid_platform") === "android" ||
+            (searchParams.get("platform") === "android" ||
+                localStorage.getItem("consistencygrid_platform") === "android" ||
                 navigator.userAgent.includes("ConsistencyGridApp"));
+
+        // Persist platform for future checks
+        if (isAndroid && typeof window !== "undefined") {
+            localStorage.setItem("consistencygrid_platform", "android");
+        }
 
         signIn("google", {
             callbackUrl: isAndroid

@@ -157,10 +157,21 @@ export const authOptions = {
 
       return session;
     },
+
+    async redirect({ url, baseUrl }) {
+      // Allow relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // Allow callback URLs on the same origin
+      if (new URL(url).origin === baseUrl) return url;
+      // 🔥 Explicitly allow the mobile-auth-callback on the main domain even if passed differently
+      if (url.includes("/mobile-auth-callback")) return url;
+
+      return baseUrl;
+    },
   },
 
   pages: {
-  signIn: "/login",
-  error: "/login", // redirect errors to UI page
-},
+    signIn: "/login",
+    error: "/login", // redirect errors to UI page
+  },
 };

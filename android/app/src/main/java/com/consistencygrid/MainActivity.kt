@@ -95,7 +95,7 @@ class MainActivity : AppCompatActivity() {
         if (token != null) {
             loginWithToken(token) // Auto-login on restart
         } else {
-            webView.loadUrl("$WEBSITE_URL/login")
+            webView.loadUrl("$WEBSITE_URL/login?platform=android")
         }
     }
 
