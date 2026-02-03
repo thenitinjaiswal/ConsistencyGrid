@@ -102,10 +102,12 @@ export default function LoginForm() {
         const isAndroidApp =
             typeof window !== 'undefined' &&
             (window.consistencyGridPlatform === 'android' ||
-                navigator.userAgent.includes('ConsistencyGridApp'));
+                navigator.userAgent.includes('ConsistencyGridApp') ||
+                window.location.search.includes('platform=android'));
 
         if (isAndroidApp) {
             console.log("🤖 Android detected: Using mobile OAuth flow");
+            // alert("Android Detected!"); // Debug
             signIn("google", { callbackUrl: "/auth/mobile-success" });
         } else {
             console.log("🌐 Web detected: Using standard OAuth flow");

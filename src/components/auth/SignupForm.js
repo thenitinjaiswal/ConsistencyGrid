@@ -56,7 +56,22 @@ export default function SignupForm() {
     }
 
     const handleGoogleSignUp = () => {
-        signIn("google", { callbackUrl: "/onboarding" });
+        // Detect if running in Android app
+        const isAndroidApp =
+            typeof window !== 'undefined' &&
+            (window.consistencyGridPlatform === 'android' ||
+                navigator.userAgent.includes('ConsistencyGridApp') ||
+                window.location.search.includes('platform=android'));
+
+        if (isAndroidApp) {
+            console.log("🤖 Android detected: Using mobile OAuth flow");
+            // callbackUrl must point to the mobile-success page handler
+            signIn("google", { callbackUrl: "/auth/mobile-success" });
+        } else {
+            console.log("🌐 Web detected: Using standard OAuth flow");
+            // Standard web signup goes to onboarding
+            signIn("google", { callbackUrl: "/onboarding" });
+        }
     };
 
     return (
