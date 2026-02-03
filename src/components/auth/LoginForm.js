@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -23,178 +23,204 @@ import Navbar from "@/components/layout/Navbar";
  * Those are handled ONLY in /mobile-auth-callback
  */
 export default function LoginForm() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
-
-  /* --------------------------------------------
-   * Credentials Login
-   * ------------------------------------------ */
-  async function handleLogin(e) {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const result = await signIn("credentials", {
-        email: form.email,
-        password: form.password,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        throw new Error("Invalid email or password");
-      }
-
-      // Store public token for WebView recovery (SAFE)
-      await storeAuthToken();
-
-      toast.success("Welcome back!");
-      router.push("/dashboard");
-    } catch (err) {
-      toast.error(err.message || "Login failed");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  /* --------------------------------------------
-   * Google OAuth Trigger
-   * ------------------------------------------ */
-  function handleGoogleSignIn() {
-    const isAndroid =
-      typeof window !== "undefined" &&
-      localStorage.getItem("consistencygrid_platform") === "android";
-
-    signIn("google", {
-      callbackUrl: isAndroid
-        ? "https://consistencygrid.netlify.app/mobile-auth-callback"
-        : "https://consistencygrid.netlify.app/dashboard",
+    const router = useRouter();
+    const [loading, setLoading] = useState(false);
+    const [form, setForm] = useState({
+        email: "",
+        password: "",
     });
-  }
 
-  /* --------------------------------------------
-   * Token storage (used ONLY after credentials login)
-   * ------------------------------------------ */
-  async function storeAuthToken() {
-    try {
-      const res = await fetch("/api/auth/get-token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
+    // 🔄 Auto-login from Android Deep Link
+    useEffect(() => {
+        if (typeof window === "undefined") return;
 
-      if (!res.ok) return;
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get("authtoken");
 
-      const data = await res.json();
-      if (data?.success && data?.data?.publicToken) {
-        localStorage.setItem("cg_auth_token", data.data.publicToken);
-      }
-    } catch (err) {
-      // Silent fail – optional enhancement
-      console.error("Token storage failed:", err);
+        if (token) {
+            setLoading(true);
+            signIn("token-login", {
+                token,
+                redirect: false,
+            }).then((res) => {
+                if (!res.error) {
+                    toast.success("Logged in automatically");
+                    router.push("/dashboard");
+                } else {
+                    setLoading(false);
+                    toast.error("Auto-login failed");
+                }
+            });
+        }
+    }, [router]);
+
+
+    /* --------------------------------------------
+     * Credentials Login
+     * ------------------------------------------ */
+    async function handleLogin(e) {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            const result = await signIn("credentials", {
+                email: form.email,
+                password: form.password,
+                redirect: false,
+            });
+
+            if (result?.error) {
+                throw new Error("Invalid email or password");
+            }
+
+            // Store public token for WebView recovery (SAFE)
+            await storeAuthToken();
+
+            toast.success("Welcome back!");
+            router.push("/dashboard");
+        } catch (err) {
+            toast.error(err.message || "Login failed");
+        } finally {
+            setLoading(false);
+        }
     }
-  }
 
-  /* --------------------------------------------
-   * UI
-   * ------------------------------------------ */
-  return (
-    <main className="min-h-screen bg-[#fffaf1] px-4 sm:px-6">
-      <Toaster position="bottom-right" />
-      <Navbar rightLinkText="Sign up" rightLinkHref="/signup" />
+    /* --------------------------------------------
+     * Google OAuth Trigger
+     * ------------------------------------------ */
+    function handleGoogleSignIn() {
+        const isAndroid =
+            typeof window !== "undefined" &&
+            (localStorage.getItem("consistencygrid_platform") === "android" ||
+                navigator.userAgent.includes("ConsistencyGridApp"));
 
-      <section className="mx-auto mt-8 sm:mt-10 max-w-md w-full">
-        <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-sm ring-1 ring-gray-100">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-            Welcome back
-          </h1>
+        signIn("google", {
+            callbackUrl: isAndroid
+                ? "https://consistencygrid.netlify.app/mobile-auth-callback"
+                : "https://consistencygrid.netlify.app/dashboard",
+        });
+    }
 
-          <p className="mt-2 text-sm text-gray-500 font-medium">
-            Your grid is saved. Your progress is waiting.
-          </p>
+    /* --------------------------------------------
+     * Token storage (used ONLY after credentials login)
+     * ------------------------------------------ */
+    async function storeAuthToken() {
+        try {
+            const res = await fetch("/api/auth/get-token", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+            });
 
-          {/* Google Login */}
-          <button
-            onClick={handleGoogleSignIn}
-            type="button"
-            disabled={loading}
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-50 transition-all active:scale-95 disabled:opacity-60"
-          >
-            <span className="text-lg">G</span>
-            Continue with Google
-          </button>
+            if (!res.ok) return;
 
-          <div className="my-6 flex items-center gap-3">
-            <div className="h-px flex-1 bg-gray-200" />
-            <span className="text-xs text-gray-500">or</span>
-            <div className="h-px flex-1 bg-gray-200" />
-          </div>
+            const data = await res.json();
+            if (data?.success && data?.data?.publicToken) {
+                localStorage.setItem("cg_auth_token", data.data.publicToken);
+            }
+        } catch (err) {
+            // Silent fail – optional enhancement
+            console.error("Token storage failed:", err);
+        }
+    }
 
-          {/* Credentials Login */}
-          <form className="space-y-4" onSubmit={handleLogin}>
-            <div>
-              <label className="text-xs font-medium text-gray-700 block mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                required
-                placeholder="you@example.com"
-                value={form.email}
-                onChange={(e) =>
-                  setForm({ ...form, email: e.target.value })
-                }
-                disabled={loading}
-                className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-              />
-            </div>
+    /* --------------------------------------------
+     * UI
+     * ------------------------------------------ */
+    return (
+        <main className="min-h-screen bg-[#fffaf1] px-4 sm:px-6">
+            <Toaster position="bottom-right" />
+            <Navbar rightLinkText="Sign up" rightLinkHref="/signup" />
 
-            <div>
-              <label className="text-xs font-medium text-gray-700 block mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                required
-                placeholder="••••••••"
-                value={form.password}
-                onChange={(e) =>
-                  setForm({ ...form, password: e.target.value })
-                }
-                disabled={loading}
-                className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-              />
-            </div>
+            <section className="mx-auto mt-8 sm:mt-10 max-w-md w-full">
+                <div className="rounded-2xl bg-white p-6 sm:p-8 shadow-sm ring-1 ring-gray-100">
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+                        Welcome back
+                    </h1>
 
-            <Link
-              href="/forgot-password"
-              className="block text-center text-sm font-medium text-orange-500 hover:underline"
-            >
-              Forgot your password?
-            </Link>
+                    <p className="mt-2 text-sm text-gray-500 font-medium">
+                        Your grid is saved. Your progress is waiting.
+                    </p>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-lg bg-orange-500 px-4 py-3 text-sm font-semibold text-white hover:bg-orange-600 transition-all active:scale-95 disabled:opacity-70"
-            >
-              {loading ? "Logging in…" : "Log in →"}
-            </button>
-          </form>
+                    {/* Google Login */}
+                    <button
+                        onClick={handleGoogleSignIn}
+                        type="button"
+                        disabled={loading}
+                        className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-50 transition-all active:scale-95 disabled:opacity-60"
+                    >
+                        <span className="text-lg">G</span>
+                        Continue with Google
+                    </button>
 
-          <p className="mt-6 text-center text-sm text-gray-600">
-            Don&apos;t have an account?{" "}
-            <Link
-              href="/signup"
-              className="font-semibold text-orange-500 hover:underline"
-            >
-              Sign up
-            </Link>
-          </p>
-        </div>
-      </section>
-    </main>
-  );
+                    <div className="my-6 flex items-center gap-3">
+                        <div className="h-px flex-1 bg-gray-200" />
+                        <span className="text-xs text-gray-500">or</span>
+                        <div className="h-px flex-1 bg-gray-200" />
+                    </div>
+
+                    {/* Credentials Login */}
+                    <form className="space-y-4" onSubmit={handleLogin}>
+                        <div>
+                            <label className="text-xs font-medium text-gray-700 block mb-1">
+                                Email
+                            </label>
+                            <input
+                                type="email"
+                                required
+                                placeholder="you@example.com"
+                                value={form.email}
+                                onChange={(e) =>
+                                    setForm({ ...form, email: e.target.value })
+                                }
+                                disabled={loading}
+                                className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="text-xs font-medium text-gray-700 block mb-1">
+                                Password
+                            </label>
+                            <input
+                                type="password"
+                                required
+                                placeholder="••••••••"
+                                value={form.password}
+                                onChange={(e) =>
+                                    setForm({ ...form, password: e.target.value })
+                                }
+                                disabled={loading}
+                                className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                            />
+                        </div>
+
+                        <Link
+                            href="/forgot-password"
+                            className="block text-center text-sm font-medium text-orange-500 hover:underline"
+                        >
+                            Forgot your password?
+                        </Link>
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full rounded-lg bg-orange-500 px-4 py-3 text-sm font-semibold text-white hover:bg-orange-600 transition-all active:scale-95 disabled:opacity-70"
+                        >
+                            {loading ? "Logging in…" : "Log in →"}
+                        </button>
+                    </form>
+
+                    <p className="mt-6 text-center text-sm text-gray-600">
+                        Don&apos;t have an account?{" "}
+                        <Link
+                            href="/signup"
+                            className="font-semibold text-orange-500 hover:underline"
+                        >
+                            Sign up
+                        </Link>
+                    </p>
+                </div>
+            </section>
+        </main>
+    );
 }
