@@ -13,14 +13,14 @@ cd android
 
 if not exist gradlew.bat (
     echo ==================================================================
-    echo ERROR: Gradle Wrapper (gradlew.bat) is missing!
+    echo ERROR: Gradle Wrapper ^(gradlew.bat^) is missing!
     echo.
     echo Since the Android project was recreated from scratch, the Gradle 
     echo wrapper binaries are missing.
     echo.
     echo PLEASE DO THIS ONCE:
     echo 1. Open the "android" folder in Android Studio
-    echo 2. Allow it to sync/configure (this generates gradlew)
+    echo 2. Allow it to sync/configure ^(this generates gradlew^)
     echo 3. Run this script again
     echo ==================================================================
     cd ..
