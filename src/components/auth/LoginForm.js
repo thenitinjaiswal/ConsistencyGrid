@@ -98,16 +98,17 @@ export default function LoginForm() {
     }
 
     const handleGoogleSignIn = () => {
-        // Detect if running in Android app (via injected global or user agent)
+        // Detect if running in Android app
         const isAndroidApp =
             typeof window !== 'undefined' &&
             (window.consistencyGridPlatform === 'android' ||
                 navigator.userAgent.includes('ConsistencyGridApp'));
 
         if (isAndroidApp) {
-            console.log("Android environment detected: Adding OAuth flag");
-            signIn("google", { callbackUrl: "/dashboard?from_oauth=true" });
+            console.log("🤖 Android detected: Using mobile OAuth flow");
+            signIn("google", { callbackUrl: "/auth/mobile-success" });
         } else {
+            console.log("🌐 Web detected: Using standard OAuth flow");
             signIn("google", { callbackUrl: "/dashboard" });
         }
     };
