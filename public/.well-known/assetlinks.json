@@ -1,0 +1,14 @@
+[
+    {
+        "relation": [
+            "delegate_permission/common.handle_all_urls"
+        ],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "com.consistencygrid",
+            "sha256_cert_fingerprints": [
+                "FA:C6:17:45:35:FF:CC:45:90:5B:3D:06:95:C9:83:97:18:BD:31:0F:78:E8:11:AB:F9:50:5F:AD:D7:9F:7C:1E"
+            ]
+        }
+    }
+]

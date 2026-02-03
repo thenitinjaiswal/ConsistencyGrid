@@ -6,7 +6,7 @@
 
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/authOptions";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/prisma";
 import { invalidateDashboardCache } from "@/lib/cache-invalidation";
 import { getRateLimitErrorResponse, RATE_LIMITS } from "@/lib/rate-limit";

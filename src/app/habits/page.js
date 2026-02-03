@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/authOptions";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import HabitHeader from "@/components/habits/HabitHeader";

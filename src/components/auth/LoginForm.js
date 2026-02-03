@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -29,31 +29,6 @@ export default function LoginForm() {
         email: "",
         password: "",
     });
-
-    // 🔄 Auto-login from Android Deep Link
-    useEffect(() => {
-        if (typeof window === "undefined") return;
-
-        const params = new URLSearchParams(window.location.search);
-        const token = params.get("authtoken");
-
-        if (token) {
-            setLoading(true);
-            signIn("token-login", {
-                token,
-                redirect: false,
-            }).then((res) => {
-                if (!res.error) {
-                    toast.success("Logged in automatically");
-                    router.push("/dashboard");
-                } else {
-                    setLoading(false);
-                    toast.error("Auto-login failed");
-                }
-            });
-        }
-    }, [router]);
-
 
     /* --------------------------------------------
      * Credentials Login
@@ -89,17 +64,9 @@ export default function LoginForm() {
      * Google OAuth Trigger
      * ------------------------------------------ */
     function handleGoogleSignIn() {
-        const searchParams = new URLSearchParams(window.location.search);
         const isAndroid =
             typeof window !== "undefined" &&
-            (searchParams.get("platform") === "android" ||
-                localStorage.getItem("consistencygrid_platform") === "android" ||
-                navigator.userAgent.includes("ConsistencyGridApp"));
-
-        // Persist platform for future checks
-        if (isAndroid && typeof window !== "undefined") {
-            localStorage.setItem("consistencygrid_platform", "android");
-        }
+            localStorage.getItem("consistencygrid_platform") === "android";
 
         signIn("google", {
             callbackUrl: isAndroid

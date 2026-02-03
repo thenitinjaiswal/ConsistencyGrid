@@ -1,10 +1,8 @@
 package com.consistencygrid
 
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.webkit.CookieManager
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -14,27 +12,22 @@ import androidx.browser.customtabs.CustomTabsIntent
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
-    private val WEBSITE_URL = "https://consistencygrid.netlify.app" // Replace with env var if needed
+    private val WEBSITE_URL = "https://consistencygrid.netlify.app"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        // simple programmatic layout
-        webView = WebView(this)
-        setContentView(webView)
+        setContentView(R.layout.activity_main)
 
+        webView = findViewById(R.id.webview)
         setupWebView()
 
-        // Check for deep link on startup
+        // Handle initial launch intent
         handleIntent(intent)
-        
-        if (savedInstanceState == null && intent.data == null) {
-            loadInitialUrl()
-        }
     }
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
+        setIntent(intent)
         handleIntent(intent)
     }
 
@@ -42,25 +35,28 @@ class MainActivity : AppCompatActivity() {
         webView.settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = true
-            userAgentString += " ConsistencyGridApp" // Marker for website detection
+            // Append app identifier to User Agent for server-side detection
+            userAgentString += " ConsistencyGridApp"
         }
-
-        CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
 
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 val url = request?.url?.toString() ?: return false
-                
-                // 1. Intercept Google Auth & NextAuth Google Signin
-                if (url.contains("accounts.google.com") || 
-                    url.contains("/api/auth/signin/google")) {
+
+                // Intercept Google Auth URLs and open in Chrome Custom Tabs
+                if (url.contains("accounts.google.com") || url.contains("/api/auth/signin/google")) {
                     openInCustomTab(url)
                     return true
                 }
-
-                // 2. Allow normal navigation inside WebView
+                
+                // Keep other navigation inside WebView
                 return false
             }
+        }
+
+        // Load initial page if no token login happened yet
+        if (webView.url == null) {
+             webView.loadUrl("$WEBSITE_URL/login?platform=android")
         }
     }
 
@@ -71,11 +67,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
-        val data = intent?.data
-        // consistencygrid://login-success?token=XYZ
-        if (data != null && data.scheme == "consistencygrid" && data.host == "login-success") {
-            val token = data.getQueryParameter("token")
-            if (token != null) {
+        val appLinkData: Uri? = intent?.data
+
+        // ✅ HANDLE APP LINKS: https://consistencygrid.netlify.app/app-login?token=XYZ
+        if (appLinkData != null && appLinkData.path?.startsWith("/app-login") == true) {
+            val token = appLinkData.getQueryParameter("token")
+            if (!token.isNullOrEmpty()) {
                 saveToken(token)
                 loginWithToken(token)
             }
@@ -83,28 +80,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun saveToken(token: String) {
-        val prefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        prefs.edit().putString("auth_token", token).apply()
-    }
-
-    private fun loadInitialUrl() {
-        // Check if we have a stored token to auto-login
-        val prefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        val token = prefs.getString("auth_token", null)
-        
-        if (token != null) {
-            loginWithToken(token) // Auto-login on restart
-        } else {
-            webView.loadUrl("$WEBSITE_URL/login?platform=android")
+        val sharedPref = getPreferences(MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            putString("public_token", token)
+            apply()
         }
     }
 
     private fun loginWithToken(token: String) {
-        // Pass token to login page so it can execute signIn("token-login")
-        webView.loadUrl("$WEBSITE_URL/login?authtoken=$token")
+        // Load the special login URL that NextAuth (CredentialsProvider 'token-login') handles
+        // We add a timestamp to force reload if needed
+        val loginUrl = "$WEBSITE_URL/login?authtoken=$token&ts=${System.currentTimeMillis()}"
+        webView.loadUrl(loginUrl)
     }
-    
-    // Handle back button
+
     override fun onBackPressed() {
         if (webView.canGoBack()) {
             webView.goBack()

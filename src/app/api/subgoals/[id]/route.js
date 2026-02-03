@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/authOptions";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/prisma";
 import { invalidateGoalsCache } from "@/lib/cache-invalidation";
 import { getRateLimitErrorResponse, RATE_LIMITS } from "@/lib/rate-limit";
