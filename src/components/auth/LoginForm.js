@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
 import Navbar from "@/components/layout/Navbar";
+import { isAndroidApp } from "@/lib/platform-utils";
 
 /**
  * LoginForm
@@ -24,11 +25,57 @@ import Navbar from "@/components/layout/Navbar";
  */
 export default function LoginForm() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const { status } = useSession();
+    const tokenLoginAttempted = useRef(false);
     const [loading, setLoading] = useState(false);
     const [form, setForm] = useState({
         email: "",
         password: "",
     });
+
+    /* --------------------------------------------
+     * Token Auto-Login (Android Deep Link Handoff)
+     * ------------------------------------------ */
+    useEffect(() => {
+        const token = searchParams.get("token");
+        if (!token) return;
+
+        // Wait for NextAuth to resolve session first
+        if (status === "loading") return;
+
+        // If user is already logged in, just go to dashboard
+        if (status === "authenticated") {
+            router.replace("/dashboard");
+            return;
+        }
+
+        if (tokenLoginAttempted.current) return;
+        tokenLoginAttempted.current = true;
+
+        setLoading(true);
+
+        signIn("token-login", { token, redirect: false })
+            .then((result) => {
+                if (result?.error) {
+                    console.error("[token-login] Failed:", result.error);
+                    toast.error("Auto login failed. Please log in again.");
+                    router.replace("/login");
+                    return;
+                }
+
+                toast.success("Welcome back!");
+                router.replace("/dashboard");
+            })
+            .catch((err) => {
+                console.error("[token-login] Error:", err);
+                toast.error("Auto login failed. Please log in again.");
+                router.replace("/login");
+            })
+            .finally(() => {
+                setLoading(false);
+            });
+    }, [searchParams, router, status]);
 
     /* --------------------------------------------
      * Credentials Login
@@ -64,13 +111,11 @@ export default function LoginForm() {
      * Google OAuth Trigger
      * ------------------------------------------ */
     function handleGoogleSignIn() {
-        const isAndroid =
-            typeof window !== "undefined" &&
-            localStorage.getItem("consistencygrid_platform") === "android";
+        const isAndroid = isAndroidApp();
 
         signIn("google", {
             callbackUrl: isAndroid
-                ? "/mobile-auth-callback"
+                ? "/mobile-auth-callback?source=app"
                 : "/dashboard",
         });
     }

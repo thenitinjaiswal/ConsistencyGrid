@@ -116,33 +116,39 @@ export const authOptions = {
 
     async jwt({ token, user }) {
       // ✅ attach DB userId to token
-      if (user) {
-        token.id = user.id;
-        token.onboarded = user.onboarded;
-        if (user.publicToken) {
-          token.publicToken = user.publicToken;
-        }
-      } else {
-        // Always fetch the latest onboarded status from DB
-        const dbUser = await prisma.user.findUnique({
-          where: { email: token.email },
-          select: { id: true, onboarded: true, emailVerified: true },
-        });
+      const email = user?.email || token?.email;
+      if (!email) return token;
 
-        if (dbUser) {
-          token.id = dbUser.id;
-          token.onboarded = dbUser.onboarded;
-          token.verified = !!dbUser.emailVerified;
+      // Always derive auth-critical fields from DB so OAuth logins work reliably.
+      // (OAuth `user` object doesn't include our DB fields like `publicToken`/`onboarded`)
+      const dbUser = await prisma.user.findUnique({
+        where: { email },
+        select: {
+          id: true,
+          onboarded: true,
+          emailVerified: true,
+          publicToken: true,
+        },
+      });
 
-          // Need publicToken for mobile auth handoff
-          const fullUser = await prisma.user.findUnique({
-            where: { id: dbUser.id },
-            select: { publicToken: true }
-          });
-          if (fullUser) token.publicToken = fullUser.publicToken;
-        }
+      if (!dbUser) return token;
+
+      token.id = dbUser.id;
+      token.onboarded = dbUser.onboarded;
+      token.verified = !!dbUser.emailVerified;
+
+      if (dbUser.publicToken) {
+        token.publicToken = dbUser.publicToken;
+        return token;
       }
 
+      // Ensure publicToken always exists for mobile auth handoff + WebView recovery.
+      const newPublicToken = generatePublicToken();
+      await prisma.user.update({
+        where: { id: dbUser.id },
+        data: { publicToken: newPublicToken },
+      });
+      token.publicToken = newPublicToken;
       return token;
     },
 

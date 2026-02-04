@@ -66,7 +66,7 @@ export default function SignupForm() {
         if (isAndroidApp) {
             console.log("🤖 Android detected: Using mobile OAuth flow");
             // callbackUrl must point to the mobile-auth-callback page handler
-            signIn("google", { callbackUrl: "/mobile-auth-callback" });
+            signIn("google", { callbackUrl: "/mobile-auth-callback?source=app" });
         } else {
             console.log("🌐 Web detected: Using standard OAuth flow");
             // Standard web signup goes to onboarding

@@ -1,6 +1,6 @@
 import { getServerSession } from 'next-auth/next';
 import prisma from '@/lib/prisma';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { authOptions } from "../../auth/authOptions";
 
 /**
  * GET /api/gdpr/consent

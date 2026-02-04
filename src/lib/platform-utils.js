@@ -96,7 +96,7 @@ export function getUpgradeUrl() {
         // External website for Android app users
         return process.env.NEXT_PUBLIC_SITE_URL
             ? `${process.env.NEXT_PUBLIC_SITE_URL}/pricing`
-            : 'https://consistencygrid.com/pricing';
+            : 'https://consistencygrid.netlify.app/pricing';
     }
 
     // Internal route for web users
